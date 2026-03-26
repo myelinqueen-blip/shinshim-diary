@@ -510,15 +510,17 @@ textarea.field::placeholder{color:var(--text3);}
 
 /* ── 창제표 버튼 ── */
 .forest-section-btn{
-  display:inline-flex;align-items:center;gap:5px;
-  padding:7px 15px;
-  background:linear-gradient(135deg,#7c3aed 0%,#a78bfa 100%);
-  border:none;border-radius:22px;
-  font-size:12px;font-weight:800;color:#fff;
-  cursor:pointer;font-family:var(--font);
-  box-shadow:0 3px 10px rgba(124,58,237,.4);
-  letter-spacing:.02em;transition:all .2s;white-space:nowrap;
+  display:inline-flex;align-items:center;
+  padding:5px 12px;
+  background:rgba(255,255,255,.15);
+  border:1.5px solid rgba(255,255,255,.35);
+  border-radius:16px;
+  font-size:12px;font-weight:700;color:#fff;
+  font-family:var(--font);cursor:pointer;
+  transition:all .15s;
+  backdrop-filter:blur(4px);
 }
+.forest-section-btn:hover{background:rgba(255,255,255,.25);}
 .forest-section-btn:hover{transform:translateY(-2px);box-shadow:0 5px 16px rgba(124,58,237,.55);}
 .forest-section-btn:active{transform:translateY(0);}
 /* ── 창제표 아이콘 버튼 ── */
@@ -671,6 +673,96 @@ textarea.field::placeholder{color:var(--text3);}
   line-height:1.6;
   word-break:keep-all;
 }
+
+/* ══ 헤더 아이콘 버튼 ══ */
+.btn-icon-sm{
+  width:32px;height:32px;
+  border-radius:50%;
+  border:1.5px solid var(--border);
+  background:var(--surface);
+  cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  color:var(--text2);
+  flex-shrink:0;
+  padding:0;
+}
+.btn-icon-sm:hover{background:var(--bg2);}
+header{height:48px;}
+
+/* ══ ticker 좌우 흐름 ══ */
+.forest-ticker{
+  overflow:hidden;padding:8px 12px;
+  display:flex;align-items:center;gap:8px;
+  background:rgba(0,0,0,.45);
+}
+.ticker-scroll-wrap{
+  flex:1;overflow:hidden;position:relative;
+}
+.ticker-text{
+  display:inline-block;
+  white-space:nowrap;
+  font-size:13px;font-weight:700;color:#fff;
+  animation:ticker-scroll 18s linear;
+}
+@keyframes ticker-scroll{
+  0%   { transform:translateX(100%); }
+  100% { transform:translateX(-100%); }
+}
+.ticker-add-btn{flex-shrink:0;z-index:1;}
+
+/* ══ 창제표 접기 버튼 ══ */
+#chanje-coll
+/* ══ forest-section-header 정렬 ══ */
+.forest-section-header{
+  display:flex;align-items:center;
+  justify-content:space-between;
+  margin-bottom:7px;
+}
+apse-btn:hover{color:rgba(255,255,255,.7);}
+#giwon-toggle-btn:hover{color:rgba(255,255,255,.7);}
+
+/* ══ 활동/회합 간격 ══ */
+.forest-act-section + .forest-meet-section{margin-top:10px;}
+
+/* ══ 기간 네비게이션 버튼 ══ */
+.forest-nav-bar{
+  display:flex;align-items:center;gap:5px;
+  padding:6px 12px 8px;
+  flex-wrap:nowrap;
+}
+.period-nav-btn{
+  padding:4px 10px;
+  border:1.5px solid rgba(255,255,255,.25);
+  border-radius:14px;
+  background:rgba(255,255,255,.08);
+  color:rgba(255,255,255,.7);
+  font-size:12px;font-weight:700;
+  font-family:var(--font);
+  cursor:pointer;
+  transition:all .15s;
+  white-space:nowrap;
+}
+.period-nav-btn:hover{background:rgba(255,255,255,.2);color:#fff;}
+.period-nav-btn.active{
+  background:rgba(255,255,255,.28);
+  border-color:rgba(255,255,255,.6);
+  color:#fff;
+}
+.period-month-lbl{min-width:44px;text-align:center;}
+
+/* 모아보기용 (라이트 모드) */
+#fpb-goal,#fpb-prev,#fpb-month,#fpb-next,#fpb-custom{
+  border-color:var(--border);
+  background:var(--surface);
+  color:var(--text2);
+}
+#fpb-goal:hover,#fpb-prev:hover,#fpb-month:hover,#fpb-next:hover,#fpb-custom:hover{
+  background:var(--bg2);color:var(--text);
+}
+#fpb-goal.active,#fpb-month.active,#fpb-custom.active{
+  border-color:var(--green);color:var(--green);
+  background:rgba(107,203,119,.08);
+}
 </style>
 </head>
 <body>
@@ -681,22 +773,21 @@ textarea.field::placeholder{color:var(--text3);}
 
 <div id="app">
   <header>
-    <div class="header-logo" style="display:flex;align-items:center;gap:7px;">
+    <div class="header-logo" onclick="openNickModal()" style="cursor:pointer;display:flex;align-items:center;gap:6px;" title="닉네임 설정">
       <span>🌿</span>
-      <span id="header-title" onclick="openNickModal()" style="cursor:pointer" title="닉네임 설정">신심 일기</span>
-      <span style="font-size:10px;color:var(--text3)" onclick="openNickModal()" style="cursor:pointer">✏️</span>
+      <span id="header-title">신심 일기</span>
     </div>
-    <div class="header-right">
-      <div class="header-date" id="header-today"></div>
-      <div id="user-info" style="display:none;align-items:center;gap:4px;font-size:10px;font-weight:600;color:var(--text2);max-width:130px;">
-        <span id="user-name" style="max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:inline-block;"></span>
+    <div class="header-right" style="gap:6px;">
+      <div id="user-info" style="display:none;align-items:center;gap:3px;font-size:10px;color:var(--text2);">
+        <span id="user-name" style="max-width:70px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:inline-block;font-size:10px;"></span>
       </div>
-      <button class="btn-icon" id="btn-login" onclick="window._googleLogin&&window._googleLogin()" style="font-size:11px;padding:5px 9px">
-        <svg width="13" height="13" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
-        로그인
+      <button class="btn-icon-sm" id="btn-login" onclick="window._googleLogin&&window._googleLogin()" title="구글 로그인">
+        <svg width="16" height="16" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
       </button>
-      <button class="btn-icon" id="btn-logout" style="display:none;font-size:11px" onclick="window._logout&&window._logout()">로그아웃</button>
-      <button class="btn-icon" onclick="openBackupModal()" style="font-size:13px">💾</button>
+      <button class="btn-icon-sm" id="btn-logout" style="display:none;" onclick="window._logout&&window._logout()" title="로그아웃">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      </button>
+      <button class="btn-icon-sm" onclick="openBackupModal()" title="백업">💾</button>
     </div>
   </header>
 
@@ -789,19 +880,18 @@ textarea.field::placeholder{color:var(--text3);}
 
     <!-- 활동 일정 -->
     <div class="card card-schedule-card">
-      <div class="card-header">
-        <div class="card-icon">📋</div>
-        <div class="card-title">활동 일정</div>
-        <button class="btn-copy-sm" style="margin-left:auto" onclick="loadRecentSchedule()">📂 최근 일정 불러오기</button>
-        <button class="btn-copy-sm" style="margin-left:6px" onclick="copyActSchedule()">📋 복사</button>
+      <div class="card-header" style="flex-wrap:nowrap;gap:5px;align-items:center;">
+        <div class="card-icon" style="flex-shrink:0;">📋</div>
+        <div class="card-title" style="flex-shrink:0;">활동 일정</div>
+        <div style="margin-left:auto;display:flex;gap:5px;flex-shrink:0;">
+          <button class="btn-copy-sm" onclick="loadRecentSchedule()" style="white-space:nowrap;font-size:10px;padding:4px 7px;">📂 불러오기</button>
+          <button class="btn-copy-sm" onclick="copyActSchedule()" style="white-space:nowrap;font-size:10px;padding:4px 7px;">📋 복사</button>
+        </div>
       </div>
       <div id="act-rows"></div>
       <button class="add-row-btn" onclick="addActRow()">＋ 추가</button>
     </div>
 
-    <div class="action-row">
-      <button class="btn-copy" onclick="copyEntry()" style="width:100%">📋 복사</button>
-    </div>
     <!-- 플로팅 저장 버튼 (기록 탭 활성 시 표시) -->
   </div>
 
@@ -818,9 +908,18 @@ textarea.field::placeholder{color:var(--text3);}
       <button class="pill p-res"    onclick="setFilter('resolution',this)">🌅 결의</button>
       <button class="pill p-member" onclick="setFilter('member',this)">👥 멤버</button>
     </div>
+    <!-- 모아보기 기간/검색 패널 -->
     <div class="filter-search-panel">
-      <div class="fsp-row">
-        <span class="fsp-label">📅 기간</span>
+      <div class="fsp-row" style="gap:6px;flex-wrap:wrap;">
+        <button class="period-nav-btn" id="fpb-goal" onclick="_setFilterPeriod('goal')" title="창제 목표 기간">목표</button>
+        <button class="period-nav-btn" id="fpb-prev" onclick="_filterMonthMove(-1)">‹</button>
+        <button class="period-nav-btn period-month-lbl" id="fpb-month" onclick="_setFilterPeriod('month')">
+          <span id="filter-month-label">이번달</span>
+        </button>
+        <button class="period-nav-btn" id="fpb-next" onclick="_filterMonthMove(1)">›</button>
+        <button class="period-nav-btn" id="fpb-custom" onclick="_setFilterPeriod('custom')">설정</button>
+      </div>
+      <div id="filter-custom-row" style="display:none;" class="fsp-row">
         <input type="date" class="fsp-date" id="filter-from" onchange="renderFilter()">
         <span class="fsp-sep">~</span>
         <input type="date" class="fsp-date" id="filter-to" onchange="renderFilter()">
@@ -862,14 +961,38 @@ textarea.field::placeholder{color:var(--text3);}
     <div id="forest-wrap" class="forest-bg">
       <div class="forest-sky" id="forest-stars"></div>
       <div class="forest-ticker" id="forest-ticker">
-        <span class="ticker-text" id="ticker-text">🌿 기록을 시작하면 칭찬이 가득해져요!</span>
         <button class="ticker-add-btn" onclick="openTickerInput()">💬 칭찬 추가</button>
+        <div class="ticker-scroll-wrap">
+          <span class="ticker-text" id="ticker-text">🌿 기록을 시작하면 칭찬이 가득해져요!</span>
+        </div>
       </div>
       <div class="forest-stats-row" id="forest-stats"></div>
-      <div id="forest-period" class="forest-period-bar"></div>
+      <div class="forest-nav-bar">
+        <button class="period-nav-btn" id="fnb-goal" onclick="_setForestPeriod('goal')" title="창제 목표 기간">목표</button>
+        <button class="period-nav-btn" id="fnb-prev" onclick="_forestMonthMove(-1)">‹</button>
+        <button class="period-nav-btn period-month-lbl" id="fnb-month" onclick="_setForestPeriod('month')">
+          <span id="forest-month-label">이번달</span>
+        </button>
+        <button class="period-nav-btn" id="fnb-next" onclick="_forestMonthMove(1)">›</button>
+        <button class="period-nav-btn" id="fnb-custom" onclick="_setForestPeriod('custom')">설정</button>
+      </div>
+      <div id="forest-period" class="forest-period-bar" style="display:none;"></div>
       <div class="forest-section">
-        <div class="forest-section-header"><div class="forest-section-title">🙏 복운 가득 경애</div><button class="forest-section-btn" onclick="openChanjeModal()">⚙️</button></div>
-        <div class="forest-hearts" id="forest-hearts"></div>
+        <div class="forest-section-header">
+          <div style="display:flex;align-items:center;gap:6px;">
+            <div class="forest-section-title">🙏 복운 가득 경애</div>
+            <button id="giwon-toggle-btn" onclick="toggleGiwon()" style="background:none;border:none;color:rgba(255,255,255,.35);font-size:11px;cursor:pointer;padding:2px 4px;line-height:1;" title="기원문 보기">▾</button>
+          </div>
+          <button class="forest-section-btn" onclick="openChanjeModal()">창제표</button>
+        </div>
+        <div id="giwon-display" style="display:none;padding:8px 10px;background:rgba(255,255,255,.06);border-radius:9px;margin-bottom:6px;font-size:12px;color:rgba(255,255,255,.7);line-height:1.7;white-space:pre-wrap;"></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+          <span style="font-size:10px;color:rgba(255,255,255,.4);">창제표</span>
+          <button id="chanje-collapse-btn" onclick="toggleChanjeCollapse()" style="background:none;border:none;color:rgba(255,255,255,.35);font-size:11px;cursor:pointer;padding:2px 4px;" title="접기">▾</button>
+        </div>
+        <div id="chanje-collapse-wrap">
+          <div class="forest-hearts" id="forest-hearts"></div>
+        </div>
       </div>
       <div class="forest-section">
         <div style="border-top:1px solid rgba(255,255,255,.15);margin:4px 0 8px;padding-top:8px;display:flex;align-items:center;justify-content:space-between;">
@@ -966,7 +1089,7 @@ textarea.field::placeholder{color:var(--text3);}
   </div></div>
 <!-- 창제표 모달 -->
 <div class="modal-overlay" id="chanje-modal" onclick="if(event.target===this)closeChanjeModal()" style="z-index:700">
-  <div class="modal-box" style="width:min(92vw,440px);max-height:90vh;overflow-y:auto">
+  <div class="modal-box" style="width:min(92vw,400px);max-height:85vh;overflow-y:auto">
     <div class="modal-title">⚙️ 창제표 설정</div>
 
     <!-- 이모지 선택 -->
@@ -982,7 +1105,6 @@ textarea.field::placeholder{color:var(--text3);}
         <button class="chanje-icon-btn" onclick="selectChanjeIcon('💎',this)">💎</button>
         <button class="chanje-icon-btn" onclick="selectChanjeIcon('🌈',this)">🌈</button>
         <button class="chanje-icon-btn" onclick="selectChanjeIcon('🌺',this)">🌺</button>
-        <button class="chanje-icon-btn" onclick="selectChanjeIcon('🦋',this)">🦋</button>
         <button class="chanje-icon-btn" onclick="selectChanjeIcon('🙏',this)">🙏</button>
         <input type="text" id="custom-icon-input" placeholder="+" maxlength="2"
           style="width:36px;height:36px;text-align:center;font-size:18px;border:2px dashed var(--border);border-radius:9px;font-family:var(--font);"
@@ -990,33 +1112,12 @@ textarea.field::placeholder{color:var(--text3);}
       </div>
     </div>
 
-    <!-- 색상 선택 -->
-    <div style="background:var(--bg2);border-radius:12px;padding:12px;margin-bottom:11px">
-      <div style="font-size:11px;font-weight:800;color:var(--text2);margin-bottom:8px">🎨 색상</div>
-      <div id="chanje-color-chips" style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px"></div>
-      <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">
-        <label style="font-size:11px;color:var(--text3)">시작색</label>
-        <input type="color" id="chanje-color1" value="#00BFFF"
-          style="width:32px;height:28px;border:2px solid var(--border);border-radius:6px;cursor:pointer;padding:0;" oninput="onChanjeColorChange()">
-        <label style="font-size:11px;color:var(--text3)">→ 끝색</label>
-        <input type="color" id="chanje-color2" value="#0066cc"
-          style="width:32px;height:28px;border:2px solid var(--border);border-radius:6px;cursor:pointer;padding:0;" oninput="onChanjeColorChange()">
-        <button onclick="clearChanjeGrad()" style="font-size:10px;padding:3px 8px;border:1.5px solid var(--border);border-radius:6px;background:var(--surface);cursor:pointer;color:var(--text3);font-family:var(--font)">단색</button>
-      </div>
-    </div>
-
     <!-- 기원문 -->
     <div style="background:var(--bg2);border-radius:12px;padding:12px;margin-bottom:11px">
       <div style="font-size:11px;font-weight:800;color:var(--text2);margin-bottom:6px">🙏 기원문</div>
-      <div style="font-size:11px;color:var(--text3);margin-bottom:8px">나만의 기원 문구를 적어요</div>
-      <textarea id="chanje-giwon" placeholder="예: 반드시 원하는 삶을 살겠다&#10;복운이 가득하게 해주세요"
-        style="width:100%;min-height:80px;max-height:180px;overflow-y:auto;padding:9px 11px;border:2px solid var(--border);border-radius:10px;font-size:13px;font-family:var(--font);color:var(--text);background:var(--bg);resize:none;box-sizing:border-box;line-height:1.6;"></textarea>
+      <textarea id="chanje-giwon" placeholder="나만의 기원 문구를 적어요"
+        style="width:100%;min-height:80px;max-height:200px;overflow-y:auto;padding:9px 11px;border:2px solid var(--border);border-radius:10px;font-size:13px;font-family:var(--font);color:var(--text);background:var(--bg);resize:none;box-sizing:border-box;line-height:1.6;"></textarea>
     </div>
-
-    <!-- 미리보기 -->
-    <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:6px">미리보기</div>
-    <div id="chanje-preview" style="min-height:64px;border:2px dashed var(--border);border-radius:12px;padding:12px;background:var(--bg);display:flex;flex-wrap:wrap;gap:3px;align-items:center;overflow-x:auto;"></div>
-    <div id="chanje-stats" style="font-size:11px;color:var(--text3);text-align:center;margin-top:6px;"></div>
 
     <div class="modal-btns" style="margin-top:14px">
       <button class="btn-modal-cancel" onclick="closeChanjeModal()">닫기</button>
@@ -1201,6 +1302,126 @@ function copyReportHeader(){
       showToast('📋 보고 문구가 복사됐어요!');
     });
 }
+
+function toggleGiwon(){
+  const disp=document.getElementById('giwon-display');
+  const btn=document.getElementById('giwon-toggle-btn');
+  if(!disp)return;
+  const isOpen=disp.style.display!=='none';
+  disp.style.display=isOpen?'none':'block';
+  if(btn) btn.textContent=isOpen?'▾':'▴';
+  /* 기원문 내용 채우기 */
+  if(!isOpen){
+    const giwon=chanjeSettings?.giwon||'';
+    disp.textContent=giwon||'(기원문이 없어요 — 창제표 ⚙️에서 입력해주세요)';
+  }
+}
+
+function toggleChanjeCollapse(){
+  const wrap=document.getElementById('chanje-collapse-wrap');
+  const btn=document.getElementById('chanje-collapse-btn');
+  if(!wrap)return;
+  const isOpen=wrap.style.display!=='none';
+  wrap.style.display=isOpen?'none':'block';
+  if(btn) btn.textContent=isOpen?'▸':'▾';
+}
+
+/* ══ 기간 네비게이션 상태 ══ */
+let _filterYear=new Date().getFullYear(), _filterMonth=new Date().getMonth()+1;
+let _filterMode='month'; /* month | goal | custom */
+let _forestYear=new Date().getFullYear(), _forestMonth=new Date().getMonth()+1;
+let _forestMode='month';
+
+function _getMonthRange(y,m){
+  const from=y+'-'+String(m).padStart(2,'0')+'-01';
+  const to=y+'-'+String(m).padStart(2,'0')+'-31';
+  return {from,to};
+}
+
+/* ── 모아보기 기간 ── */
+function _setFilterPeriod(mode){
+  _filterMode=mode;
+  if(mode==='custom'){
+    document.getElementById('filter-custom-row').style.display='flex';
+  } else {
+    document.getElementById('filter-custom-row').style.display='none';
+  }
+  if(mode==='month'){
+    const {from,to}=_getMonthRange(_filterYear,_filterMonth);
+    window._filterFrom=from; window._filterTo=to;
+    document.getElementById('filter-month-label').textContent=_filterMonth+'월';
+  } else if(mode==='goal'){
+    const g=getShinGoal();
+    if(g&&g.from&&g.to){window._filterFrom=g.from;window._filterTo=g.to;}
+    document.getElementById('filter-month-label').textContent='목표기간';
+  }
+  _updatePeriodBtns('f');
+  renderFilter();
+}
+function _filterMonthMove(dir){
+  _filterMode='month';
+  _filterMonth+=dir;
+  if(_filterMonth<1){_filterMonth=12;_filterYear--;}
+  if(_filterMonth>12){_filterMonth=1;_filterYear++;}
+  const {from,to}=_getMonthRange(_filterYear,_filterMonth);
+  window._filterFrom=from; window._filterTo=to;
+  document.getElementById('filter-month-label').textContent=_filterMonth+'월';
+  document.getElementById('filter-custom-row').style.display='none';
+  _updatePeriodBtns('f');
+  renderFilter();
+}
+
+/* ── 복운의 숲 기간 ── */
+function _setForestPeriod(mode){
+  _forestMode=mode;
+  if(mode==='month'){
+    const {from,to}=_getMonthRange(_forestYear,_forestMonth);
+    window._forestFrom=from; window._forestTo=to;
+    document.getElementById('forest-month-label').textContent=_forestMonth+'월';
+  } else if(mode==='goal'){
+    const g=getShinGoal();
+    if(g&&g.from&&g.to){window._forestFrom=g.from;window._forestTo=g.to;}
+    document.getElementById('forest-month-label').textContent='목표기간';
+  } else if(mode==='custom'){
+    const from=prompt('시작일 (YYYY-MM-DD)',window._forestFrom||'');
+    if(from===null)return;
+    const to=prompt('종료일 (YYYY-MM-DD)',window._forestTo||'');
+    if(to===null)return;
+    window._forestFrom=from.trim();window._forestTo=to.trim();
+    document.getElementById('forest-month-label').textContent='설정기간';
+  }
+  _updatePeriodBtns('n');
+  renderForest();
+}
+function _forestMonthMove(dir){
+  _forestMode='month';
+  _forestMonth+=dir;
+  if(_forestMonth<1){_forestMonth=12;_forestYear--;}
+  if(_forestMonth>12){_forestMonth=1;_forestYear++;}
+  const {from,to}=_getMonthRange(_forestYear,_forestMonth);
+  window._forestFrom=from; window._forestTo=to;
+  document.getElementById('forest-month-label').textContent=_forestMonth+'월';
+  _updatePeriodBtns('n');
+  renderForest();
+}
+
+function _updatePeriodBtns(prefix){
+  const pref=prefix==='f'?'fpb':'fnb';
+  const mode=prefix==='f'?_filterMode:_forestMode;
+  ['goal','month','custom'].forEach(m=>{
+    const btn=document.getElementById(pref+'-'+(m==='month'?'month':m));
+    if(btn) btn.classList.toggle('active',mode===m);
+  });
+}
+
+/* 초기화 */
+(function(){
+  const {from,to}=_getMonthRange(_filterYear,_filterMonth);
+  window._filterFrom=from; window._filterTo=to;
+  window._forestFrom=from; window._forestTo=to;
+  document.getElementById('filter-month-label')&&(document.getElementById('filter-month-label').textContent=_filterMonth+'월');
+  document.getElementById('forest-month-label')&&(document.getElementById('forest-month-label').textContent=_forestMonth+'월');
+})();
 document.addEventListener('DOMContentLoaded', () => {
   window._appReady = true;
   /* 초기: 기록 탭이므로 플로팅 저장 버튼 표시 */
@@ -1209,8 +1430,7 @@ document.addEventListener('DOMContentLoaded', () => {
   window.toDateStr = toDateStr;
   BOOK_HISTORY = loadBooks();
   const now = new Date();
-  document.getElementById('header-today').textContent =
-    `${now.getMonth()+1}월 ${now.getDate()}일 ${WD[now.getDay()]}`;
+  /* 헤더 날짜 표시 제거 */
   generateStars();
   setToday();
   updateShinGoalDisplay();
@@ -1659,16 +1879,16 @@ function addActRow(data) {
   const {html:typeOpts}=buildTypeSelect(savedType);
   const div=document.createElement('div');
   div.className='sched-row'; div.id=id;
-  const dv=data?escAttr(data.date||''):'';
+  const dv=data?escAttr(data?escAttr(data.date||''):'';
   const bv=data?escAttr(data.branch||''):'';
   const tv=data?escAttr(data.target||''):'';
   const isCustom=!!(data&&data.actType&&!HAENG_ACTS.includes(data.actType)&&!HAENG_MEETS.includes(data.actType)&&data.actType!=='대화');
   div.innerHTML=
-    '<input type="date" class="sched-date-input" value="'+dv+'">'+
-    '<input type="text" class="sched-text" placeholder="지부" value="'+bv+'" style="flex:1;min-width:55px">'+
-    '<select class="field field-type" style="width:86px;flex-shrink:0">'+typeOpts+'</select>'+
-    '<input class="field-direct" type="text" placeholder="직접입력" style="display:'+(isCustom?'block':'none')+';width:72px" value="'+(isCustom?escAttr(data.actType||''):'')+'" id="adir-'+id+'">'+
-    '<input type="text" class="sched-text" placeholder="대상자·활동 계획" value="'+tv+'" style="flex:2;min-width:72px">'+
+    '<input type="date" class="sched-date-input" value="'+dv+'" style="width:90px;font-size:11px;padding:6px 5px;">'+
+    '<input type="text" class="sched-text" placeholder="이름" value="'+bv+'" style="flex:1.5;min-width:60px;">'+
+    '<select class="field field-type" style="width:80px;flex-shrink:0;font-size:12px;">'+typeOpts+'</select>'+
+    '<input class="field-direct" type="text" placeholder="직접입력" style="display:'+(isCustom?'block':'none')+';width:68px;font-size:12px;" value="'+(isCustom?escAttr(data.actType||''):'')+'\" id="adir-'+id+'">'+
+    '<input type="text" class="sched-text" placeholder="같이 활동" value="'+tv+'" style="flex:2;min-width:72px;">'+
     '<button class="row-del" data-rid="'+id+'">×</button>';
   const sel=div.querySelector('select');
   sel.addEventListener('change',()=>_atc(sel,id));
@@ -1823,17 +2043,17 @@ function setFilter(f,btn) {
 function getFilteredEntries() {
   const entries=getAllEntries();
   let dates=Object.keys(entries).sort().reverse();
-  const from=document.getElementById('filter-from')?.value||'';
-  const to  =document.getElementById('filter-to')?.value||'';
+  const from=window._filterFrom||document.getElementById('filter-from')?.value||'';
+  const to  =window._filterTo  ||document.getElementById('filter-to')?.value||'';
   const nameQ=(window.filterNameQ||'').trim().toLowerCase();
-  if (from) dates=dates.filter(d=>d>=from);
-  if (to)   dates=dates.filter(d=>d<=to);
-  if (nameQ) {
+  if(from) dates=dates.filter(d=>d>=from);
+  if(to)   dates=dates.filter(d=>d<=to);
+  if(nameQ){
     dates=dates.filter(ds=>{
       const e=entries[ds];
-      const haengMatch=(e.haeng||[]).some(r=>r.name&&r.name.toLowerCase().includes(nameQ));
-      const memberMatch=(e.memberRows||[]).some(r=>r.name&&r.name.toLowerCase().includes(nameQ));
-      return haengMatch||memberMatch;
+      const hm=(e.haeng||[]).some(r=>r.name&&r.name.toLowerCase().includes(nameQ));
+      const mm=(e.memberRows||[]).some(r=>r.name&&r.name.toLowerCase().includes(nameQ));
+      return hm||mm;
     });
   }
   return {dates,entries};
@@ -2233,8 +2453,31 @@ function updateTickerMessages(nick,totalMin,haengTotal,bookCount,haeng30){
   tickerMessages=tickerMessages.slice(0,Math.max(5,msgs.length));
   tickerIdx=0; startTicker();
 }
-function startTicker(){if(tickerTimer)clearInterval(tickerTimer);showTickerMsg();tickerTimer=setInterval(()=>{tickerIdx=(tickerIdx+1)%tickerMessages.length;showTickerMsg();},3000);}
-function showTickerMsg(){const el=document.getElementById('ticker-text');if(!el||!tickerMessages.length)return;el.style.animation='none';void el.offsetHeight;el.style.animation='';el.textContent=tickerMessages[tickerIdx]||'';}
+function startTicker(){
+  if(tickerTimer) clearInterval(tickerTimer);
+  showTickerMsg();
+  /* animationend 이벤트로 다음 메시지 */
+  const el=document.getElementById('ticker-text');
+  if(el){
+    el.onanimationend=()=>{
+      tickerIdx=(tickerIdx+1)%Math.max(1,tickerMessages.length);
+      showTickerMsg();
+    };
+  }
+}
+function showTickerMsg(){
+  const el=document.getElementById('ticker-text');
+  if(!el||!tickerMessages.length) return;
+  const msg=tickerMessages[tickerIdx]||'';
+  el.textContent=msg;
+  /* 텍스트 길이에 비례해 속도 조절 (글자당 약 0.25초, 최소 6초) */
+  const duration=Math.max(6, msg.length*0.25)+'s';
+  el.style.animationDuration=duration;
+  /* 애니메이션 재시작 */
+  el.style.animation='none';
+  void el.offsetWidth;
+  el.style.animation=`ticker-scroll ${duration} linear`;
+}
 // ══════════════════════════════════════════════════════
 // MEMBER ROWS
 // ══════════════════════════════════════════════════════
@@ -2320,7 +2563,7 @@ function renderForest(){
   const totalBkPg=Object.values(bookPages).reduce((a,b)=>a+b,0);
 
   document.getElementById('forest-stats').innerHTML=
-    `<div class="fstat"><div class="fstat-label">🌟 창제 총합</div><div class="fstat-val">${fmtShin(totalMin)||'0m'}</div></div>`+
+    `<div class="fstat"><div class="fstat-label">🌟 창제</div><div class="fstat-val">${fmtShin(totalMin)||'0m'}</div></div>`+
     `<div class="fstat"><div class="fstat-label">🌸 활동</div><div class="fstat-val">${actCnt}회</div></div>`+
     `<div class="fstat"><div class="fstat-label">💛 회합</div><div class="fstat-val">${meetCnt}회</div></div>`+
     `<div class="fstat"><div class="fstat-label">📚 연찬</div><div class="fstat-val">${bkCnt}권</div></div>`;
@@ -2604,7 +2847,7 @@ function clearChanjeGrad(){
 }
 function openChanjeModal(){
   const m=document.getElementById('chanje-modal');if(m)m.style.display='flex';
-  initChanjeColorChips();previewChanjeTable();
+  
   const giwonEl=document.getElementById('chanje-giwon');
   if(giwonEl) giwonEl.value=chanjeSettings?.giwon||'';
 }
