@@ -143,7 +143,7 @@ header{background:var(--surface);border-bottom:2px solid var(--border);padding:0
 .tab-btn.t-forest.active{color:#FF9F43;border-bottom-color:#FF9F43;}
 
 /* ══ MAIN ══ */
-.main{flex:1;padding:8px 14px;max-width:800px;margin:0 auto;width:100%;}
+.main{flex:1;padding:8px 14px;max-width:800px;margin:0 auto;width:100%;box-sizing:border-box;}
 
 /* ══ DATE NAV ══ */
 .date-nav{display:flex;align-items:center;gap:7px;margin-bottom:16px;}
@@ -447,7 +447,7 @@ textarea.field::placeholder{color:var(--text3);}
   .tab-btn{padding:9px 8px;font-size:11px;white-space:nowrap;flex-shrink:0;}
 
   /* ── 기록 카드 ── */
-  .main{flex:1;padding:10px 10px;gap:10px;}
+  .main{padding:8px 10px;}
   .card{padding:13px 13px;}
   .card-header{gap:8px;}
   .card-icon{width:30px;height:30px;font-size:15px;}
@@ -557,12 +557,12 @@ header{height:48px;}
 .filter-name-row{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
 
 /* ══ 보고 문구 복사 버튼 ══ */
-.report-copy-btn{width:100%;padding:11px 14px;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:700;font-family:var(--font);cursor:pointer;margin-bottom:8px;text-align:left;display:flex;align-items:center;gap:8px;box-shadow:0 2px 10px rgba(102,126,234,.3);}
+.report-copy-btn{width:100%;padding:11px 14px;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:700;font-family:var(--font);cursor:pointer;margin-bottom:12px;text-align:left;display:flex;align-items:center;gap:8px;box-shadow:0 2px 10px rgba(102,126,234,.3);}
 
 /* ══ 플로팅 저장 버튼 ══ */
 .floating-save-btn{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:800;padding:11px 32px;background:linear-gradient(135deg,var(--green),var(--blue));color:#fff;border:none;border-radius:24px;font-size:14px;font-weight:800;font-family:var(--font);cursor:pointer;box-shadow:0 4px 20px rgba(0,0,0,.25);white-space:nowrap;}
 .floating-save-btn:active{transform:translateX(-50%) scale(.96);}
-
+#tab-write{padding-bottom:70px;}
 
 /* ══ 멤버 카드 ══ */
 .member-month-nav{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:14px;}
@@ -629,82 +629,8 @@ header{height:48px;}
 /* ══ 행 직접입력 테두리 ══ */
 /* already set via replacement, but ensure */
 
-/* ══ 기간 네비 개선 ══ */
-.period-month-group{display:flex;align-items:center;gap:2px;}
-.period-month-center{min-width:52px;text-align:center;font-size:13px;font-weight:900 !important;padding:5px 10px !important;}
-.period-arrow-btn{background:none;border:1.5px solid var(--border);border-radius:10px;font-size:16px;font-weight:700;cursor:pointer;padding:3px 8px;color:var(--text2);line-height:1;transition:all .15s;}
-.period-arrow-btn:hover{background:var(--bg2);color:var(--text);}
-.period-goal-btn{font-size:11px !important;padding:4px 8px !important;}
-.fnav-arrow{border-color:rgba(255,255,255,.25);color:rgba(255,255,255,.7);background:rgba(255,255,255,.08);}
-.fnav-arrow:hover{background:rgba(255,255,255,.2);color:#fff;}
-.filter-period-nav{gap:4px !important;margin-bottom:8px !important;align-items:center;}
-
-/* ══ 복운의 숲 소제목 크게 ══ */
-.forest-section-title{
-  font-size:15px !important;
-  font-weight:900 !important;
-  color:#fff !important;
-  letter-spacing:0 !important;
-  text-transform:none !important;
-}
-.forest-section-header{margin-bottom:8px;}
-
-/* ══ 연찬 레이아웃 ══ */
-.forest-books-wrap{
-  display:flex;flex-direction:column;gap:8px;
-  padding:8px 10px;
-  background:rgba(255,255,255,.08);
-  border-radius:14px;
-}
-.forest-books-row{display:flex;flex-wrap:wrap;gap:6px;}
-.forest-aseo-row{
-  display:flex;flex-wrap:wrap;gap:4px 16px;
-  padding-top:6px;
-  border-top:1px dashed rgba(255,255,255,.2);
-}
-.forest-aseo-item{
-  font-size:12px;font-weight:700;
-  color:rgba(255,255,255,.8);
-}
-
-/* ══ 모아보기 상단 여백 최소화 ══ */
-
-.report-copy-btn{padding:9px 14px;margin-top:0;margin-bottom:8px;}
-
-/* ══ 창제 목표 기간 버튼 작게 ══ */
-.period-goal-btn{font-size:10px !important;padding:4px 7px !important;line-height:1.3;}
-/* ══ 탭 상단 여백 완전 제거 ══ */
-
-
-/* 기록 탭 제외 main 여백 최소화 */
-main{padding-top:6px !important;}
-/* sched-header 여백 */
-.sched-header{padding-top:0 !important;margin-top:0 !important;}
-/* forest-wrap 여백 */
-
-/* 기간 설정 버튼 컬러 */
-#fpb-custom.active,#fnb-custom.active{border-color:var(--orange);color:var(--orange);}
-/* forest-date-picker 애니 */
-@keyframes fadeIn{from{opacity:0;transform:translateY(-4px);}to{opacity:1;transform:translateY(0);}}
-
-/* ══ 탭별 패딩 ══ */
-#tab-write{padding-bottom:70px;}
-
-
-
-/* ══ 탭 컨텐츠 레이아웃 완전 수정 ══ */
-/* #app 전체 높이 유지 */
+/* ══ 레이아웃 ══ */
 #app{display:flex;flex-direction:column;min-height:100vh;}
-/* 모든 탭 공통 */
-#tab-write,#tab-filter,#tab-schedule,#tab-forest{
-  flex:1;
-  padding:8px 14px;
-  max-width:800px;
-  margin:0 auto;
-  width:100%;
-  box-sizing:border-box;
-}
-/* 탭별 개별 패딩 */
 #tab-write{padding-bottom:70px;}
 #tab-forest{padding:0;}
 </style>
@@ -840,19 +766,16 @@ main{padding-top:6px !important;}
   </div>
 
   <!-- ══ 모아보기 탭 ══ -->
-  <div class="main" id="tab-filter" style="display:none;">
+  <div class="main" id="tab-filter" style="display:none">
     <!-- 보고 문구 복사 -->
     <button class="report-copy-btn" onclick="copyReportHeader()">📋 보고 문구 복사</button>
     <!-- 기간 네비 -->
     <div class="filter-period-nav">
-      <button class="period-nav-btn period-goal-btn" id="fpb-goal" onclick="_setFilterPeriod('goal')" title="창제 목표 기간">창제 목표<br>기간</button>
-      <div class="period-month-group">
-        <button class="period-arrow-btn" id="fpb-prev" onclick="_filterMonthMove(-1)">‹</button>
-        <button class="period-nav-btn period-month-center" id="fpb-month" onclick="_setFilterPeriod('month')"><span id="filter-month-label">이번달</span></button>
-        <button class="period-arrow-btn" id="fpb-next" onclick="_filterMonthMove(1)">›</button>
-      </div>
-      <button class="period-nav-btn" id="fpb-all" onclick="_setFilterPeriod('all')">전체</button>
-      <button class="period-nav-btn" id="fpb-custom" onclick="_setFilterPeriod('custom')">기간 설정</button>
+      <button class="period-nav-btn" id="fpb-goal" onclick="_setFilterPeriod('goal')" title="창제 목표 기간">목표</button>
+      <button class="period-nav-btn" id="fpb-prev" onclick="_filterMonthMove(-1)">‹</button>
+      <button class="period-nav-btn period-month-lbl" id="fpb-month" onclick="_setFilterPeriod('month')"><span id="filter-month-label">이번달</span></button>
+      <button class="period-nav-btn" id="fpb-next" onclick="_filterMonthMove(1)">›</button>
+      <button class="period-nav-btn" id="fpb-custom" onclick="_setFilterPeriod('custom')">설정</button>
     </div>
     <!-- 이름 검색 -->
     <div class="filter-name-row">
@@ -874,17 +797,22 @@ main{padding-top:6px !important;}
       <button class="pill p-res"    onclick="setFilter('resolution',this)">🌅 결의</button>
       <button class="pill p-member" onclick="setFilter('member',this)">👥 멤버</button>
     </div>
-
+    <div class="date-range-row">
+      <label>기간</label>
+      <input type="date" class="field" id="filter-from" style="width:auto" onchange="renderFilter()">
+      <span style="color:var(--text3)">~</span>
+      <input type="date" class="field" id="filter-to" style="width:auto" onchange="renderFilter()">
+    </div>
     <div id="filter-content"></div>
   </div>
 
   <!-- ══ 광포 달력 탭 ══ -->
-  <div class="main" id="tab-schedule" style="display:none;">
+  <div class="main" id="tab-schedule" style="display:none">
     <div class="sched-header">
       <div class="sched-title" id="sched-title"></div>
       <div class="sched-nav-row">
         <button class="date-arrow" onclick="schedMove(-1)">‹</button>
-        <button class="today-btn"  onclick="schedGoToday()" id="sched-today-btn">이번달</button>
+        <button class="today-btn"  onclick="schedGoToday()">이번달</button>
         <button class="date-arrow" onclick="schedMove(1)">›</button>
       </div>
     </div>
@@ -901,7 +829,7 @@ main{padding-top:6px !important;}
   </div>
 
   <!-- ══ 복운의 숲 탭 ══ -->
-  <div class="main" id="tab-forest" style="display:none;">
+  <div class="main" id="tab-forest" style="display:none">
     <div id="forest-wrap" class="forest-bg">
       <div class="forest-sky" id="forest-stars"></div>
       <div class="forest-ticker" id="forest-ticker">
@@ -912,20 +840,17 @@ main{padding-top:6px !important;}
       </div>
       <div class="forest-stats-row" id="forest-stats"></div>
       <div class="forest-nav-bar">
-        <button class="fnav-btn period-goal-btn" id="fnb-goal" onclick="_setForestPeriod('goal')">창제 목표<br>기간</button>
-        <div class="period-month-group">
-          <button class="period-arrow-btn fnav-arrow" id="fnb-prev" onclick="_forestMonthMove(-1)">‹</button>
-          <button class="fnav-btn period-month-center" id="fnb-month" onclick="_setForestPeriod('month')"><span id="forest-month-label">이번달</span></button>
-          <button class="period-arrow-btn fnav-arrow" id="fnb-next" onclick="_forestMonthMove(1)">›</button>
-        </div>
-        <button class="fnav-btn" id="fnb-all" onclick="_setForestPeriod('all')">전체</button>
-        <button class="fnav-btn" id="fnb-custom" onclick="_setForestPeriod('custom')">기간 설정</button>
+        <button class="period-nav-btn fnav-btn" id="fnb-goal" onclick="_setForestPeriod('goal')">목표</button>
+        <button class="period-nav-btn fnav-btn" id="fnb-prev" onclick="_forestMonthMove(-1)">‹</button>
+        <button class="period-nav-btn fnav-btn period-month-lbl" id="fnb-month" onclick="_setForestPeriod('month')"><span id="forest-month-label">이번달</span></button>
+        <button class="period-nav-btn fnav-btn" id="fnb-next" onclick="_forestMonthMove(1)">›</button>
+        <button class="period-nav-btn fnav-btn" id="fnb-custom" onclick="_setForestPeriod('custom')">설정</button>
       </div>
       <div class="forest-section">
         <div class="forest-section-header">
           <div style="display:flex;align-items:center;gap:6px;">
             <div class="forest-section-title">🙏 복운 가득 경애</div>
-            <button id="giwon-toggle-btn" onclick="toggleGiwon()" style="background:none;border:none;color:rgba(255,255,255,.55);font-size:16px;cursor:pointer;padding:2px 6px;line-height:1;" title="기원문">▾</button>
+            <button id="giwon-toggle-btn" onclick="toggleGiwon()" style="background:none;border:none;color:rgba(255,255,255,.4);font-size:11px;cursor:pointer;padding:2px 5px;line-height:1;" title="기원문">▾</button>
           </div>
           <button class="forest-section-btn" onclick="openChanjeModal()">창제표</button>
         </div>
@@ -968,7 +893,7 @@ main{padding-top:6px !important;}
 <!-- 신 목표 설정 모달 -->
 <div class="modal-overlay" id="shin-goal-modal" onclick="if(event.target===this)closeShinGoalModal()">
   <div class="modal-box">
-    <div class="modal-title">🎯 창제 목표 설정</div>
+    <div class="modal-title">🙏 신 목표 설정</div>
     <div class="modal-field"><label>기간 목표 창제 시간 (분)</label><input type="number" id="sg-total" placeholder="예: 3000 (50시간)"></div>
     <div class="modal-field"><label>시작일</label><input type="date" id="sg-from"></div>
     <div class="modal-field"><label>종료일</label><input type="date" id="sg-to"></div>
@@ -1049,27 +974,6 @@ main{padding-top:6px !important;}
       <div style="font-size:11px;font-weight:800;color:var(--text2);margin-bottom:6px">🙏 기원문</div>
       <textarea id="chanje-giwon" placeholder="나만의 기원 문구를 적어요"
         style="width:100%;min-height:80px;max-height:200px;overflow-y:auto;padding:9px 11px;border:2px solid var(--border);border-radius:10px;font-size:13px;font-family:var(--font);color:var(--text);background:var(--bg);resize:none;box-sizing:border-box;line-height:1.6;"></textarea>
-    </div>
-    <!-- 창제 목표 설정 -->
-    <div style="background:var(--bg2);border-radius:12px;padding:12px;margin-bottom:11px">
-      <div style="font-size:11px;font-weight:800;color:var(--text2);margin-bottom:8px">🎯 창제 목표 설정</div>
-      <div style="display:flex;flex-direction:column;gap:8px;">
-        <div style="display:flex;align-items:center;gap:8px;">
-          <label style="font-size:11px;color:var(--text3);min-width:70px;flex-shrink:0;">목표 시간(분)</label>
-          <input type="number" id="sg-total-2" placeholder="예: 3000 (50시간)"
-            style="flex:1;padding:7px 10px;border:2px solid var(--border);border-radius:9px;font-size:13px;font-family:var(--font);background:var(--bg);outline:none;">
-        </div>
-        <div style="display:flex;align-items:center;gap:8px;">
-          <label style="font-size:11px;color:var(--text3);min-width:70px;flex-shrink:0;">시작일</label>
-          <input type="date" id="sg-from-2"
-            style="flex:1;padding:7px 10px;border:2px solid var(--border);border-radius:9px;font-size:12px;font-family:var(--font);background:var(--bg);outline:none;">
-        </div>
-        <div style="display:flex;align-items:center;gap:8px;">
-          <label style="font-size:11px;color:var(--text3);min-width:70px;flex-shrink:0;">종료일</label>
-          <input type="date" id="sg-to-2"
-            style="flex:1;padding:7px 10px;border:2px solid var(--border);border-radius:9px;font-size:12px;font-family:var(--font);background:var(--bg);outline:none;">
-        </div>
-      </div>
     </div>
     <div class="modal-btns" style="margin-top:14px">
       <button class="btn-modal-cancel" onclick="closeChanjeModal()">닫기</button>
@@ -1245,34 +1149,36 @@ function renderForest(){
   const bEl=document.getElementById('forest-bookshelf');
   if(bEl){
     bEl.innerHTML='';
-    bEl.className='forest-books-wrap';
     if(!booksSeen.length&&!aseoSeen.length){
-      bEl.innerHTML='<span style="color:rgba(255,255,255,.4);font-size:12px">책을 읽으면 서재가 채워져요</span>';
+      bEl.innerHTML='<span style="color:rgba(0,0,0,.35);font-size:12px;padding:8px">책을 읽으면 서재가 채워져요</span>';
     }else{
-      /* 도서 벽돌 */
-      if(booksSeen.length){
-        const bRow=document.createElement('div');bRow.className='forest-books-row';
-        booksSeen.forEach((b,i)=>{
-          const pg=bookPages[b]||0,[bg1,bg2]=BCOLS[i%BCOLS.length];
-          const brick=document.createElement('div');
-          brick.style.cssText=`background:linear-gradient(135deg,${bg1},${bg2});border-radius:8px;padding:7px 11px;box-shadow:0 2px 6px rgba(0,0,0,.1);display:inline-flex;align-items:center;gap:6px;max-width:100%;`;
-          const bt=document.createElement('div');bt.style.cssText='font-size:13px;font-weight:700;color:#2d3436;word-break:keep-all;';bt.textContent=b;
-          brick.appendChild(bt);
-          if(pg){const bp=document.createElement('div');bp.style.cssText='font-size:11px;color:rgba(0,0,0,.5);white-space:nowrap;font-weight:600;';bp.textContent=pg+'p';brick.appendChild(bp);}
-          bRow.appendChild(brick);
-        });
-        bEl.appendChild(bRow);
-      }
-      /* 어서 텍스트 (▪️ 리스트) */
+      const wrap=document.createElement('div');
+      wrap.style.cssText='display:flex;flex-wrap:wrap;gap:6px;width:100%;';
+      booksSeen.forEach((b,i)=>{
+        const pg=bookPages[b]||0,[bg1,bg2]=BCOLS[i%BCOLS.length];
+        const brick=document.createElement('div');
+        brick.style.cssText=`background:linear-gradient(135deg,${bg1},${bg2});border-radius:8px;padding:7px 11px;box-shadow:0 2px 6px rgba(0,0,0,.1);display:inline-flex;align-items:center;gap:6px;max-width:100%;`;
+        const bt=document.createElement('div');bt.style.cssText='font-size:13px;font-weight:700;color:#2d3436;word-break:keep-all;';bt.textContent=b;
+        brick.appendChild(bt);
+        if(pg){const bp=document.createElement('div');bp.style.cssText='font-size:11px;color:rgba(0,0,0,.5);white-space:nowrap;font-weight:600;';bp.textContent=pg+'p';brick.appendChild(bp);}
+        wrap.appendChild(brick);
+      });
+      bEl.appendChild(wrap);
+      // 어서 텍스트 나열
       if(aseoSeen.length){
-        const aRow=document.createElement('div');aRow.className='forest-aseo-row';
+        const divider=document.createElement('div');
+        divider.style.cssText='width:100%;border-top:1px dashed rgba(0,0,0,.15);margin:8px 0 6px;';
+        bEl.appendChild(divider);
+        const aWrap=document.createElement('div');
+        aWrap.style.cssText='display:flex;flex-wrap:wrap;gap:6px 14px;';
         aseoSeen.forEach(a=>{
           const pg=aseoPages[a]||0;
-          const span=document.createElement('span');span.className='forest-aseo-item';
-          span.textContent='▪️ '+a+(pg?` ${pg}p`:'');
-          aRow.appendChild(span);
+          const span=document.createElement('span');
+          span.style.cssText='font-size:12px;font-weight:700;color:#555;';
+          span.textContent=a+(pg?` ${pg}p`:'');
+          aWrap.appendChild(span);
         });
-        bEl.appendChild(aRow);
+        bEl.appendChild(aWrap);
       }
     }
   }
@@ -1382,19 +1288,8 @@ function _setFilterPeriod(mode){
   _filterMode=mode;
   const cr=document.getElementById('filter-custom-row');
   if(cr)cr.style.display=mode==='custom'?'flex':'none';
-  if(mode==='month'){
-    const{from,to}=_getMR(_filterYear,_filterMonth);
-    window._filterFrom=from;window._filterTo=to;
-    document.getElementById('filter-month-label').textContent=_filterMonth+'월';
-  }else if(mode==='goal'){
-    const g=getShinGoal();
-    if(g&&g.from&&g.to){window._filterFrom=g.from;window._filterTo=g.to;}
-    else{window._filterFrom='';window._filterTo='';}
-    document.getElementById('filter-month-label').textContent='목표';
-  }else if(mode==='all'){
-    window._filterFrom='';window._filterTo='';
-    document.getElementById('filter-month-label').textContent='전체';
-  }
+  if(mode==='month'){const{from,to}=_getMR(_filterYear,_filterMonth);window._filterFrom=from;window._filterTo=to;document.getElementById('filter-month-label').textContent=_filterMonth+'월';}
+  else if(mode==='goal'){const g=getShinGoal();if(g&&g.from&&g.to){window._filterFrom=g.from;window._filterTo=g.to;}document.getElementById('filter-month-label').textContent='목표';}
   _updatePBtns('f');renderFilter();
 }
 function _filterMonthMove(dir){
@@ -1407,56 +1302,9 @@ function _filterMonthMove(dir){
 }
 function _setForestPeriod(mode){
   _forestMode=mode;
-  if(mode==='month'){
-    const{from,to}=_getMR(_forestYear,_forestMonth);
-    window._forestFrom=from;window._forestTo=to;
-    document.getElementById('forest-month-label').textContent=_forestMonth+'월';
-    _hideForestDatePicker();
-  }else if(mode==='goal'){
-    const g=getShinGoal();
-    if(g&&g.from&&g.to){window._forestFrom=g.from;window._forestTo=g.to;}
-    else{window._forestFrom='';window._forestTo='';}
-    document.getElementById('forest-month-label').textContent='목표';
-    _hideForestDatePicker();
-  }else if(mode==='all'){
-    window._forestFrom='';window._forestTo='';
-    document.getElementById('forest-month-label').textContent='전체';
-    _hideForestDatePicker();
-  }else if(mode==='custom'){
-    _showForestDatePicker();
-    return; /* renderForest는 날짜 선택 후 */
-  }
-  _updatePBtns('n');renderForest();
-}
-function _showForestDatePicker(){
-  let picker=document.getElementById('forest-date-picker');
-  if(!picker){
-    picker=document.createElement('div');
-    picker.id='forest-date-picker';
-    picker.style.cssText='display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:6px 12px 8px;animation:fadeIn .2s;';
-    picker.innerHTML=`
-      <input type="date" id="forest-custom-from" style="flex:1;min-width:120px;padding:5px 8px;border:1.5px solid rgba(255,255,255,.3);border-radius:9px;background:rgba(255,255,255,.12);color:#fff;font-family:var(--font);font-size:12px;outline:none;">
-      <span style="color:rgba(255,255,255,.5);font-size:12px;">~</span>
-      <input type="date" id="forest-custom-to" style="flex:1;min-width:120px;padding:5px 8px;border:1.5px solid rgba(255,255,255,.3);border-radius:9px;background:rgba(255,255,255,.12);color:#fff;font-family:var(--font);font-size:12px;outline:none;">
-      <button onclick="_applyForestCustom()" style="padding:5px 12px;border:none;border-radius:9px;background:rgba(255,255,255,.25);color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);">적용</button>`;
-    const nav=document.querySelector('.forest-nav-bar');
-    if(nav)nav.parentNode.insertBefore(picker,nav.nextSibling);
-  }
-  picker.style.display='flex';
-  /* 기존 값 채우기 */
-  if(window._forestFrom)document.getElementById('forest-custom-from').value=window._forestFrom;
-  if(window._forestTo)document.getElementById('forest-custom-to').value=window._forestTo;
-  _updatePBtns('n');
-}
-function _hideForestDatePicker(){
-  const p=document.getElementById('forest-date-picker');
-  if(p)p.style.display='none';
-}
-function _applyForestCustom(){
-  const f=document.getElementById('forest-custom-from')?.value||'';
-  const t=document.getElementById('forest-custom-to')?.value||'';
-  window._forestFrom=f;window._forestTo=t;
-  document.getElementById('forest-month-label').textContent='설정';
+  if(mode==='month'){const{from,to}=_getMR(_forestYear,_forestMonth);window._forestFrom=from;window._forestTo=to;document.getElementById('forest-month-label').textContent=_forestMonth+'월';}
+  else if(mode==='goal'){const g=getShinGoal();if(g&&g.from&&g.to){window._forestFrom=g.from;window._forestTo=g.to;}document.getElementById('forest-month-label').textContent='목표';}
+  else if(mode==='custom'){const f=prompt('시작일 (YYYY-MM-DD)',window._forestFrom||'');if(f===null)return;const t=prompt('종료일 (YYYY-MM-DD)',window._forestTo||'');if(t===null)return;window._forestFrom=f.trim();window._forestTo=t.trim();document.getElementById('forest-month-label').textContent='설정';}
   _updatePBtns('n');renderForest();
 }
 function _forestMonthMove(dir){
@@ -1467,13 +1315,8 @@ function _forestMonthMove(dir){
   _updatePBtns('n');renderForest();
 }
 function _updatePBtns(p){
-  const pref=p==='f'?'fpb':'fnb';
-  const mode=p==='f'?_filterMode:_forestMode;
-  ['goal','month','all','custom'].forEach(m=>{
-    const id=pref+(m==='month'?'-month':'-'+m);
-    const b=document.getElementById(id);
-    if(b)b.classList.toggle('active',mode===m);
-  });
+  const pref=p==='f'?'fpb':'fnb',mode=p==='f'?_filterMode:_forestMode;
+  ['goal','month','custom'].forEach(m=>{const b=document.getElementById(pref+(m==='month'?'-month':'-'+m));if(b)b.classList.toggle('active',mode===m);});
 }
 document.addEventListener('DOMContentLoaded', () => {
   window._appReady = true;
@@ -1518,18 +1361,15 @@ function openShinGoalModal() {
   document.getElementById('shin-goal-modal').style.display = 'flex';
 }
 function closeShinGoalModal() { document.getElementById('shin-goal-modal').style.display = 'none'; }
-function saveShinGoal(){
-  const total=parseInt(document.getElementById('sg-total').value);
-  const from=document.getElementById('sg-from').value;
-  const to=document.getElementById('sg-to').value;
-  if(!total||isNaN(total)){showToast('목표 시간을 입력해주세요.');return;}
-  saveShinGoalData({totalMin:total,from,to});
+function saveShinGoal() {
+  const total = parseInt(document.getElementById('sg-total').value);
+  const from  = document.getElementById('sg-from').value;
+  const to    = document.getElementById('sg-to').value;
+  if (!total||isNaN(total)) { showToast('목표 시간을 입력해주세요.'); return; }
+  saveShinGoalData({ totalMin: total, from, to });
   updateShinGoalDisplay();
   closeShinGoalModal();
-  showToast('✅ 창제 목표가 설정됐어요!');
-  /* 목표기간 버튼이 활성화돼있으면 자동 업데이트 */
-  if(_filterMode==='goal'){_setFilterPeriod('goal');}
-  if(_forestMode==='goal'){_setForestPeriod('goal');}
+  showToast('✅ 신 목표가 설정됐어요!');
 }
 function updateShinGoalDisplay(){
   const g=getShinGoal();
@@ -1553,8 +1393,7 @@ function switchTab(tab, btn) {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   ['write','filter','schedule','forest'].forEach(t => {
-    const el = document.getElementById('tab-'+t);
-    el.style.display = t===tab ? 'block' : 'none';
+    document.getElementById('tab-'+t).style.display = t===tab ? 'block' : 'none';
   });
   if (tab==='filter')   renderFilter();
   const _fsb=document.getElementById('floating-save-btn');
@@ -2258,7 +2097,7 @@ function schedMove(dir){
 }
 function schedGoToday() {
   const now=new Date();schedYear=now.getFullYear();schedMonth=now.getMonth();
-  schedSelectedDate=toDateStr(now);drawSchedGrid();drawSchedDetail(schedSelectedDate);drawSchedMonthSummary();const sb=document.getElementById('sched-today-btn');if(sb)sb.textContent=(now.getMonth()+1)+'월';
+  schedSelectedDate=toDateStr(now);drawSchedGrid();drawSchedDetail(schedSelectedDate);drawSchedMonthSummary();
 }
 function drawSchedMonthSummary(){
   const el=document.getElementById('sched-month-list');if(!el)return;
@@ -2281,7 +2120,7 @@ function drawSchedMonthSummary(){
 }
 
 function drawSchedGrid() {
-  document.getElementById('sched-title').textContent='광포 캘린더';{const _sb=document.getElementById('sched-today-btn');if(_sb)_sb.textContent=(schedMonth+1)+'월';}
+  document.getElementById('sched-title').textContent=`☀️ ${schedYear}년 ${schedMonth+1}월 광포 달력`;
   const entries=getAllEntries();
   const todayStr=toDateStr(new Date());
   const firstDay=new Date(schedYear,schedMonth,1).getDay();
@@ -2622,9 +2461,6 @@ function applyChanjeAndClose(){
   const c2=document.getElementById('chanje-color2')?.value||'';
   const giwon=document.getElementById('chanje-giwon')?.value||'';
   saveChanjeSettings({icon,color1:c1,color2:c2,mode:'icon',giwon});
-  /* 창제 목표 설정 연동 */
-  const _t2=document.getElementById('sg-total-2');const _f2=document.getElementById('sg-from-2');const _to2=document.getElementById('sg-to-2');
-  if(_t2&&_t2.value&&parseInt(_t2.value)){saveShinGoalData({totalMin:parseInt(_t2.value),from:_f2?.value||'',to:_to2?.value||''});updateShinGoalDisplay();}
   closeChanjeModal();
   showToast('✦ 창제표가 적용됐어요!');
   if(currentTab==='forest')renderForest();
