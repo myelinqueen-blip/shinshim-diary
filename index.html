@@ -2150,7 +2150,7 @@ function showMemberAC(input,rowId){
 }
 function hideMemberAC(rowId){const d=document.getElementById('mac-'+rowId);if(d)d.style.display='none';}
 function _selMember(rowId,name){const row=document.getElementById(rowId);if(row)row.querySelector('.field-name').value=name;hideMemberAC(rowId);}
-function getMemberData(){return[...document.querySelectorAll('#member-rows .parallel-row')].map(r=>{const inputs=r.querySelectorAll('input');return{name:inputs[1]?.value.trim()||'',status:inputs[2]?.value.trim()||''};}).filter(r=>r.name);}
+function getMemberData(){return[...document.querySelectorAll('#member-rows .parallel-row')].map(r=>{const name=(r.querySelector('.field-name')?.value||'').trim();const statusInput=r.querySelectorAll('input[type="text"]');const status=(statusInput[1]?.value||'').trim();return{name,status};}).filter(r=>r.name);}
 // ══════════════════════════════════════════════════════
 // FOREST
 // ══════════════════════════════════════════════════════
