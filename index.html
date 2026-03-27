@@ -541,7 +541,7 @@ textarea.field::placeholder{color:var(--text3);}
 
 /* ══ ticker 좌우 ══ */
 .forest-ticker{overflow:hidden !important;}
-.ticker-text{display:inline-block;white-space:nowrap;font-size:13px;font-weight:700;color:#fff;animation:ticker-scroll 18s linear;}
+.ticker-text{display:inline-block;white-space:nowrap;font-size:13px;font-weight:700;color:#fff;animation:ticker-scroll 26s linear;}
 @keyframes ticker-scroll{0%{transform:translateX(100%);}100%{transform:translateX(-100%);}}
 
 /* ══ fstat ══ */
@@ -656,8 +656,8 @@ textarea.field::placeholder{color:var(--text3);}
     <!-- 신 -->
     <div class="card card-shin">
       <div class="card-header">
-        <div class="card-icon">🙏</div>
-        <div class="card-title">신 — 창제</div>
+        <div class="card-icon" style="font-size:16px;font-weight:900;">신</div>
+        <div class="card-title">창제</div>
         <div class="card-sub" id="shin-goal-display">목표: 설정 없음</div>
         <button class="btn-shin-goal" onclick="openShinGoalModal()">목표 설정</button>
       </div>
@@ -675,8 +675,8 @@ textarea.field::placeholder{color:var(--text3);}
     <!-- 행 -->
     <div class="card card-haeng">
       <div class="card-header">
-        <div class="card-icon">🤝</div>
-        <div class="card-title">행 — 격려 활동</div>
+        <div class="card-icon" style="font-size:16px;font-weight:900;">행</div>
+        <div class="card-title">광포·격려</div>
         <div class="card-sub">목표: 10명</div>
       </div>
       <div id="haeng-rows"></div>
@@ -690,8 +690,8 @@ textarea.field::placeholder{color:var(--text3);}
     <!-- 학 -->
     <div class="card card-hak">
       <div class="card-header">
-        <div class="card-icon">📖</div>
-        <div class="card-title">학 — 연찬</div>
+        <div class="card-icon" style="font-size:16px;font-weight:900;">학</div>
+        <div class="card-title">연찬</div>
         <div class="card-sub">목표: 300p</div>
       </div>
       <div id="hak-rows"></div>
@@ -749,6 +749,7 @@ textarea.field::placeholder{color:var(--text3);}
       <button class="pnav-btn" id="fpb-all" onclick="_setFilterPeriod('all')">전체</button>
       <button class="pnav-btn" id="fpb-custom" onclick="_setFilterPeriod('custom')">설정</button>
     </div>
+    <div id="filter-period-label" style="font-size:11px;color:var(--text3);margin-bottom:6px;display:none;"></div>
     <div class="fsp-name-row">
       <span class="fsp-label">🔍 이름</span>
       <input type="text" class="fsp-text" id="filter-name-input" placeholder="이름 검색" oninput="window.filterNameQ=this.value;renderFilter()">
@@ -804,8 +805,8 @@ textarea.field::placeholder{color:var(--text3);}
     <div id="forest-wrap" class="forest-bg">
       <div class="forest-sky" id="forest-stars"></div>
       <div class="forest-ticker" id="forest-ticker">
-        <span class="ticker-text" id="ticker-text">🌿 기록을 시작하면 칭찬이 가득해져요!</span>
-        <button class="ticker-add-btn" onclick="openTickerInput()">💬 칭찬 추가</button>
+        <button class="ticker-add-btn" onclick="openTickerInput()" title="칭찬 추가" style="flex-shrink:0;padding:5px 8px;background:rgba(20,30,70,.9);border:1.5px solid rgba(255,255,255,.3);border-radius:9px;font-size:16px;cursor:pointer;color:#fff;">💬</button>
+        <div style="flex:1;overflow:hidden;"><span class="ticker-text" id="ticker-text">🌿 기록을 시작하면 칭찬이 가득해져요!</span></div>
       </div>
       <div class="forest-stats-row" id="forest-stats"></div>
       <div class="forest-nav-bar">
@@ -817,17 +818,17 @@ textarea.field::placeholder{color:var(--text3);}
         <button class="pnav-btn fnav" id="fnb-custom" onclick="_setForestPeriod('custom')">설정</button>
       </div>
       <div class="forest-section">
-        <div class="forest-section-header">
-          <div style="display:flex;align-items:center;gap:6px;">
-            <div class="forest-section-title">🙏 복운 가득 경애</div>
-            <button id="giwon-toggle-btn" onclick="toggleGiwon()" style="background:none;border:none;color:rgba(255,255,255,.4);font-size:11px;cursor:pointer;padding:2px 5px;">▾</button>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px;gap:6px;flex-wrap:nowrap;width:100%;">
+          <div style="display:flex;align-items:center;gap:4px;flex:1;min-width:0;">
+            <span style="font-size:15px;font-weight:900;color:#fff;white-space:nowrap;">🙏 복운 가득 경애</span>
+            <button id="giwon-toggle-btn" onclick="toggleGiwon()" style="background:none;border:none;color:rgba(255,255,255,.5);font-size:18px;cursor:pointer;padding:0 2px;line-height:1;flex-shrink:0;">▾</button>
           </div>
-          <button class="forest-section-btn" onclick="openChanjeModal()">창제표</button>
+          <button onclick="openChanjeModal()" style="flex-shrink:0;white-space:nowrap;padding:4px 10px;background:rgba(255,255,255,.15);border:1.5px solid rgba(255,255,255,.35);border-radius:14px;font-size:11px;font-weight:700;color:#fff;cursor:pointer;font-family:var(--font);">창제표</button>
         </div>
-        <div id="giwon-display" style="display:none;padding:8px 10px;background:rgba(255,255,255,.06);border-radius:9px;margin-bottom:6px;font-size:12px;color:rgba(255,255,255,.7);line-height:1.7;white-space:pre-wrap;max-height:150px;overflow-y:auto;"></div>
+        <div id="forest-period-label" style="font-size:10px;color:rgba(255,255,255,.4);padding:0 12px 3px;display:none;"></div>
+      <div id="giwon-display" style="display:none;padding:8px 10px;background:rgba(255,255,255,.06);border-radius:9px;margin-bottom:6px;font-size:12px;color:rgba(255,255,255,.7);line-height:1.7;white-space:pre-wrap;max-height:150px;overflow-y:auto;"></div>
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
-          <span style="font-size:10px;color:rgba(255,255,255,.4);">창제표</span>
-          <button id="chanje-collapse-btn" onclick="toggleChanjeCollapse()" style="background:none;border:none;color:rgba(255,255,255,.35);font-size:11px;cursor:pointer;padding:2px 5px;">▾</button>
+          <button id="chanje-collapse-btn" onclick="toggleChanjeCollapse()" style="background:none;border:none;color:rgba(255,255,255,.35);font-size:11px;cursor:pointer;padding:2px 5px;">접기 ▾</button>
         </div>
         <div id="chanje-collapse-wrap"><div class="forest-hearts" id="forest-hearts"></div></div>
       </div>
@@ -1106,8 +1107,15 @@ function toggleGiwon(){
   if(!open)d.textContent=chanjeSettings?.giwon||'(기원문 없음)';
 }
 function toggleChanjeCollapse(){
-  const w=document.getElementById('chanje-collapse-wrap'),b=document.getElementById('chanje-collapse-btn');
-  if(!w)return;const open=w.style.display!=='none';w.style.display=open?'none':'block';if(b)b.textContent=open?'▸':'▾';
+  const el=document.getElementById('forest-hearts');
+  const b=document.getElementById('chanje-collapse-btn');
+  if(!el)return;
+  /* 빈 칸들 = opacity:.18 인 span들 */
+  const emptyCells=el.querySelectorAll('span[style*="opacity:.18"]');
+  if(!emptyCells.length){showToast('접을 빈 칸이 없어요!');return;}
+  const isHidden=emptyCells[0].style.display==='none';
+  emptyCells.forEach(s=>s.style.display=isHidden?'':'none');
+  if(b)b.textContent=isHidden?'접기 ▾':'펼치기 ▸';
 }
 function applyChanjeAndClose(){
   const icon=chanjeSelectedIcon||'❤️';
@@ -1129,11 +1137,53 @@ function _renderChanjeArea(totalMin,g){
   else{total=Math.max(5,Math.ceil(doneMin/MIN)+3);filled=Math.floor(doneMin/MIN);}
   const cs=chanjeSettings||{},icon=cs.icon||'❤️',c1=cs.color1||'#00BFFF',c2=cs.color2||'';
   const getCol=i=>(!c2||c2===c1)?c1:_hexMix(c1,c2,filled>1?i/(filled-1):0);
-  el.style.cssText='padding:8px 10px;background:rgba(255,255,255,.07);border-radius:12px;display:flex;flex-wrap:wrap;gap:3px;min-height:40px;';
+  el.style.cssText='padding:8px 10px;background:rgba(255,255,255,.07);border-radius:12px;';
   if(!total){el.innerHTML='<span style="color:rgba(255,255,255,.35);font-size:12px">창제 기록이 없어요</span>';return;}
-  for(let i=0;i<total;i++){const sp=document.createElement('span');sp.textContent=icon;sp.style.cssText=i<filled?`font-size:18px;line-height:1;color:${getCol(i)};`:'font-size:18px;line-height:1;opacity:.18;filter:grayscale(1);';el.appendChild(sp);}
-  const sum=document.createElement('div');sum.style.cssText='width:100%;text-align:right;font-size:10px;color:rgba(255,255,255,.45);margin-top:4px;font-weight:600;';
-  const hrs=Math.floor(doneMin/60),mins=doneMin%60;sum.textContent=`${filled}/${total}칸 · ${hrs?hrs+'시간 ':''}${mins}분${goalMin?` · 목표 ${Math.round(doneMin/goalMin*100)}%`:''}`;el.appendChild(sum);
+
+  /* 채워진 칸 (항상 표시) */
+  const filledWrap=document.createElement('div');
+  filledWrap.style.cssText='display:flex;flex-wrap:wrap;gap:3px;';
+  for(let i=0;i<filled;i++){
+    const sp=document.createElement('span');
+    sp.textContent=icon;sp.style.cssText=`font-size:18px;line-height:1;color:${getCol(i)};`;
+    filledWrap.appendChild(sp);
+  }
+  el.appendChild(filledWrap);
+
+  /* 빈 칸 - 접기/펼치기 */
+  const emptyCount=total-filled;
+  if(emptyCount>0){
+    const isOpen=localStorage.getItem('shinshim_chanje_open')==='1';
+    const emptyWrap=document.createElement('div');
+    emptyWrap.id='chanje-empty-wrap';
+    emptyWrap.style.cssText=(isOpen?'display:flex;':'display:none;')+'flex-wrap:wrap;gap:3px;margin-top:3px;';
+    for(let i=0;i<emptyCount;i++){
+      const sp=document.createElement('span');sp.textContent=icon;
+      sp.style.cssText='font-size:18px;line-height:1;opacity:.18;filter:grayscale(1);';
+      emptyWrap.appendChild(sp);
+    }
+    const btn=document.createElement('button');
+    btn.id='chanje-empty-toggle';
+    btn.style.cssText='width:100%;background:none;border:none;color:rgba(255,255,255,.35);font-size:10px;cursor:pointer;padding:4px 0;text-align:left;font-family:var(--font);';
+    btn.textContent=isOpen?`▴ 빈칸 접기 (${emptyCount})`:`▾ 빈칸 펼치기 (${emptyCount})`;
+    btn.onclick=()=>{
+      const w=document.getElementById('chanje-empty-wrap');
+      const b=document.getElementById('chanje-empty-toggle');
+      const open=w.style.display!=='none';
+      w.style.display=open?'none':'flex';
+      b.textContent=open?`▾ 빈칸 펼치기 (${emptyCount})`:`▴ 빈칸 접기 (${emptyCount})`;
+      localStorage.setItem('shinshim_chanje_open',open?'0':'1');
+    };
+    el.appendChild(btn);
+    el.appendChild(emptyWrap);
+  }
+
+  /* 요약 */
+  const sum=document.createElement('div');
+  sum.style.cssText='width:100%;text-align:right;font-size:10px;color:rgba(255,255,255,.45);margin-top:4px;font-weight:600;';
+  const hrs=Math.floor(doneMin/60),mins=doneMin%60;
+  sum.textContent=`${filled}/${total}칸 · ${hrs?hrs+'시간 ':''}${mins}분${goalMin?` · 목표 ${Math.round(doneMin/goalMin*100)}%`:''}`;
+  el.appendChild(sum);
 }
 
 function renderForest(){
@@ -1193,7 +1243,10 @@ function _setFilterPeriod(mode){
   if(mode==='month'){const{from,to}=_getMR(_filterYear,_filterMonth);window._filterFrom=from;window._filterTo=to;document.getElementById('filter-month-label').textContent=_filterMonth+'월';}
   else if(mode==='goal'){const g=getShinGoal();if(g&&g.from&&g.to){window._filterFrom=g.from;window._filterTo=g.to;}else{window._filterFrom='';window._filterTo='';}document.getElementById('filter-month-label').textContent='목표';}
   else if(mode==='all'){window._filterFrom='';window._filterTo='';document.getElementById('filter-month-label').textContent='전체';}
-  _updatePBtns('f');renderFilter();
+  _updatePBtns('f');
+  const pl2=document.getElementById('filter-period-label');
+  if(pl2){if(mode!=='month'&&(window._filterFrom||window._filterTo)){pl2.textContent=(window._filterFrom||'-').replace(/-/g,'.')+'  ~  '+(window._filterTo||'-').replace(/-/g,'.');pl2.style.display='block';}else pl2.style.display='none';}
+  renderFilter();
 }
 function _filterMonthMove(dir){
   _filterMode='month';_filterMonth+=dir;
@@ -1209,7 +1262,10 @@ function _setForestPeriod(mode){
   else if(mode==='goal'){const g=getShinGoal();if(g&&g.from&&g.to){window._forestFrom=g.from;window._forestTo=g.to;}else{window._forestFrom='';window._forestTo='';}document.getElementById('forest-month-label').textContent='목표';}
   else if(mode==='all'){window._forestFrom='';window._forestTo='';document.getElementById('forest-month-label').textContent='전체';}
   else if(mode==='custom'){const f=prompt('시작일 (YYYY-MM-DD)',window._forestFrom||'');if(f===null)return;const t=prompt('종료일',window._forestTo||'');if(t===null)return;window._forestFrom=f.trim();window._forestTo=t.trim();document.getElementById('forest-month-label').textContent='설정';}
-  _updatePBtns('n');renderForest();
+  _updatePBtns('n');
+  const pl=document.getElementById('forest-period-label');
+  if(pl){if(mode!=='month'&&(window._forestFrom||window._forestTo)){pl.textContent=(window._forestFrom||'-').replace(/-/g,'.')+'  ~  '+(window._forestTo||'-').replace(/-/g,'.');pl.style.display='block';}else pl.style.display='none';}
+  renderForest();
 }
 function _forestMonthMove(dir){
   _forestMode='month';_forestMonth+=dir;
@@ -1436,18 +1492,21 @@ function addHaengRow(data) {
   const id = 'hr'+haengRows;
   const savedType = data ? data.type : '대화';
   const { html: typeOpts, isCustom } = buildTypeSelect(savedType);
+  const nameVal = data ? escAttr(data.name||'') : '';
+  const directVal = isCustom ? escAttr(data.type||'') : '';
   const div = document.createElement('div');
   div.className = 'parallel-row'; div.id = id; div.draggable = true;
   div.innerHTML = `
-    <span class="drag-handle" title="꾹 누르면 순서 변경">⠿</span>
-    <div class="ac-wrap">
-      <input class="field field-name" type="text" placeholder="이름" autocomplete="off" value="${data?escAttr(data.name||''):''}">
-      <div class="ac-dropdown" id="hac-${id}" style="display:none"></div>
-    </div>
-    <select class="field field-type" onchange="_htc(this,'${id}')">${typeOpts}</select>
-    <input class="field-direct" id="direct-${id}" type="text" placeholder="직접 입력"
-      style="display:${isCustom?'block':'none'}" value="${isCustom?escAttr(data.type||''):''}">
-    <button class="row-del" onclick="document.getElementById('${id}').remove();updateHaengProgress()">×</button>`;
+    <div style="display:flex;align-items:center;gap:4px;width:100%;">
+      <span class="drag-handle" style="flex-shrink:0;">⠿</span>
+      <div class="ac-wrap" style="flex:1.5;min-width:0;position:relative;">
+        <input class="field field-name" type="text" placeholder="이름" autocomplete="off" value="${nameVal}" style="width:100%;min-width:0;">
+        <div class="ac-dropdown" id="hac-${id}" style="display:none"></div>
+      </div>
+      <select class="field field-type" onchange="_htc(this,'${id}')" style="flex:1;min-width:60px;">${typeOpts}</select>
+      <input class="field-direct" id="direct-${id}" type="text" placeholder="직접입력" style="flex:1;min-width:50px;display:${isCustom?'block':'none'}" value="${directVal}">
+      <button class="row-del" style="flex-shrink:0;" onclick="document.getElementById('${id}').remove();updateHaengProgress()">×</button>
+    </div>`;
   const ni = div.querySelector('.field-name');
   ni.addEventListener('input', () => { showHaengAC(ni,id); updateHaengProgress(); });
   ni.addEventListener('focus', () => showHaengAC(ni,id));
@@ -1521,19 +1580,24 @@ function addHakRow(data) {
   const bv = data?escAttr(data.book||''):'';
   const p1 = data?escAttr(data.p1||''):'';
   const p2 = data?escAttr(data.p2||''):'';
+  const hakType = data?(data.hakType||'도서'):'도서';
   div.innerHTML = `
-    <span class="drag-handle" title="꾹 누르면 순서 변경">⠿</span>
-    <div class="ac-wrap">
-      <input class="field field-book" type="text" placeholder="도서명" autocomplete="off" value="${bv}">
-      <div class="ac-dropdown" id="ac-${id}" style="display:none"></div>
-    </div>
-    <div class="page-range">
-      <span>p.</span>
-      <input type="number" min="0" placeholder="0" value="${p1}" oninput="updateHakProgress()">
-      <span>~p.</span>
-      <input type="number" min="0" placeholder="0" value="${p2}" oninput="updateHakProgress()">
-    </div>
-    <button class="row-del" onclick="document.getElementById('${id}').remove();updateHakProgress()">×</button>`;
+    <div style="display:flex;align-items:center;gap:4px;width:100%;">
+      <span class="drag-handle" style="flex-shrink:0;">⠿</span>
+      <select id="htype-${id}" style="width:50px;flex-shrink:0;padding:6px 3px;border:2px solid var(--border);border-radius:9px;font-size:11px;font-family:var(--font);background:var(--bg);">
+        <option value="도서" ${hakType==='도서'?'selected':''}>도서</option>
+        <option value="어서" ${hakType==='어서'?'selected':''}>어서</option>
+      </select>
+      <div class="ac-wrap" style="flex:1;min-width:0;position:relative;">
+        <input class="field field-book" type="text" placeholder="도서명/어서명" autocomplete="off" value="${bv}" style="width:100%;">
+        <div class="ac-dropdown" id="ac-${id}" style="display:none"></div>
+      </div>
+      <div class="page-range" style="flex-shrink:0;">
+        <span>p.</span><input type="number" min="0" placeholder="0" value="${p1}" oninput="updateHakProgress()" style="width:42px;">
+        <span>~</span><input type="number" min="0" placeholder="0" value="${p2}" oninput="updateHakProgress()" style="width:42px;">
+      </div>
+      <button class="row-del" style="flex-shrink:0;" onclick="document.getElementById('${id}').remove();updateHakProgress()">×</button>
+    </div>`;
   const bi = div.querySelector('.field-book');
   bi.addEventListener('input',  () => { showBookAC(bi,id); updateHakProgress(); });
   bi.addEventListener('focus',  () => showBookAC(bi,id));
@@ -1555,11 +1619,14 @@ function _selBook(rowId,name) {
   if(row) row.querySelector('.field-book').value=name;
   hideBookAC(rowId);
 }
-function getHakData() {
-  return [...document.querySelectorAll('#hak-rows .parallel-row')].map(r => {
-    const pages = r.querySelectorAll('.page-range input');
-    return { book:r.querySelector('.field-book').value.trim(), p1:pages[0].value, p2:pages[1].value };
-  }).filter(r => r.book);
+function getHakData(){
+  return [...document.querySelectorAll('#hak-rows .parallel-row')].map(r=>{
+    const book=(r.querySelector('.field-book')?.value||'').trim();
+    const nums=r.querySelectorAll('input[type="number"]');
+    const p1=nums[0]?.value||'',p2=nums[1]?.value||'';
+    const hakType=r.querySelector('select')?.value||'도서';
+    return{book,p1,p2,hakType};
+  }).filter(r=>r.book);
 }
 function updateHakProgress() {
   const hak = getHakData(); let total=0;
