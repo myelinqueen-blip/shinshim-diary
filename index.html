@@ -120,7 +120,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 #app{display:flex;flex-direction:column;min-height:100vh;}
 
 /* ══ SYNC BANNER ══ */
-#sync-banner{background:linear-gradient(135deg,#4285F4,#34A853);color:#fff;text-align:center;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer;}
+#sync-banner{background:linear-gradient(135deg,#4285F4,#34A853);color:#fff;text-align:center;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;}
 
 /* ══ HEADER ══ */
 header{background:var(--surface);border-bottom:2px solid var(--border);padding:0 16px;height:52px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;box-shadow:0 2px 12px var(--shadow);}
@@ -408,10 +408,6 @@ textarea.field::placeholder{color:var(--text3);}
 .fci-date{font-size:8px;color:#7a6555;}
 
 /* ══ BACKUP MODAL ══ */
-.backup-card{background:var(--surface);border:2px solid var(--border);border-radius:14px;padding:14px 16px;margin-bottom:9px;}
-.backup-title{font-size:14px;font-weight:700;margin-bottom:5px;}
-.backup-desc{font-size:12px;color:var(--text2);margin-bottom:11px;line-height:1.6;}
-.backup-row{display:flex;gap:8px;flex-wrap:wrap;}
 
 /* ══ TOAST ══ */
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(40px);background:var(--text);color:#fff;padding:10px 22px;border-radius:18px;font-size:13px;font-weight:600;opacity:0;transition:all .3s;z-index:9999;pointer-events:none;box-shadow:0 6px 20px rgba(0,0,0,.2);}
@@ -434,7 +430,6 @@ textarea.field::placeholder{color:var(--text3);}
   header{padding:0 10px;height:52px;gap:7px;}
   .header-title{font-size:15px;}
   .btn-login{padding:6px 11px;font-size:12px;}
-  .btn-save{width:36px;height:36px;}
 
   /* ── 탭 ── */
   .tabs{padding:0 6px;gap:2px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
@@ -522,13 +517,9 @@ textarea.field::placeholder{color:var(--text3);}
 .btn-icon-sm{width:32px;height:32px;border-radius:50%;border:1.5px solid var(--border);background:var(--surface);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text2);flex-shrink:0;padding:0;}
 .btn-icon-sm:hover{background:var(--bg2);}
 
-/* ══ 카드 색상 ══ */
+/* ══ 카드 색상 (그라데이션 유지) ══ */
 .card{overflow:hidden;}
 .card::before{content:'';position:absolute;top:-2px;left:-2px;right:-2px;height:4px;border-radius:var(--radius) var(--radius) 0 0;z-index:1;}
-.card-shin::before{background:#14D3FF;}.card-haeng::before{background:#FFE641;}.card-hak::before{background:#6DD66D;}
-.card-speech::before{background:#FFF56E;}.card-resolution::before{background:#FFBEFF;}.card-member::before{background:#FFA6CF;}
-.card-shin .card-icon{background:#14D3FF;}.card-haeng .card-icon{background:#FFE641;}.card-hak .card-icon{background:#6DD66D;}
-.pf-shin{background:#14D3FF;}.pf-haeng{background:#FFE641;}.pf-hak{background:#6DD66D;}
 .field-direct{border:2px solid #FFE641 !important;}
 
 /* ══ 신 카드 ══ */
@@ -625,8 +616,9 @@ textarea.field::placeholder{color:var(--text3);}
 </head>
 <body>
 
-<div id="sync-banner" style="display:none" onclick="window._googleLogin&&window._googleLogin()">
-  📱 지금은 이 기기에만 저장돼요 — 구글 로그인하면 모든 기기 동기화! 탭하여 로그인
+<div id="sync-banner" style="display:none;align-items:center;" onclick="window._googleLogin&&window._googleLogin()">
+  <span style="flex:1;">📱 지금은 이 기기에만 저장돼요 — 구글 로그인하면 모든 기기 동기화! 탭하여 로그인</span>
+  <button onclick="event.stopPropagation();document.getElementById('sync-banner').style.display='none'" style="background:none;border:none;cursor:pointer;font-size:1.1rem;color:#fff;margin-left:8px;padding:2px 6px;flex-shrink:0;">✕</button>
 </div>
 
 <div id="app">
@@ -718,7 +710,7 @@ textarea.field::placeholder{color:var(--text3);}
 
     <!-- 한 줄 스피치 -->
     <div class="card card-speech">
-      <div class="card-header"><div class="card-icon">✨</div><div class="card-title">한 줄 스피치</div></div>
+      <div class="card-header"><div class="card-icon">✨</div><div class="card-title">한 줄 스피치</div><button class="btn-copy-sm" onclick="copySpeech()" style="margin-left:auto;" title="복사">📋 복사</button></div>
       <textarea class="field" id="speech-text" style="min-height:80px;max-height:200px;overflow-y:auto;" placeholder="오늘의 한 줄 스피치를 기록해주세요"></textarea>
     </div>
 
@@ -754,7 +746,10 @@ textarea.field::placeholder{color:var(--text3);}
 
   <!-- ══ 모아보기 탭 ══ -->
   <div class="main" id="tab-filter" style="display:none">
-    <button class="report-copy-btn" onclick="copyReportHeader()">📋 보고 문구 복사</button>
+    <div style="display:flex;gap:6px;margin-bottom:8px;">
+      <button class="report-copy-btn" onclick="copyReportHeader()" style="flex:1;margin-bottom:0;">📋 보고 문구 복사</button>
+      <button class="btn-outline" onclick="openReportModal()" style="padding:9px 14px;background:var(--surface);border:2px solid #764ba2;border-radius:12px;font-size:13px;font-weight:700;color:#764ba2;cursor:pointer;font-family:var(--font);white-space:nowrap;">✏️ 편집</button>
+    </div>
     <div class="filter-period-nav">
       <button class="pnav-btn pnav-goal" id="fpb-goal" onclick="_setFilterPeriod('goal')">목표기간</button>
       <button class="pnav-arrow" onclick="_filterMonthMove(-1)">‹</button>
@@ -781,12 +776,6 @@ textarea.field::placeholder{color:var(--text3);}
       <button class="pill p-speech" onclick="setFilter('speech',this)">✨ 스피치</button>
       <button class="pill p-res"    onclick="setFilter('resolution',this)">🌅 결의</button>
       <button class="pill p-member" onclick="setFilter('member',this)">👥 멤버</button>
-    </div>
-    <div class="date-range-row">
-      <label>기간</label>
-      <input type="date" class="field" id="filter-from" style="width:auto" onchange="renderFilter()">
-      <span style="color:var(--text3)">~</span>
-      <input type="date" class="field" id="filter-to" style="width:auto" onchange="renderFilter()">
     </div>
     <div id="filter-content"></div>
   </div>
@@ -830,6 +819,15 @@ textarea.field::placeholder{color:var(--text3);}
         <button class="pnav-arrow fnav" onclick="_forestMonthMove(1)">›</button>
         <button class="pnav-btn fnav" id="fnb-all" onclick="_setForestPeriod('all')">전체</button>
         <button class="pnav-btn fnav" id="fnb-custom" onclick="_setForestPeriod('custom')">설정</button>
+      </div>
+      <div id="forest-period-panel" style="display:none;padding:6px 12px 10px;">
+        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+          <input type="date" id="forest-custom-from" style="flex:1;padding:6px 8px;border:1.5px solid rgba(255,255,255,.3);border-radius:9px;font-size:12px;font-family:var(--font);background:rgba(255,255,255,.1);color:#fff;">
+          <span style="color:rgba(255,255,255,.5);font-size:12px;">~</span>
+          <input type="date" id="forest-custom-to" style="flex:1;padding:6px 8px;border:1.5px solid rgba(255,255,255,.3);border-radius:9px;font-size:12px;font-family:var(--font);background:rgba(255,255,255,.1);color:#fff;">
+          <button onclick="_applyForestCustom()" style="padding:6px 12px;background:rgba(255,255,255,.2);border:1.5px solid rgba(255,255,255,.4);border-radius:9px;font-size:12px;font-weight:700;color:#fff;cursor:pointer;font-family:var(--font);white-space:nowrap;">적용</button>
+          <button onclick="document.getElementById('forest-period-panel').style.display='none'" style="padding:6px 8px;background:none;border:1.5px solid rgba(255,255,255,.2);border-radius:9px;font-size:12px;color:rgba(255,255,255,.5);cursor:pointer;font-family:var(--font);">닫기</button>
+        </div>
       </div>
       <div class="forest-section">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px;gap:6px;flex-wrap:nowrap;width:100%;">
@@ -921,20 +919,6 @@ textarea.field::placeholder{color:var(--text3);}
   </div>
 </div>
 
-<!-- 닉네임 모달 -->
-<div class="modal-overlay" id="nick-modal" onclick="if(event.target===this)closeNickModal()">
-  <div class="modal-box" style="width:280px"><div class="modal-title">✏️ 닉네임 설정</div>
-  <div class="modal-field"><label>닉네임 (예: 선민)</label><input type="text" id="nick-input" placeholder="이름을 입력해주세요" maxlength="10"></div>
-  <div class="modal-btns"><button class="btn-modal-cancel" onclick="closeNickModal()">취소</button><button class="btn-modal-save" onclick="saveNickname()">저장</button></div>
-  </div></div>
-<!-- 칭찬 추가 모달 -->
-<div class="modal-overlay" id="ticker-modal" onclick="if(event.target===this)closeTickerModal()">
-  <div class="modal-box"><div class="modal-title">💬 듣고 싶은 칭찬 추가</div>
-  <div style="font-size:12px;color:var(--text2);margin-bottom:10px">닉네임이 자동으로 들어가요! 예: "매일 창제하는" → "매일 창제하는 선민님 👍"</div>
-  <div class="modal-field"><label>칭찬 문구 (닉네임 빼고)</label><input type="text" id="ticker-input" placeholder="예: 매일 창제하는" maxlength="30"></div>
-  <div id="ticker-custom-list" style="margin-bottom:10px"></div>
-  <div class="modal-btns"><button class="btn-modal-cancel" onclick="closeTickerModal()">닫기</button><button class="btn-modal-save" onclick="addCustomTicker()">추가</button></div>
-  </div></div>
 <!-- 창제표 모달 -->
 <div class="modal-overlay" id="chanje-modal" onclick="if(event.target===this)closeChanjeModal()" style="z-index:700">
   <div class="modal-box" style="width:min(92vw,400px);max-height:85vh;overflow-y:auto">
@@ -971,7 +955,18 @@ textarea.field::placeholder{color:var(--text3);}
   </div>
 </div>
 <canvas id="chanje-canvas" style="display:none"></canvas>
-<!-- 백업 모달 -->
+<!-- 보고 문구 편집 모달 -->
+<div class="cal-overlay" id="report-modal" onclick="if(event.target===this)closeModal('report-modal')" style="z-index:600">
+  <div class="modal-box" style="width:min(90vw,400px)">
+    <div class="modal-title">✏️ 보고 문구 편집</div>
+    <p style="font-size:12px;color:var(--text2);line-height:1.6;margin-bottom:10px">보고 문구 복사 시 사용할 머리말을 입력하세요.</p>
+    <textarea id="report-header-input" style="width:100%;min-height:120px;padding:10px 12px;border:2px solid var(--border);border-radius:12px;font-size:14px;font-family:var(--font);color:var(--text);background:var(--bg);resize:vertical;line-height:1.8;box-sizing:border-box;" placeholder="예: <서울8방면 신강북권 총합권여자부장 홍길동>&#10;&#10;안녕하세요! 신행학 보고드립니다!"></textarea>
+    <div class="modal-btns" style="margin-top:12px;">
+      <button class="btn-modal-cancel" onclick="closeModal('report-modal')">취소</button>
+      <button class="btn-modal-save" onclick="saveReportHeader()" style="background:linear-gradient(135deg,#667eea,#764ba2)">저장</button>
+    </div>
+  </div>
+</div>
 <!-- 백업 모달 -->
 <div class="cal-overlay" id="backup-modal" onclick="if(event.target===this)closeBackupModal()" style="z-index:600">
   <div class="modal-box" style="width:min(90vw,380px)">
@@ -1106,9 +1101,23 @@ function showToast(msg, duration=2500) {
 // ══════════════════════════════════════════════════════
 
 function copyReportHeader(){
-  const text='<서울8방면 신강북권 총합권여자부장 오선민>\n\n안녕하세요! 신행학 보고드립니다!\n\n';
-  navigator.clipboard.writeText(text).then(()=>showToast('📋 보고 문구가 복사됐어요!')).catch(()=>{const ta=document.createElement('textarea');ta.value=text;ta.style.cssText='position:fixed;opacity:0;';document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);showToast('📋 보고 문구가 복사됐어요!');});
+  const text=localStorage.getItem('shinshim_report_header');
+  if(!text){showToast('보고 문구가 설정되지 않았습니다. ✏️ 편집 버튼으로 등록해 주세요.');return;}
+  navigator.clipboard.writeText(text+'\n\n').then(()=>showToast('📋 보고 문구가 복사됐어요!')).catch(()=>{const ta=document.createElement('textarea');ta.value=text+'\n\n';ta.style.cssText='position:fixed;opacity:0;';document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);showToast('📋 보고 문구가 복사됐어요!');});
 }
+function openReportModal(){
+  const el=document.getElementById('report-header-input');
+  if(el)el.value=localStorage.getItem('shinshim_report_header')||'';
+  document.getElementById('report-modal').style.display='flex';
+}
+function saveReportHeader(){
+  const v=document.getElementById('report-header-input').value.trim();
+  if(v)localStorage.setItem('shinshim_report_header',v);
+  else localStorage.removeItem('shinshim_report_header');
+  closeModal('report-modal');showToast('보고 문구가 저장됐어요!');
+}
+function closeModal(id){document.getElementById(id).style.display='none';}
+function copySpeech(){const txt=document.getElementById('speech-text').value.trim();if(!txt){showToast('스피치를 먼저 입력하세요');return;}navigator.clipboard.writeText(txt).then(()=>showToast('📋 복사되었습니다!')).catch(()=>{const ta=document.createElement('textarea');ta.value=txt;ta.style.cssText='position:fixed;opacity:0;';document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);showToast('📋 복사되었습니다!');});}
 function copyActSchedule(){
   const rows=getActData();if(!rows.length){showToast('복사할 일정이 없어요.');return;}
   const lines=rows.map(r=>{const parts=[];if(r.date){const d=new Date(r.date+'T00:00:00');parts.push(`${d.getMonth()+1}/${d.getDate()}(${WD[d.getDay()]})`)}if(r.branch)parts.push(r.branch);if(r.actType&&r.actType!=='직접입력')parts.push(r.actType);if(r.target)parts.push('(w.'+r.target+')');return parts.join(' ');});
@@ -1278,7 +1287,7 @@ function _setForestPeriod(mode){
   if(mode==='month'){const{from,to}=_getMR(_forestYear,_forestMonth);window._forestFrom=from;window._forestTo=to;document.getElementById('forest-month-label').textContent=_forestMonth+'월';}
   else if(mode==='goal'){const g=getShinGoal();if(g&&g.from&&g.to){window._forestFrom=g.from;window._forestTo=g.to;}else{window._forestFrom='';window._forestTo='';}document.getElementById('forest-month-label').textContent='목표';}
   else if(mode==='all'){window._forestFrom='';window._forestTo='';document.getElementById('forest-month-label').textContent='전체';}
-  else if(mode==='custom'){const f=prompt('시작일 (YYYY-MM-DD)',window._forestFrom||'');if(f===null)return;const t=prompt('종료일',window._forestTo||'');if(t===null)return;window._forestFrom=f.trim();window._forestTo=t.trim();document.getElementById('forest-month-label').textContent='설정';}
+  else if(mode==='custom'){const panel=document.getElementById('forest-period-panel');if(panel){panel.style.display='block';const fi=document.getElementById('forest-custom-from'),ti=document.getElementById('forest-custom-to');if(fi)fi.value=window._forestFrom||'';if(ti)ti.value=window._forestTo||'';}document.getElementById('forest-month-label').textContent='설정';}
   _updatePBtns('n');
   const pl=document.getElementById('forest-period-label');
   if(pl){if(mode!=='month'&&(window._forestFrom||window._forestTo)){pl.textContent=(window._forestFrom||'-').replace(/-/g,'.')+'  ~  '+(window._forestTo||'-').replace(/-/g,'.');pl.style.display='block';}else pl.style.display='none';}
@@ -1290,6 +1299,18 @@ function _forestMonthMove(dir){
   const{from,to}=_getMR(_forestYear,_forestMonth);window._forestFrom=from;window._forestTo=to;
   document.getElementById('forest-month-label').textContent=_forestMonth+'월';
   _updatePBtns('n');renderForest();
+}
+function _applyForestCustom(){
+  const f=document.getElementById('forest-custom-from')?.value||'';
+  const t=document.getElementById('forest-custom-to')?.value||'';
+  window._forestFrom=f.trim();window._forestTo=t.trim();
+  _forestMode='custom';
+  document.getElementById('forest-month-label').textContent='설정';
+  _updatePBtns('n');
+  const pl=document.getElementById('forest-period-label');
+  if(pl&&(f||t)){pl.textContent=(f||'-').replace(/-/g,'.')+'  ~  '+(t||'-').replace(/-/g,'.');pl.style.display='block';}
+  document.getElementById('forest-period-panel').style.display='none';
+  renderForest();
 }
 function _updatePBtns(p){
   const pref=p==='f'?'fpb':'fnb',mode=p==='f'?_filterMode:_forestMode;
@@ -1341,7 +1362,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initDrag(document.getElementById('hak-rows'));
   setTimeout(() => {
     if (!window._currentUID)
-      document.getElementById('sync-banner').style.display = 'block';
+      document.getElementById('sync-banner').style.display = 'flex';
   }, 800);
 });
 
@@ -2085,7 +2106,7 @@ function drawSchedMonthSummary(){
 }
 
 function drawSchedGrid() {
-  document.getElementById('sched-title').textContent='광포 캘린더';
+  document.getElementById('sched-title').textContent=schedYear+'년 '+(schedMonth+1)+'월 광포 캘린더';
   const entries=getAllEntries();
   const todayStr=toDateStr(new Date());
   const firstDay=new Date(schedYear,schedMonth,1).getDay();
@@ -2333,12 +2354,6 @@ function renderMember(el,allDates,allEntries){
   });
 }
 
-function _memberMonthMove(dir){
-  window.memberMonthNum=(window.memberMonthNum||new Date().getMonth()+1)+dir;
-  if(window.memberMonthNum<1){window.memberMonthNum=12;window.memberMonthYear=(window.memberMonthYear||new Date().getFullYear())-1;}
-  if(window.memberMonthNum>12){window.memberMonthNum=1;window.memberMonthYear=(window.memberMonthYear||new Date().getFullYear())+1;}
-  renderFilter();
-}
 function _memberMonthMove(dir){let m=(window.memberMonthNum||new Date().getMonth()+1)+dir,y=window.memberMonthYear||new Date().getFullYear();if(m<1){m=12;y--;}if(m>12){m=1;y++;}window.memberMonthNum=m;window.memberMonthYear=y;renderFilter();}
 function _memberSearch(q){
   window.memberSearchQ=q;
@@ -2369,7 +2384,10 @@ const CHANJE_PRESETS=[
   {c1:'#00b894',c2:'#00cec9',l:'청록'},{c1:'#fd79a8',c2:'#e84393',l:'핑크'},
   {c1:'#fdcb6e',c2:'#e17055',l:'골드'},{c1:'#55efc4',c2:'#00b894',l:'민트'},
 ];
-window.chanjeIcon='❤️';window.chanjeColor='#00BFFF';window.chanjeColor2='';
+// chanjeIcon/chanjeColor/chanjeColor2 는 chanjeSettings 로 통합 관리 (하위호환용 alias)
+Object.defineProperty(window,'chanjeIcon',{get(){return chanjeSettings.icon||'❤️';},set(v){chanjeSettings.icon=v;}});
+Object.defineProperty(window,'chanjeColor',{get(){return chanjeSettings.color1||'#00BFFF';},set(v){chanjeSettings.color1=v;}});
+Object.defineProperty(window,'chanjeColor2',{get(){return chanjeSettings.color2||'';},set(v){chanjeSettings.color2=v;}});
 let chanjeSelectedIcon='❤️';
 
 function initChanjeColorChips(){
@@ -2416,11 +2434,8 @@ function selectChanjeIcon(icon,btn){
   previewChanjeTable();if(currentTab==='forest')renderForest();
 }
 
-function hexMix(c1,c2,t){
-  const r1=parseInt(c1.slice(1,3),16),g1=parseInt(c1.slice(3,5),16),b1=parseInt(c1.slice(5,7),16);
-  const r2=parseInt(c2.slice(1,3),16),g2=parseInt(c2.slice(3,5),16),b2=parseInt(c2.slice(5,7),16);
-  return 'rgb('+Math.round(r1+(r2-r1)*t)+','+Math.round(g1+(g2-g1)*t)+','+Math.round(b1+(b2-b1)*t)+')';
-}
+// hexMix는 _hexMix 로 통합됨 (위쪽 정의 사용)
+function hexMix(c1,c2,t){ return _hexMix(c1,c2,t); }
 function hexToRgba(c,a){
   const r=parseInt(c.slice(1,3),16),g=parseInt(c.slice(3,5),16),b=parseInt(c.slice(5,7),16);
   return 'rgba('+r+','+g+','+b+','+a+')';
