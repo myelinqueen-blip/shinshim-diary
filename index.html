@@ -730,7 +730,7 @@ header {
   width: 30px; height: 30px;
   border-radius: 8px;
   display: flex; align-items: center; justify-content: center;
-  font-size: 14px; font-weight: 900; flex-shrink: 0; color: #fff;
+  font-size: 16px; font-weight: 900; flex-shrink: 0; color: #fff;
 }
 .card-shin .card-icon { background: var(--main); }
 .card-haeng .card-icon { background: var(--point); }
@@ -1499,19 +1499,19 @@ textarea.field { resize: vertical; line-height: 1.7; white-space: pre-wrap; }
 
     <!-- 한 줄 스피치 -->
     <div class="card card-speech">
-      <div class="card-header"><div class="card-icon">말</div><div class="card-title">한 줄 스피치</div></div>
+      <div class="card-header"><div class="card-icon">💬</div><div class="card-title">한 줄 스피치</div></div>
       <textarea class="field" id="speech-text" style="min-height:80px;max-height:200px;overflow-y:auto;" placeholder="오늘의 한 줄 스피치를 기록해주세요"></textarea>
     </div>
 
     <!-- 결의 -->
     <div class="card card-resolution">
-      <div class="card-header"><div class="card-icon">결</div><div class="card-title">결의</div></div>
+      <div class="card-header"><div class="card-icon">✊</div><div class="card-title">결의</div></div>
       <textarea class="field" id="resolution-text" style="min-height:80px;max-height:200px;overflow-y:auto;" placeholder="오늘의 결의를 적어주세요"></textarea>
     </div>
 
     <!-- 멤버 상황 -->
     <div class="card card-member">
-      <div class="card-header"><div class="card-icon">멤</div><div class="card-title">멤버 상황</div></div>
+      <div class="card-header"><div class="card-icon">👤</div><div class="card-title">멤버 상황</div></div>
       <div id="member-rows"></div>
       <button class="add-row-btn" onclick="addMemberRow()">＋ 추가</button>
     </div>
@@ -1519,7 +1519,7 @@ textarea.field { resize: vertical; line-height: 1.7; white-space: pre-wrap; }
     <!-- 활동 일정 -->
     <div class="card card-schedule-card">
       <div class="card-header">
-        <div class="card-icon">일</div>
+        <div class="card-icon">📋</div>
         <div class="card-title">활동 일정</div>
         <div style="margin-left:auto;display:flex;gap:5px;">
           <button class="btn-copy-sm" onclick="loadRecentSchedule()">불러오기</button>
