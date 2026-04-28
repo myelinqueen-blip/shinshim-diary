@@ -784,38 +784,24 @@ function loadCloud() {
       return;
     }
 
+    // ── 기록 복원: records 키 우선, 없으면 entries, 날짜키 순서로 ──
     var loaded = false;
 
-    // ── entries 복원 ──────────────────────────────────────
-    // 케이스1: entries가 날짜키 객체 { "2026-03-01": {...}, ... }
-    if (data.entries && typeof data.entries === 'object') {
-      var keys = Object.keys(data.entries);
-      console.log('entries 키 수:', keys.length, '첫번째 키:', keys[0]);
-      // 날짜 형식(YYYY-MM-DD)인지 확인
-      var isDateKeyed = keys.some(function(k) { return /^\d{4}-\d{2}-\d{2}$/.test(k); });
-      if (isDateKeyed) {
-        records = data.entries;
-        loaded = true;
-        console.log('✅ entries(날짜키) 복원:', keys.length + '개');
-      } else {
-        // 케이스2: entries 하위에 또 다른 구조
-        // 날짜가 아닌 키 안에 날짜가 있는지 탐색
-        Object.values(data.entries).forEach(function(sub) {
-          if (sub && typeof sub === 'object') {
-            Object.keys(sub).forEach(function(k) {
-              if (/^\d{4}-\d{2}-\d{2}$/.test(k)) {
-                records[k] = sub[k];
-                loaded = true;
-              }
-            });
-          }
-        });
-        if (loaded) console.log('✅ entries(중첩) 복원');
-      }
+    // 1순위: records (이전 버전에서 저장한 키)
+    if (data.records && typeof data.records === 'object' && Object.keys(data.records).length > 0) {
+      records = data.records;
+      loaded = true;
+      console.log('✅ records 키 복원:', Object.keys(data.records).length + '개');
     }
 
-    // 케이스3: entries 없이 최상위에 날짜 키가 바로 있는 경우
-    // ex) users/{uid}/2026-03-01: {...}
+    // 2순위: entries
+    if (!loaded && data.entries && typeof data.entries === 'object') {
+      records = data.entries;
+      loaded = true;
+      console.log('✅ entries 키 복원:', Object.keys(data.entries).length + '개');
+    }
+
+    // 3순위: 최상위에 날짜키가 직접 있는 경우
     if (!loaded) {
       var topDateKeys = Object.keys(data).filter(function(k) { return /^\d{4}-\d{2}-\d{2}$/.test(k); });
       if (topDateKeys.length > 0) {
@@ -825,15 +811,8 @@ function loadCloud() {
       }
     }
 
-    // 케이스4: records 키로 저장된 경우 (이전 버전)
-    if (!loaded && data.records && typeof data.records === 'object') {
-      records = data.records;
-      loaded = true;
-      console.log('✅ records 키 복원');
-    }
-
     if (!loaded) {
-      console.log('⚠️ 날짜 형식 데이터를 찾을 수 없음. 전체 구조:', JSON.stringify(data).slice(0, 300));
+      console.log('⚠️ 기록 없음. 키 목록:', Object.keys(data));
     }
 
     // ── chanjeSettings 복원 ──────────────────────────────
