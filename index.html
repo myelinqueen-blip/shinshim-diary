@@ -718,9 +718,9 @@ function saveCloud() {
   if (!curUser || !db) { showToast('로그인 후 저장 가능'); return; }
   var base = baseRef();
 
-  // entries: 기록탭 날짜별 전체 데이터
-  base.child('entries').set(records)
-    .catch(function(e) { console.log('entries error', e); });
+  // records: 기록탭 날짜별 전체 데이터 (이전 버전과 동일한 키명 유지)
+  base.child('records').set(records)
+    .catch(function(e) { console.log('records error', e); });
 
   // books: 연찬 요약 집계 (bookType > bookName: totalPages)
   var booksData = {};
@@ -849,10 +849,16 @@ function loadCloud() {
     }
 
     saveLocal();
-    renderAll();
 
+    // 화면 갱신: 날짜 표시 후 전체 렌더
     var recCount = Object.keys(records).length;
-    showToast('☁️ 불러오기 완료 (' + recCount + '일 기록)');
+    updateDateDisp();
+    renderRecord();
+    renderCol();
+    renderCal();
+    renderForest();
+
+    showToast('☁️ ' + recCount + '일 기록 불러오기 완료!');
   }).catch(function(e) {
     console.error('loadCloud 오류:', e);
     showToast('불러오기 오류: ' + e.message);
