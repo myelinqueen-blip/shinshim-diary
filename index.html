@@ -701,7 +701,7 @@ function logoutUser() {
 
 function saveCloud() {
   if (!curUser || !db) { showToast('로그인 후 저장 가능'); return; }
-  db.ref('u/' + curUser.uid).set({
+  db.ref('users/' + curUser.uid).set({
     records: records, goals: goals, forestCfg: forestCfg,
     forestMsgs: forestMsgs, rptTemplate: rptTemplate,
     fixedPhrase: fixedPhrase, spFolders: spFolders, spDone: spDone
@@ -710,7 +710,7 @@ function saveCloud() {
 
 function loadCloud() {
   if (!curUser || !db) return;
-  db.ref('u/' + curUser.uid).once('value').then(function(s) {
+  db.ref('users/' + curUser.uid).once('value').then(function(s) {
     var d = s.val();
     if (!d) return;
     if (d.records) records = d.records;
