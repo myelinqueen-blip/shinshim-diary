@@ -22,7 +22,7 @@
   --bg:#F4F6F9;--sf:#fff;--bd:#E8ECF2;
   --r:14px;--rs:9px;
 }
-body{background:var(--bg);color:var(--tx);min-height:100vh;}
+body{background:var(--bg);color:var(--tx);min-height:100vh;font-size:13px;}
 button{cursor:pointer;background:none;font-family:inherit;border:none;}
 input,select,textarea{font-family:inherit;}
 input:focus,select:focus,textarea:focus{outline:none;}
@@ -40,16 +40,15 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
 .logo-txt{font-size:16px;font-weight:900;color:#fff;}
 .hbtns{display:flex;align-items:center;gap:8px;}
 #gbtn{
-  display:flex;align-items:center;gap:6px;background:#fff;border-radius:20px;
-  padding:6px 12px;font-size:12px;font-weight:700;color:var(--tx);
-  box-shadow:0 2px 8px rgba(0,0,0,.12);
+  display:flex;align-items:center;justify-content:center;background:#fff;border-radius:50%;
+  width:30px;height:30px;
+  box-shadow:0 2px 8px rgba(0,0,0,.15);
 }
-#gbtn img{width:14px;height:14px;}
+#gbtn img{width:16px;height:16px;}
 #uinfo{display:none;align-items:center;gap:6px;}
-#uphoto{width:28px;height:28px;border-radius:50%;border:2px solid rgba(255,255,255,.5);}
-#uname{font-size:12px;font-weight:700;color:#fff;max-width:60px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-#lout{font-size:10px;color:rgba(255,255,255,.8);text-decoration:underline;}
-#scbtn{width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:15px;color:#fff;}
+#uphoto{width:30px;height:30px;border-radius:50%;border:2px solid rgba(255,255,255,.6);}
+#lout{font-size:17px;background:none;color:#fff;padding:0 2px;}
+#scbtn{font-size:17px;background:none;color:#fff;padding:0 2px;}
 
 /* TABBAR */
 #tabbar{
@@ -115,7 +114,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
 .cic.cpu{background:linear-gradient(135deg,var(--pu),#8060d8);}
 .cic.ct{background:linear-gradient(135deg,var(--te),#329a90);}
 .cic.co{background:linear-gradient(135deg,var(--or),#e07820);}
-.ctit{font-size:14px;font-weight:800;color:var(--tx);}
+.ctit{font-size:13px;font-weight:800;color:var(--tx);}
 .cright{margin-left:auto;display:flex;align-items:center;gap:5px;}
 .cbdy{padding:12px;}
 
@@ -272,19 +271,18 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
 <!-- HEADER -->
 <div id="hdr">
   <div class="logo">
-    <span style="font-size:22px">🌿</span>
     <span class="logo-txt">선민의 신심 일기</span>
   </div>
   <div class="hbtns">
-    <button id="gbtn" onclick="loginGoogle()">
-      <img src="https://www.google.com/favicon.ico" alt="G"/>로그인
+    <button id="gbtn" onclick="loginGoogle()" title="구글 로그인">
+      <img src="https://www.google.com/favicon.ico" alt="G"/>
     </button>
     <div id="uinfo">
-      <img id="uphoto" src="" alt=""/>
-      <span id="uname"></span>
-      <button id="lout" onclick="logoutUser()">로그아웃</button>
+      <img id="uphoto" src="" alt="" style="cursor:pointer;" onclick="showToast(document.getElementById('uname-data').textContent)"/>
+      <span id="uname-data" style="display:none;"></span>
+      <button id="lout" onclick="logoutUser()" title="로그아웃">🔓</button>
     </div>
-    <button id="scbtn" onclick="saveCloud()">💾</button>
+    <button id="scbtn" onclick="saveCloud()" title="저장">⬇️</button>
   </div>
 </div>
 
@@ -601,6 +599,19 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
   </div>
 </div>
 
+
+<div id="m-haeng-items" class="mo" style="display:none;">
+  <div class="mb">
+    <div class="mtit"><span>행 드롭다운 항목 관리</span><button onclick="closeM('m-haeng-items')" style="font-size:18px;color:var(--tx3);">×</button></div>
+    <div style="font-size:11px;color:var(--tx3);margin-bottom:10px;">추가한 항목은 '기록' 탭 행·활동일정 드롭다운에 반영됩니다</div>
+    <div id="haeng-items-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px;"></div>
+    <div style="display:flex;gap:7px;margin-bottom:12px;">
+      <input type="text" class="minp" id="haeng-new-inp" placeholder="새 항목 이름..." style="margin-bottom:0;flex:1;"/>
+      <button onclick="addHaengItem()" style="border-radius:var(--rs);background:var(--g);padding:0 12px;font-size:12px;font-weight:700;color:#fff;">추가</button>
+    </div>
+    <div class="mfoot"><button class="mcan" onclick="closeM('m-haeng-items')">닫기</button></div>
+  </div>
+</div>
 </div><!-- #app -->
 <script>
 // ====== STATE ======
@@ -622,6 +633,7 @@ var forestMsgs = ['오늘도 정진하는 당신이 멋져요!', '꾸준함이 �
 var rptTemplate = '<서울8방면 신강북권 총합권여자부장 오선민>\n\n안녕하세요! 신행학 보고드립니다!';
 var fixedPhrase = '(고정 문구를 여기에 입력하세요)';
 var spFolders = [];
+var customHaengItems = []; // 사용자 추가 행 드롭다운 항목
 var spDone = {};
 var spChecked = {};
 var memPeriodMonths = 3;
@@ -652,13 +664,13 @@ var DAYS = ['일', '월', '화', '수', '목', '금', '토'];
 // ====== FIREBASE ======
 function initFirebase() {
   var cfg = {
-  apiKey: "AIzaSyAvtgUROy9sqe4mnjcb3HV4TzRQ6bXsCQA",
-  authDomain: "shinshim-diary.firebaseapp.com",
-  databaseURL: "https://shinshim-diary-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "shinshim-diary",
-  storageBucket: "shinshim-diary.firebasestorage.app",
-  messagingSenderId: "736639802328",
-  appId: "1:736639802328:web:1a8dabc364c22af453f0ad"
+    apiKey: "",
+    authDomain: "",
+    databaseURL: "",
+    projectId: "",
+    storageBucket: "",
+    messagingSenderId: "",
+    appId: ""
   };
   try {
     if (!cfg.apiKey) return;
@@ -670,7 +682,7 @@ function initFirebase() {
         document.getElementById('gbtn').style.display = 'none';
         document.getElementById('uinfo').style.display = 'flex';
         document.getElementById('uphoto').src = u.photoURL || '';
-        document.getElementById('uname').textContent = (u.displayName || u.email || '').split(' ')[0];
+        document.getElementById('uname-data').textContent = (u.displayName || u.email || '').split(' ')[0];
         loadCloud();
       } else {
         curUser = null;
@@ -699,30 +711,109 @@ function logoutUser() {
   if (firebase.auth) firebase.auth().signOut().then(function() { showToast('로그아웃'); });
 }
 
+// Firebase 경로: users/{uid}/entries, books, chanjeSettings, shinGoal
+function baseRef() { return db.ref('users/' + curUser.uid); }
+
 function saveCloud() {
   if (!curUser || !db) { showToast('로그인 후 저장 가능'); return; }
-  db.ref('users/' + curUser.uid).set({
-    records: records, goals: goals, forestCfg: forestCfg,
-    forestMsgs: forestMsgs, rptTemplate: rptTemplate,
-    fixedPhrase: fixedPhrase, spFolders: spFolders, spDone: spDone
-  }).then(function() { showToast('☁️ 저장 완료'); }).catch(function(e) { showToast('오류: ' + e.message); });
+  var base = baseRef();
+
+  // entries: 기록탭 날짜별 전체 데이터
+  base.child('entries').set(records)
+    .catch(function(e) { console.log('entries error', e); });
+
+  // books: 연찬 요약 집계 (bookType > bookName: totalPages)
+  var booksData = {};
+  Object.values(records).forEach(function(r) {
+    (r.hak || []).forEach(function(h) {
+      if (!h.bookName) return;
+      var type = h.bookType || '도서';
+      var pg = Math.max(0, (parseInt(h.endPage) || 0) - (parseInt(h.startPage) || 0) + 1);
+      if (!booksData[type]) booksData[type] = {};
+      var key = h.bookName.replace(/[.#$[\]\/]/g, '_');
+      booksData[type][key] = (booksData[type][key] || 0) + pg;
+    });
+  });
+  base.child('books').set(booksData)
+    .catch(function(e) { console.log('books error', e); });
+
+  // chanjeSettings: 복운의 숲 창제표 설정
+  // 기존 구조(color1, color2, giwon, icon, mode) + 추가 필드 병합
+  var chanjeData = {
+    color1: '#00BFFF',
+    color2: '',
+    giwon: forestCfg.prayer || '',
+    icon: '❤️',
+    mode: 'icon',
+    name: forestCfg.name || '당신',
+    startDate: forestCfg.startDate || '',
+    endDate: forestCfg.endDate || '',
+    goalMin: forestCfg.goalMin || 6000,
+    msgs: forestMsgs || []
+  };
+  base.child('chanjeSettings').set(chanjeData)
+    .catch(function(e) { console.log('chanjeSettings error', e); });
+
+  // shinGoal: 목표값 및 앱 설정
+  var shinGoalData = {
+    sinGoal: goals.sin || 90,
+    haengGoal: goals.haeng || 10,
+    hakGoal: goals.hak || 300,
+    rptTemplate: rptTemplate || '',
+    fixedPhrase: fixedPhrase || '',
+    spFolders: spFolders || [],
+    spDone: spDone || {},
+    customHaengItems: customHaengItems || []
+  };
+  base.child('shinGoal').set(shinGoalData)
+    .then(function() { showToast('☁️ 저장 완료'); })
+    .catch(function(e) { showToast('저장 오류: ' + e.message); });
 }
 
 function loadCloud() {
   if (!curUser || !db) return;
-  db.ref('users/' + curUser.uid).once('value').then(function(s) {
-    var d = s.val();
-    if (!d) return;
-    if (d.records) records = d.records;
-    if (d.goals) goals = d.goals;
-    if (d.forestCfg) forestCfg = d.forestCfg;
-    if (d.forestMsgs) forestMsgs = d.forestMsgs;
-    if (d.rptTemplate) rptTemplate = d.rptTemplate;
-    if (d.fixedPhrase) fixedPhrase = d.fixedPhrase;
-    if (d.spFolders) spFolders = d.spFolders;
-    if (d.spDone) spDone = d.spDone;
+  showToast('☁️ 불러오는 중...');
+  baseRef().once('value').then(function(snap) {
+    var data = snap.val();
+    if (!data) { showToast('저장된 데이터가 없습니다'); return; }
+
+    // entries → records (기록탭 날짜별 데이터)
+    if (data.entries) {
+      records = data.entries;
+    }
+
+    // chanjeSettings → forestCfg & forestMsgs
+    if (data.chanjeSettings) {
+      var cs = data.chanjeSettings;
+      if (cs.giwon !== undefined) forestCfg.prayer = cs.giwon;
+      if (cs.name) forestCfg.name = cs.name;
+      if (cs.startDate) forestCfg.startDate = cs.startDate;
+      if (cs.endDate) forestCfg.endDate = cs.endDate;
+      if (cs.goalMin) forestCfg.goalMin = cs.goalMin;
+      if (cs.msgs && Array.isArray(cs.msgs) && cs.msgs.length) forestMsgs = cs.msgs;
+    }
+
+    // shinGoal → goals, rptTemplate, fixedPhrase, spFolders, spDone
+    if (data.shinGoal) {
+      var sg = data.shinGoal;
+      if (sg.sinGoal) goals.sin = sg.sinGoal;
+      if (sg.haengGoal) goals.haeng = sg.haengGoal;
+      if (sg.hakGoal) goals.hak = sg.hakGoal;
+      if (sg.rptTemplate) rptTemplate = sg.rptTemplate;
+      if (sg.fixedPhrase) fixedPhrase = sg.fixedPhrase;
+      if (sg.spFolders) spFolders = sg.spFolders;
+      if (sg.spDone) spDone = sg.spDone;
+      if (sg.customHaengItems) { customHaengItems = sg.customHaengItems; rebuildHaengGroups(); }
+    if (sg.customHaengItems) { customHaengItems = sg.customHaengItems; rebuildHaengGroups(); }
+    }
+
+    // books는 entries에서 재집계되므로 별도 복원 불필요
+
+    saveLocal();
     renderAll();
-    showToast('☁️ 불러왔습니다');
+    showToast('☁️ 데이터를 불러왔습니다');
+  }).catch(function(e) {
+    showToast('불러오기 오류: ' + e.message);
   });
 }
 
@@ -778,7 +869,8 @@ function saveLocal() {
     localStorage.setItem('sd4', JSON.stringify({
       records: records, goals: goals, forestCfg: forestCfg,
       forestMsgs: forestMsgs, rptTemplate: rptTemplate,
-      fixedPhrase: fixedPhrase, spFolders: spFolders, spDone: spDone
+      fixedPhrase: fixedPhrase, spFolders: spFolders, spDone: spDone,
+      customHaengItems: customHaengItems
     }));
   } catch (e) {}
 }
@@ -928,8 +1020,10 @@ function openTDrop(btnEl, groups, cur, cb) {
   di.onclick = function(e) { e.stopPropagation(); cb('직접입력'); closeTDrop(); };
   menu.appendChild(di);
   var r = btnEl.getBoundingClientRect(), W = 190;
-  menu.style.left = Math.max(8, Math.min(r.left, window.innerWidth - W - 8)) + 'px';
-  menu.style.top = (r.bottom + 4) + 'px';
+  menu.style.left = '12px';
+  menu.style.right = '12px';
+  menu.style.width = 'auto';
+  menu.style.top = Math.min(r.bottom + 4, window.innerHeight - 300) + 'px';
   menu.style.display = 'block';
   document.getElementById('tdrop-ov').style.display = 'block';
 }
@@ -1036,6 +1130,7 @@ function renderHaengList(list) {
     row.draggable = true;
     row.dataset.idx = i;
     setupDrag(row, 'haeng');
+    setupTouch(row, 'haeng');
 
     var nameInp = document.createElement('input');
     nameInp.className = 'inp';
@@ -1227,6 +1322,7 @@ function renderMemberList(list) {
     var row = document.createElement('div');
     row.className = 'drow'; row.draggable = true; row.dataset.idx = i;
     setupDrag(row, 'members');
+    setupTouch(row, 'members');
 
     var nInp = document.createElement('input');
     nInp.className = 'inp'; nInp.placeholder = '이름';
@@ -1263,6 +1359,13 @@ function addMember() {
 
 // ACTIVITY
 function renderActList(list) {
+  // 날짜 오름차순 정렬 (빈 날짜는 뒤로)
+  list.sort(function(a, b) {
+    if (!a.date && !b.date) return 0;
+    if (!a.date) return 1;
+    if (!b.date) return -1;
+    return a.date.localeCompare(b.date);
+  });
   var el = document.getElementById('activity-list');
   el.innerHTML = '';
   list.forEach(function(item, i) {
@@ -1608,7 +1711,7 @@ function renderHaengTab(cont, recs) {
 
   var card = document.createElement('div');
   card.style.cssText = 'border-radius:var(--r);border:1px solid var(--bd);background:var(--sf);padding:12px;';
-  card.innerHTML = '<div style="font-size:12px;font-weight:700;color:var(--tx);margin-bottom:9px;">🌸 활동</div><div id="haeng-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:7px;"></div>';
+  card.innerHTML = '<div style="display:flex;align-items:center;margin-bottom:9px;gap:8px;"><span style="font-size:12px;font-weight:700;color:var(--tx);">🌸 활동</span><button onclick="openHaengItemEdit()" style="height:22px;border-radius:var(--rs);border:1.5px solid var(--pk);background:var(--pkl);padding:0 9px;font-size:10px;font-weight:600;color:var(--pk);">드롭다운 항목 추가</button></div><div id="haeng-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:7px;"></div>';
   var grid = card.querySelector('#haeng-grid');
   var openType = null;
 
@@ -2107,7 +2210,8 @@ function renderForest() {
   var emoji = pct >= 66 ? '👑' : pct >= 33 ? '💍' : '💎';
   var colors = ['#87cefa', '#00bfff', '#1e90ff'];
   var wc = document.getElementById('word-chart');
-  wc.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;"><span style="font-size:12px;font-weight:800;color:var(--tx);">🙏🏻 나의 창제표</span><span style="font-size:11px;color:var(--tx3);">' + filledCells + '/' + totalCells + '칸 (' + pct + '%)</span></div><div style="font-size:10px;color:var(--tx3);margin-bottom:7px;">30분=1칸 · 목표 ' + Math.floor(goalMin / 60) + 'h</div><div style="display:grid;grid-template-columns:repeat(15,1fr);gap:2px;margin-bottom:9px;" id="wc-cells"></div><div style="display:flex;justify-content:center;align-items:center;gap:6px;"><span class="bounce" style="font-size:22px;">' + emoji + '</span><span style="font-size:10px;font-weight:700;color:var(--tx3);">' + fmtMin(sinTotal) + ' / ' + fmtMin(goalMin) + '</span></div>';
+  var prayerHtml = forestCfg.prayer ? '<div style="border-radius:var(--rs);background:linear-gradient(135deg,var(--gl),var(--bll));padding:9px 12px;font-size:11px;color:var(--g2);line-height:1.6;margin-bottom:9px;">' + forestCfg.prayer + '</div>' : '';
+  wc.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;"><span style="font-size:12px;font-weight:800;color:var(--tx);">🙏🏻 나의 창제표</span><span style="font-size:11px;color:var(--tx3);">' + filledCells + '/' + totalCells + '칸 (' + pct + '%)</span></div>' + prayerHtml + '<div style="display:grid;grid-template-columns:repeat(15,1fr);gap:2px;margin-bottom:9px;" id="wc-cells"></div><div style="display:flex;justify-content:center;align-items:center;gap:6px;"><span class="bounce" style="font-size:22px;">' + emoji + '</span><span style="font-size:10px;font-weight:700;color:var(--tx3);">' + fmtMin(sinTotal) + ' / ' + fmtMin(goalMin) + '</span></div>';
   var cells = document.getElementById('wc-cells');
   for (var i = 0; i < totalCells; i++) {
     var c2 = document.createElement('div');
@@ -2116,9 +2220,8 @@ function renderForest() {
     cells.appendChild(c2);
   }
 
-  // 기원문
-  var pe = document.getElementById('forest-prayer');
-  if (forestCfg.prayer) { pe.textContent = forestCfg.prayer; pe.style.display = 'block'; } else { pe.style.display = 'none'; }
+  // 기원문은 word-chart 내에 렌더됨
+  var pe = document.getElementById('forest-prayer'); if(pe) pe.style.display = 'none';
 
   // EMOJI VIZ
   renderEViz('act-viz', actCnt, '🌸 격려 활동', 'var(--pk)', 'linear-gradient(135deg,var(--pkl) 80%,var(--gl) 40%)', 10, ['🌱', '🌳', '🌸']);
@@ -2197,6 +2300,108 @@ function saveChartM() {
   closeM('m-chart'); saveLocal(); renderForest();
 }
 
+
+
+// Touch DnD support for mobile
+function setupTouch(row, field) {
+  var touchStartY = 0, dragging = false;
+  row.addEventListener('touchstart', function(e) {
+    touchStartY = e.touches[0].clientY;
+    dragging = false;
+  }, { passive: true });
+  row.addEventListener('touchmove', function(e) {
+    var dy = Math.abs(e.touches[0].clientY - touchStartY);
+    if (dy > 8) {
+      dragging = true;
+      e.preventDefault();
+      var touch = e.touches[0];
+      var el = document.elementFromPoint(touch.clientX, touch.clientY);
+      var target = el ? el.closest('.drow') : null;
+      document.querySelectorAll('.drow').forEach(function(r) { r.classList.remove('dragover'); });
+      if (target && target !== row) target.classList.add('dragover');
+    }
+  }, { passive: false });
+  row.addEventListener('touchend', function(e) {
+    if (!dragging) return;
+    document.querySelectorAll('.drow').forEach(function(r) { r.classList.remove('dragover'); });
+    var touch = e.changedTouches[0];
+    var el = document.elementFromPoint(touch.clientX, touch.clientY);
+    var target = el ? el.closest('.drow') : null;
+    if (!target || target === row) return;
+    var k = dk(curDate), arr = getRec(k)[field] || [];
+    var si = parseInt(row.dataset.idx), ti = parseInt(target.dataset.idx);
+    if (isNaN(si) || isNaN(ti) || si === ti) return;
+    var item = arr.splice(si, 1)[0];
+    arr.splice(ti, 0, item);
+    refreshField(field, arr);
+    autoSave();
+  });
+}
+
+// ─── 행 커스텀 드롭다운 항목 관리 ───
+function rebuildHaengGroups() {
+  HAENG_GROUPS = [
+    { header: '활동', items: [{ v: '대화', l: '대화' }, { v: '통화', l: '통화' }, { v: '연락', l: '연락' }, { v: '근행회', l: '근행회' }, { v: '칸나', l: '칸나' }] },
+    { header: '회합', items: [{ v: '좌담회', l: '좌담회' }, { v: '좌담회 참석간부', l: '좌담회 참석간부' }, { v: '협의', l: '협의' }, { v: '창제회', l: '창제회' }] }
+  ];
+  if (customHaengItems.length > 0) {
+    HAENG_GROUPS.push({ header: '사용자 추가', items: customHaengItems.map(function(v) { return { v: v, l: v }; }) });
+  }
+  ACT_GROUPS = [
+    { header: '활동', items: [{ v: '대화', l: '대화' }, { v: '연락', l: '연락' }, { v: '칸나', l: '칸나' }] },
+    { header: '회합', items: [{ v: '좌담회', l: '좌담회' }, { v: '창제회', l: '창제회' }, { v: '협의', l: '협의' }] }
+  ];
+  if (customHaengItems.length > 0) {
+    ACT_GROUPS.push({ header: '사용자 추가', items: customHaengItems.map(function(v) { return { v: v, l: v }; }) });
+  }
+}
+
+function openHaengItemEdit() {
+  renderHaengItemsList();
+  document.getElementById('m-haeng-items').style.display = 'flex';
+}
+
+function renderHaengItemsList() {
+  var el = document.getElementById('haeng-items-list');
+  el.innerHTML = '';
+  if (!customHaengItems.length) {
+    el.innerHTML = '<div style="text-align:center;padding:12px;font-size:12px;color:var(--tx3);">추가된 항목이 없습니다</div>';
+    return;
+  }
+  customHaengItems.forEach(function(item, i) {
+    var row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:var(--rs);background:var(--bg);';
+    var lbl = document.createElement('span');
+    lbl.style.cssText = 'flex:1;font-size:12px;color:var(--tx);font-weight:600;';
+    lbl.textContent = item;
+    var del = document.createElement('button');
+    del.style.cssText = 'font-size:11px;color:var(--tx3);';
+    del.textContent = '✕';
+    del.onclick = (function(idx) {
+      return function() {
+        customHaengItems.splice(idx, 1);
+        rebuildHaengGroups();
+        saveLocal();
+        renderHaengItemsList();
+      };
+    })(i);
+    row.appendChild(lbl); row.appendChild(del);
+    el.appendChild(row);
+  });
+}
+
+function addHaengItem() {
+  var v = document.getElementById('haeng-new-inp').value.trim();
+  if (!v) return;
+  if (customHaengItems.indexOf(v) > -1) { showToast('이미 있는 항목입니다'); return; }
+  customHaengItems.push(v);
+  rebuildHaengGroups();
+  saveLocal();
+  document.getElementById('haeng-new-inp').value = '';
+  renderHaengItemsList();
+  showToast('✅ 추가됨: ' + v);
+}
+
 // ====== INIT ======
 function renderAll() {
   updateDateDisp();
@@ -2208,6 +2413,7 @@ function renderAll() {
 
 function init() {
   loadLocal();
+  rebuildHaengGroups();
   updateDateDisp();
   var k = dk(curDate);
   ensureDef(k);
