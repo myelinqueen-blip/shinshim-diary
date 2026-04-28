@@ -664,13 +664,13 @@ var DAYS = ['일', '월', '화', '수', '목', '금', '토'];
 // ====== FIREBASE ======
 function initFirebase() {
   var cfg = {
-  apiKey: "AIzaSyAvtgUROy9sqe4mnjcb3HV4TzRQ6bXsCQA",
-  authDomain: "shinshim-diary.firebaseapp.com",
-  databaseURL: "https://shinshim-diary-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "shinshim-diary",
-  storageBucket: "shinshim-diary.firebasestorage.app",
-  messagingSenderId: "736639802328",
-  appId: "1:736639802328:web:1a8dabc364c22af453f0ad"
+    apiKey: "",
+    authDomain: "",
+    databaseURL: "",
+    projectId: "",
+    storageBucket: "",
+    messagingSenderId: "",
+    appId: ""
   };
   try {
     if (!cfg.apiKey) return;
@@ -773,46 +773,109 @@ function saveCloud() {
 function loadCloud() {
   if (!curUser || !db) return;
   showToast('☁️ 불러오는 중...');
+
+  // users/{uid} 전체를 한번에 읽기
   baseRef().once('value').then(function(snap) {
     var data = snap.val();
-    if (!data) { showToast('저장된 데이터가 없습니다'); return; }
+    console.log('🔥 Firebase 전체 데이터 키:', data ? Object.keys(data) : 'null');
 
-    // entries → records (기록탭 날짜별 데이터)
-    if (data.entries) {
-      records = data.entries;
+    if (!data) {
+      showToast('저장된 데이터가 없습니다');
+      return;
     }
 
-    // chanjeSettings → forestCfg & forestMsgs
-    if (data.chanjeSettings) {
-      var cs = data.chanjeSettings;
+    var loaded = false;
+
+    // ── entries 복원 ──────────────────────────────────────
+    // 케이스1: entries가 날짜키 객체 { "2026-03-01": {...}, ... }
+    if (data.entries && typeof data.entries === 'object') {
+      var keys = Object.keys(data.entries);
+      console.log('entries 키 수:', keys.length, '첫번째 키:', keys[0]);
+      // 날짜 형식(YYYY-MM-DD)인지 확인
+      var isDateKeyed = keys.some(function(k) { return /^\d{4}-\d{2}-\d{2}$/.test(k); });
+      if (isDateKeyed) {
+        records = data.entries;
+        loaded = true;
+        console.log('✅ entries(날짜키) 복원:', keys.length + '개');
+      } else {
+        // 케이스2: entries 하위에 또 다른 구조
+        // 날짜가 아닌 키 안에 날짜가 있는지 탐색
+        Object.values(data.entries).forEach(function(sub) {
+          if (sub && typeof sub === 'object') {
+            Object.keys(sub).forEach(function(k) {
+              if (/^\d{4}-\d{2}-\d{2}$/.test(k)) {
+                records[k] = sub[k];
+                loaded = true;
+              }
+            });
+          }
+        });
+        if (loaded) console.log('✅ entries(중첩) 복원');
+      }
+    }
+
+    // 케이스3: entries 없이 최상위에 날짜 키가 바로 있는 경우
+    // ex) users/{uid}/2026-03-01: {...}
+    if (!loaded) {
+      var topDateKeys = Object.keys(data).filter(function(k) { return /^\d{4}-\d{2}-\d{2}$/.test(k); });
+      if (topDateKeys.length > 0) {
+        topDateKeys.forEach(function(k) { records[k] = data[k]; });
+        loaded = true;
+        console.log('✅ 최상위 날짜키 복원:', topDateKeys.length + '개');
+      }
+    }
+
+    // 케이스4: records 키로 저장된 경우 (이전 버전)
+    if (!loaded && data.records && typeof data.records === 'object') {
+      records = data.records;
+      loaded = true;
+      console.log('✅ records 키 복원');
+    }
+
+    if (!loaded) {
+      console.log('⚠️ 날짜 형식 데이터를 찾을 수 없음. 전체 구조:', JSON.stringify(data).slice(0, 300));
+    }
+
+    // ── chanjeSettings 복원 ──────────────────────────────
+    var cs = data.chanjeSettings || data.chanjeSettings || null;
+    if (cs) {
       if (cs.giwon !== undefined) forestCfg.prayer = cs.giwon;
-      if (cs.name) forestCfg.name = cs.name;
+      if (cs.name)      forestCfg.name      = cs.name;
       if (cs.startDate) forestCfg.startDate = cs.startDate;
-      if (cs.endDate) forestCfg.endDate = cs.endDate;
-      if (cs.goalMin) forestCfg.goalMin = cs.goalMin;
+      if (cs.endDate)   forestCfg.endDate   = cs.endDate;
+      if (cs.goalMin)   forestCfg.goalMin   = cs.goalMin;
       if (cs.msgs && Array.isArray(cs.msgs) && cs.msgs.length) forestMsgs = cs.msgs;
+      console.log('✅ chanjeSettings 복원');
     }
 
-    // shinGoal → goals, rptTemplate, fixedPhrase, spFolders, spDone
-    if (data.shinGoal) {
-      var sg = data.shinGoal;
-      if (sg.sinGoal) goals.sin = sg.sinGoal;
-      if (sg.haengGoal) goals.haeng = sg.haengGoal;
-      if (sg.hakGoal) goals.hak = sg.hakGoal;
-      if (sg.rptTemplate) rptTemplate = sg.rptTemplate;
-      if (sg.fixedPhrase) fixedPhrase = sg.fixedPhrase;
-      if (sg.spFolders) spFolders = sg.spFolders;
-      if (sg.spDone) spDone = sg.spDone;
+    // ── shinGoal 복원 ─────────────────────────────────────
+    var sg = data.shinGoal || null;
+    if (sg) {
+      if (sg.sinGoal)          goals.sin          = sg.sinGoal;
+      if (sg.haengGoal)        goals.haeng        = sg.haengGoal;
+      if (sg.hakGoal)          goals.hak          = sg.hakGoal;
+      if (sg.rptTemplate)      rptTemplate        = sg.rptTemplate;
+      if (sg.fixedPhrase)      fixedPhrase        = sg.fixedPhrase;
+      if (sg.spFolders)        spFolders          = sg.spFolders;
+      if (sg.spDone)           spDone             = sg.spDone;
       if (sg.customHaengItems) { customHaengItems = sg.customHaengItems; rebuildHaengGroups(); }
-    if (sg.customHaengItems) { customHaengItems = sg.customHaengItems; rebuildHaengGroups(); }
+      console.log('✅ shinGoal 복원');
     }
 
-    // books는 entries에서 재집계되므로 별도 복원 불필요
+    // ── goals가 별도 키에 있는 경우 ──────────────────────
+    if (data.goals) {
+      if (data.goals.sin)   goals.sin   = data.goals.sin;
+      if (data.goals.haeng) goals.haeng = data.goals.haeng;
+      if (data.goals.hak)   goals.hak   = data.goals.hak;
+    }
 
     saveLocal();
     renderAll();
-    showToast('☁️ 데이터를 불러왔습니다');
+
+    var recCount = Object.keys(records).length;
+    showToast('☁️ 불러오기 완료 (' + recCount + '일 기록)');
   }).catch(function(e) {
+    console.error('loadCloud 오류:', e);
     showToast('불러오기 오류: ' + e.message);
   });
 }
