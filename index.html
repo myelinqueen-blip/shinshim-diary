@@ -824,6 +824,8 @@ function downloadBackup() {
 }
 
 // ── 백업 복원 ──────────────────────────────────────────────
+var restoring = false;
+
 function restoreBackup(input) {
   var file = input.files[0];
   if (!file) return;
@@ -843,6 +845,9 @@ function restoreBackup(input) {
           showToast('❌ 백업 파일 형식 오류'); return;
         }
       }
+
+      // loadCloud 차단 플래그
+      restoring = true;
 
       // 기존 records와 병합 (새 데이터 우선)
       Object.keys(newRecs).forEach(function(k) {
@@ -869,6 +874,9 @@ function restoreBackup(input) {
 
       var cnt = Object.keys(newRecs).length;
 
+      // 로컬 먼저 저장
+      saveLocal();
+
       // 화면 갱신
       try { updateDateDisp(); } catch(e2) {}
       try { renderRecord(); } catch(e2) {}
@@ -876,17 +884,41 @@ function restoreBackup(input) {
       try { renderCol(); } catch(e2) {}
       try { renderForest(); } catch(e2) {}
 
-      // 로컬 저장 먼저
-      saveLocal();
-
-      // 클라우드 자동 저장 (덮어쓰기 방지를 위해 즉시)
+      // 클라우드에 저장 후 플래그 해제
       if (curUser && db) {
-        saveCloud();
-        showToast('📂 복원 완료! (' + cnt + '일치) — 클라우드 저장 중...');
+        baseRef().set({
+          records: records,
+          chanjeSettings: {
+            name: forestCfg.name,
+            giwon: forestCfg.prayer,
+            startDate: forestCfg.startDate,
+            endDate: forestCfg.endDate,
+            goalMin: forestCfg.goalMin,
+            msgs: forestMsgs
+          },
+          shinGoal: {
+            sinGoal: goals.sin,
+            haengGoal: goals.haeng,
+            hakGoal: goals.hak,
+            rptTemplate: rptTemplate,
+            fixedPhrase: fixedPhrase,
+            spFolders: spFolders,
+            spDone: spDone,
+            customHaengItems: customHaengItems
+          }
+        }).then(function() {
+          restoring = false;
+          showToast('📂 복원 + 저장 완료! (' + cnt + '일치)');
+        }).catch(function(err) {
+          restoring = false;
+          showToast('⚠️ 복원됐지만 저장 오류: ' + err.message);
+        });
       } else {
-        showToast('📂 복원 완료! (' + cnt + '일치 데이터)');
+        restoring = false;
+        showToast('📂 복원 완료! (' + cnt + '일치, 로컬에만 저장)');
       }
     } catch(err) {
+      restoring = false;
       showToast('❌ 파일 읽기 오류: ' + err.message);
       console.error('restoreBackup error:', err);
     }
@@ -956,6 +988,7 @@ function saveCloud() {
 
 function loadCloud() {
   if (!curUser || !db) return;
+  if (restoring) return; // 복원 중엔 덮어쓰기 차단
   showToast('☁️ 불러오는 중...');
 
   // users/{uid} 전체를 한번에 읽기
