@@ -804,18 +804,36 @@ function restoreBackup(input) {
   reader.onload = function(e) {
     try {
       var data = JSON.parse(e.target.result);
-      // records 키 또는 최상위 날짜키 복원
+
+      // records 파싱
+      var newRecs = null;
       if (data.records && typeof data.records === 'object') {
-        records = data.records;
+        newRecs = data.records;
       } else {
         var dateKeys = Object.keys(data).filter(function(k) { return /^\d{4}-\d{2}-\d{2}$/.test(k); });
         if (dateKeys.length > 0) {
-          records = {};
-          dateKeys.forEach(function(k) { records[k] = data[k]; });
+          newRecs = {};
+          dateKeys.forEach(function(k) { newRecs[k] = data[k]; });
         } else {
           showToast('❌ 백업 파일 형식 오류'); return;
         }
       }
+
+      // 기존 records와 병합 (새 데이터 우선)
+      Object.keys(newRecs).forEach(function(k) {
+        var r = newRecs[k];
+        // 필수 필드 보장
+        records[k] = {
+          sinMin: r.sinMin || '',
+          reso: r.reso || '',
+          haeng: Array.isArray(r.haeng) ? r.haeng : [],
+          hak: Array.isArray(r.hak) ? r.hak : [],
+          speech: Array.isArray(r.speech) ? r.speech : [],
+          members: Array.isArray(r.members) ? r.members : [],
+          activity: Array.isArray(r.activity) ? r.activity : []
+        };
+      });
+
       if (data.goals) goals = data.goals;
       if (data.forestCfg) forestCfg = data.forestCfg;
       if (data.forestMsgs) forestMsgs = data.forestMsgs;
@@ -824,11 +842,22 @@ function restoreBackup(input) {
       if (data.spFolders) spFolders = data.spFolders;
       if (data.spDone) spDone = data.spDone;
       if (data.customHaengItems) customHaengItems = data.customHaengItems;
-      renderRecord();
-      showToast('📂 복원 완료! (' + Object.keys(records).length + '일치 데이터)');
+
+      var cnt = Object.keys(newRecs).length;
+      showToast('📂 복원 완료! (' + cnt + '일치 데이터)');
+      saveLocal();
+
+      // 안전하게 렌더링
+      try { updateDateDisp(); } catch(e2) {}
+      try { renderRecord(); } catch(e2) {}
+      try { renderCal(); } catch(e2) {}
+      try { renderCol(); } catch(e2) {}
+      try { renderForest(); } catch(e2) {}
+
       if (confirm('복원된 데이터를 클라우드에도 저장할까요?')) saveCloud();
     } catch(err) {
       showToast('❌ 파일 읽기 오류: ' + err.message);
+      console.error('restoreBackup error:', err);
     }
   };
   reader.readAsText(file);
