@@ -708,17 +708,19 @@ var DAYS = ['일', '월', '화', '수', '목', '금', '토'];
 
 // ====== FIREBASE ======
 function initFirebase() {
+  if (typeof firebase === 'undefined') {
+    setTimeout(initFirebase, 300); return;
+  }
   var cfg = {
-  apiKey: "AIzaSyAvtgUROy9sqe4mnjcb3HV4TzRQ6bXsCQA",
-  authDomain: "shinshim-diary.firebaseapp.com",
-  databaseURL: "https://shinshim-diary-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "shinshim-diary",
-  storageBucket: "shinshim-diary.firebasestorage.app",
-  messagingSenderId: "736639802328",
-  appId: "1:736639802328:web:1a8dabc364c22af453f0ad"
+    apiKey: "AIzaSyAvtgUROy9sqe4mnjcb3HV4TzRQ6bXsCQA",
+    authDomain: "shinshim-diary.firebaseapp.com",
+    databaseURL: "https://shinshim-diary-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "shinshim-diary",
+    storageBucket: "shinshim-diary.firebasestorage.app",
+    messagingSenderId: "736639802328",
+    appId: "1:736639802328:web:1a8dabc364c22af453f0ad"
   };
   try {
-    if (!cfg.apiKey) return;
     if (!firebase.apps.length) firebase.initializeApp(cfg);
     db = firebase.database();
     firebase.auth().onAuthStateChanged(function(u) {
@@ -735,12 +737,22 @@ function initFirebase() {
         document.getElementById('uinfo').style.display = 'none';
       }
     });
-    firebase.auth().getRedirectResult().catch(function() {});
-  } catch (e) { console.log('Firebase:', e.message); }
+    firebase.auth().getRedirectResult().then(function(r) {
+      if (r && r.user) loadCloud();
+    }).catch(function(e) { console.warn('redirect:', e.message); });
+  } catch (e) {
+    console.error('Firebase 초기화 오류:', e.message);
+    setTimeout(initFirebase, 500);
+  }
 }
 
+
 function loginGoogle() {
-  if (!db) { showToast('Firebase 설정이 필요합니다'); return; }
+  if (!db) {
+    initFirebase();
+    setTimeout(loginGoogle, 800);
+    return;
+  }
   var p = new firebase.auth.GoogleAuthProvider();
   p.setCustomParameters({ prompt: 'select_account' });
   firebase.auth().signInWithPopup(p).catch(function(e) {
