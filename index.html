@@ -57,9 +57,9 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
 
 /* TABBAR */
 #tabbar{
-  display:flex;height:48px;background:var(--sf);
-  border-bottom:1.5px solid var(--bd);position:sticky;top:54px;z-index:100;
-  padding:0 4px;
+  display:flex;height:44px;background:var(--sf);
+  border-bottom:1.5px solid var(--bd);position:sticky;top:52px;z-index:100;
+  padding:0 2px;
 }
 .tbtn{
   flex:1;height:100%;font-size:12px;font-weight:600;color:var(--tx3);
@@ -257,9 +257,9 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
 .cdot{width:5px;height:5px;border-radius:50%;}
 
 /* FOREST */
-.marqwrap{background:var(--g);padding:12px 16px;display:flex;align-items:center;gap:8px;overflow:hidden;}
-.marqinner{flex:1;overflow:hidden;position:relative;}
-.marqtxt{white-space:nowrap;font-size:13px;font-weight:600;color:#fff;display:inline-block;will-change:transform;}
+.marqwrap{background:var(--g);padding:10px 16px;display:flex;align-items:center;gap:8px;overflow:hidden;}
+.marqinner{flex:1;overflow:hidden;position:relative;display:flex;align-items:center;height:22px;}
+.marqtxt{white-space:nowrap;font-size:13px;font-weight:600;color:#fff;display:inline-block;will-change:transform;line-height:1;}
 .sgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:8px 12px 0;}
 .scell{border-radius:10px;padding:10px 4px;text-align:center;}
 .wchart{border-radius:var(--r);border:1px solid var(--bd);background:var(--sf);padding:12px;margin:12px 12px 0;}
@@ -448,7 +448,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
 <div id="tab-collection" class="tcon">
 
   <!-- ① 서브탭 필터 (sticky) -->
-  <div class="fpills" id="fpills" style="position:sticky;top:56px;z-index:30;background:var(--sf);border-bottom:1px solid var(--bd);padding:8px 10px;display:flex;gap:4px;"></div>
+  <div class="fpills" id="fpills" style="position:sticky;top:52px;z-index:30;background:var(--sf);border-bottom:1px solid var(--bd);padding:12px 10px;display:flex;gap:4px;"></div>
 
   <!-- ② 월 네비 영역: 월별=< n월 >, 나머지=기간 텍스트 -->
   <div id="col-mnav" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:10px 14px 0;min-height:40px;">
@@ -507,7 +507,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
 <!-- CHALLENGE TAB -->
 <div id="tab-challenge" class="tcon">
   <!-- 3탭 pill 스타일 -->
-  <div style="display:flex;gap:5px;background:var(--sf);position:sticky;top:56px;z-index:40;padding:9px 12px;border-bottom:1px solid var(--bd);">
+  <div style="display:flex;gap:5px;background:var(--sf);position:sticky;top:52px;z-index:40;padding:12px 12px;border-bottom:1px solid var(--bd);">
     <button id="ch-tab-chart" class="ch-stab on" onclick="switchChTab('chart',this)">어서 연찬표</button>
     <button id="ch-tab-essay" class="ch-stab"    onclick="switchChTab('essay',this)">어서</button>
     <button id="ch-tab-sp"    class="ch-stab"    onclick="switchChTab('speech',this)">스피치</button>
@@ -748,7 +748,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
       <span id="m-folder-mgr-title" style="font-size:14px;font-weight:800;">📁 폴더 관리</span>
       <button onclick="closeM('m-folder-mgr')" style="font-size:18px;color:var(--tx3);">×</button>
     </div>
-    <div style="font-size:10px;color:var(--tx3);margin-bottom:8px;">드래그로 순서 변경 · 이름 수정 · 삭제</div>
+    <div style="font-size:10px;color:var(--tx3);margin-bottom:8px;">이름 수정 · 삭제</div>
     <div id="folder-mgr-list" style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:5px;margin-bottom:12px;min-height:40px;"></div>
     <div style="border-top:1px solid var(--bd);padding-top:10px;">
       <div style="display:flex;gap:6px;align-items:center;">
@@ -1956,28 +1956,24 @@ function renderFolderMgrList() {
   var listEl = document.getElementById('folder-mgr-list');
   listEl.innerHTML = '';
   var folders = getFolderMgrArr();
-  // 어서 탭은 가나다순 자동 정렬
-  if (_folderMgrMode === 'essay') {
-    folders = folders.slice().sort(function(a,b){return a.name.localeCompare(b.name,'ko');});
-  }
+  // 항상 가나다순 정렬
+  folders = folders.slice().sort(function(a,b){return a.name.localeCompare(b.name,'ko');});
   if (!folders.length) {
     listEl.innerHTML = '<div style="text-align:center;padding:16px;font-size:12px;color:var(--tx3);">폴더가 없습니다</div>';
     return;
   }
   folders.forEach(function(f) {
     var row = document.createElement('div');
-    row.style.cssText = 'display:flex;align-items:center;gap:6px;padding:8px 10px;border-radius:var(--rs);background:var(--bg);border:1px solid var(--bd);';
-
+    row.style.cssText = 'display:flex;align-items:center;gap:0;';
     var inp = document.createElement('input');
-    inp.type = 'text'; inp.value = f.name; inp.className = 'minp';
-    inp.style.cssText = 'flex:1;margin-bottom:0;font-size:12px;height:30px;';
+    inp.type = 'text'; inp.value = f.name;
+    inp.style.cssText = 'flex:1;height:38px;border:1px solid var(--bd);border-radius:var(--rs) 0 0 var(--rs);background:var(--bg);padding:0 12px;font-size:13px;color:var(--tx);outline:none;box-sizing:border-box;';
     inp.onblur = (function(folder){ return function(){
       var v = inp.value.trim();
       if (v && v !== folder.name) { folder.name = v; saveLocal(); renderChallenge(); }
     }; })(f);
-
     var delBtn = document.createElement('button');
-    delBtn.style.cssText = 'font-size:15px;color:var(--tx3);background:none;border:none;cursor:pointer;flex-shrink:0;line-height:1;';
+    delBtn.style.cssText = 'width:38px;height:38px;border:1px solid var(--bd);border-left:none;border-radius:0 var(--rs) var(--rs) 0;background:var(--bg);font-size:16px;color:var(--tx3);cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;';
     delBtn.textContent = '✕';
     delBtn.onclick = (function(fid){ return function(e){
       e.stopPropagation(); e.preventDefault();
@@ -1987,7 +1983,6 @@ function renderFolderMgrList() {
         saveLocal(); renderChallenge(); renderFolderMgrList();
       });
     }; })(f.id);
-
     row.appendChild(inp); row.appendChild(delBtn);
     listEl.appendChild(row);
   });
@@ -3209,12 +3204,8 @@ function renderAllTab(cont, recs) {
       sinN > 0 && ['green', '신', fmtMin(sinN)],
       haeng.length > 0 && ['pink', '행', haeng.map(function(h) { return h.name + ' ' + getT(h); }).join(', ')],
       hak.length > 0 && ['blue', '학', hak.map(function(h) { return h.bookName + ' p.' + h.startPage + '~' + h.endPage; }).join(', ')],
-      r.reso && ['purple', '결의', r.reso],
-      mem.length > 0 && ['teal', '멤버 상황', mem.map(function(m) {
-        var n = m.name || '';
-        // 이름에서 지부 추출: 이름B(지부) 또는 이름(지부) 패턴
-        return '* ' + n + (m.memo ? ' : ' + m.memo : '');
-      }).join('\n')]
+      r.reso && ['purple', '결의', r.reso]
+      // 멤버 상황은 박스에 미노출 (복사 시에만 포함)
     ].filter(Boolean);
 
     rows.forEach(function(row) {
@@ -3324,9 +3315,15 @@ function renderSinTab(cont, recs) {
     '<div style="font-size:11px;font-weight:700;color:var(--tx);margin-bottom:8px;">📅 주차별 창제 시간</div>' +
     weekArr.map(function(e, wi) {
       var wMin = e[1].min;
-      var ws = e[1].start;
+      var ws = e[1].start; // 주 시작(월요일)
+      var thu = new Date(ws); thu.setDate(ws.getDate() + 3); // 목요일
+      var thuMonth = thu.getMonth() + 1;
+      // 해당 월의 첫 목요일 기준으로 몇 주차인지
+      var firstThu = new Date(thu.getFullYear(), thu.getMonth(), 1);
+      while (firstThu.getDay() !== 4) firstThu.setDate(firstThu.getDate() + 1);
+      var weekNum = Math.round((thu - firstThu) / (7 * 86400000)) + 1;
       var we = new Date(ws); we.setDate(ws.getDate() + 6);
-      var weekLabel = (wi + 1) + '주차 (' + (ws.getMonth()+1) + '/' + ws.getDate() + '~' + (we.getMonth()+1) + '/' + we.getDate() + ')';
+      var weekLabel = thuMonth + '월 ' + weekNum + '주차 (' + (ws.getMonth()+1) + '/' + ws.getDate() + '~' + (we.getMonth()+1) + '/' + we.getDate() + ')';
       var maxW = Math.max.apply(null, weekArr.map(function(x) { return x[1].min; }));
       var pct = maxW > 0 ? Math.round(wMin / maxW * 100) : 0;
       return '<div style="margin-bottom:7px;">' +
@@ -3689,14 +3686,17 @@ function renderMemTab(cont) {
     if (!last || last < c3m) n3m.push(name);
     else if (last < c2m) n2m.push(name);
   });
+  // 3개월 이상: 랜덤 한 명 추천 카드 (소속통계 아래)
   if (n3m.length) {
-    var b1 = document.createElement('div');
-    b1.style.cssText = 'border-radius:var(--rs);background:var(--pkl);padding:9px 12px;font-size:11px;color:var(--pk);line-height:1.6;margin-bottom:5px;';
-    b1.textContent = '만난지 3개월 이상 지난 ' + n3m.join(', ') + '과 반갑게 연락해보세요😄'; cont.appendChild(b1);
+    var randName = n3m[Math.floor(Math.random() * n3m.length)];
+    var nudge = document.createElement('div');
+    nudge.style.cssText = 'border-radius:var(--rs);background:var(--pul);padding:10px 13px;font-size:12px;color:var(--pu);line-height:1.6;margin-bottom:7px;font-weight:600;';
+    nudge.textContent = '💜 대화한 지 3개월 이상된 ' + randName + '님과 만나보세요!';
+    cont.appendChild(nudge);
   }
   if (n2m.length) {
     var b2 = document.createElement('div');
-    b2.style.cssText = 'border-radius:var(--rs);background:var(--yel);opacity:.9;padding:9px 12px;font-size:11px;color:#8a6800;line-height:1.6;margin-bottom:7px;';
+    b2.style.cssText = 'border-radius:var(--rs);background:var(--yel);padding:9px 12px;font-size:11px;color:#8a6800;line-height:1.6;margin-bottom:7px;';
     b2.textContent = '만난지 2개월 이상 지난 ' + n2m.join(', ') + '의 안부를 물어보세요😉'; cont.appendChild(b2);
   }
 
@@ -4248,7 +4248,7 @@ function buildMarqMsgs() {
       .replace(/\(이름\)/g, name)
       .replace(/창제 \(n\)시간 \(n\)분/g, '창제 ' + (sinH > 0 ? sinH + '시간 ' : '') + sinM + '분')
       .replace(/\(n\)명이 격려받았어요/g, actCnt + '명이 격려받았어요')
-      .replace(/도서 \(n\)권과 어서 \(n\)편/g, '도서 ' + bookCnt + '권(' + bookPages + 'p)과 어서 ' + serCnt + '편')
+      .replace(/도서 \(n\)권과 어서 \(n\)편/g, '도서 ' + bookCnt + '권에서 ' + bookPages + 'p를 연찬했어요')
       .replace(/\(n\)/g, function() { return actCnt; });
   });
 }
