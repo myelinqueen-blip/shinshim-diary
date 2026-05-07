@@ -440,6 +440,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
     <div class="cbdy">
       <div id="activity-list"></div>
       <button class="addbtn" onclick="addActivity()">+ 추가</button>
+      <button class="addbtn" onclick="loadRecentActivity()" style="margin-left:4px;background:var(--gl);color:var(--g);border-color:var(--g);">불러오기</button>
     </div>
   </div>
 </div>
@@ -737,7 +738,9 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
     <label class="mlbl">폴더</label>
     <select class="minp" id="m-sp-folder" style="width:100%;margin-bottom:12px;appearance:none;-webkit-appearance:none;"></select>
     <label class="mlbl">내용</label>
-    <textarea class="minp" id="m-sp-text" rows="5" placeholder="스피치 내용 입력..." style="min-height:100px;resize:vertical;white-space:pre-wrap;"></textarea>
+    <textarea class="minp" id="m-sp-text" rows="5" placeholder="스피치 내용 입력..." style="min-height:100px;resize:vertical;white-space:pre-wrap;margin-bottom:12px;"></textarea>
+    <label class="mlbl">키워드 <span style="font-size:10px;font-weight:400;color:var(--tx3);">(쉼표로 구분, 검색에 반영)</span></label>
+    <input type="text" class="minp" id="m-sp-kw" placeholder="예: 용기, 화합, 청년" style="margin-bottom:0;"/>
     <div class="mfoot"><button class="mcan" onclick="closeM('m-sp-reg')">취소</button><button class="mok" onclick="confirmSpReg()">등록</button></div>
   </div>
 </div>
@@ -2861,6 +2864,26 @@ function renderActList(list) {
   });
 }
 
+function loadRecentActivity() {
+  var today = dk(curDate);
+  // 오늘 제외 가장 최근 날짜 찾기
+  var dates = Object.keys(records).filter(function(d) {
+    return d < today && records[d] && (records[d].activity || []).length > 0;
+  }).sort();
+  if (!dates.length) { showToast('불러올 활동 일정이 없습니다'); return; }
+  var recent = dates[dates.length - 1];
+  var srcList = (records[recent].activity || []).filter(function(a) { return a.name || a.date; });
+  if (!srcList.length) { showToast('불러올 활동 일정이 없습니다'); return; }
+  var r = getRec(today);
+  // 기존 항목에 추가 (중복 방지)
+  srcList.forEach(function(a) {
+    r.activity.push({ id: uid(), date: a.date || '', name: a.name || '', memo: a.memo || '' });
+  });
+  renderActList(r.activity);
+  autoSave();
+  showToast('📋 ' + fmtShort(recent) + ' 활동 일정 불러옴');
+}
+
 function addActivity() {
   var k = dk(curDate), r = getRec(k);
   if (!r.activity) r.activity = [];
@@ -3148,7 +3171,7 @@ function renderAllTab(cont, recs) {
   // 보고문구 버튼 - 전체탭 최상단
   var rptBar = document.createElement('div');
   rptBar.style.cssText = 'display:flex;gap:6px;align-items:center;margin-bottom:6px;';
-  rptBar.innerHTML = '<button onclick="copyReport()" style="height:28px;border-radius:8px;border:1.5px solid var(--pu);background:var(--sf);padding:0 10px;font-size:11px;font-weight:700;color:var(--pu);">보고문구 복사</button><button onclick="openReportEdit()" style="width:28px;height:28px;border-radius:8px;border:1px solid var(--bd);background:var(--sf);font-size:13px;">✏️</button>';
+  rptBar.innerHTML = '<button onclick="copyFixedPhrase()" style="height:28px;border-radius:8px;border:1.5px solid var(--pu);background:var(--sf);padding:0 10px;font-size:11px;font-weight:700;color:var(--pu);">보고문구 복사</button><button onclick="openFixedPhraseEdit()" style="width:28px;height:28px;border-radius:8px;border:1px solid var(--bd);background:var(--sf);font-size:13px;">✏️</button>';
   cont.appendChild(rptBar);
   var filled = recs.filter(function(r) {
     return (parseInt(r.sinMin || 0) > 0) ||
@@ -3771,7 +3794,11 @@ function renderSpTab(cont, searchId) {
   var all = getAllSpeech();
   var searchEl = document.getElementById(searchId);
   var q = searchEl ? searchEl.value.toLowerCase() : '';
-  var filtered = q ? all.filter(function(s) { return s.text.toLowerCase().includes(q); }) : all;
+  var filtered = q ? all.filter(function(s) {
+    if (s.text.toLowerCase().includes(q)) return true;
+    if (s.keywords && s.keywords.some(function(k){ return k.toLowerCase().includes(q); })) return true;
+    return false;
+  }) : all;
   var visible = filtered.filter(function(s) { return !spDone[s.id] && getSpFolderName(s.id) !== '숨김'; });
   var hidden = filtered.filter(function(s) { return spDone[s.id] || getSpFolderName(s.id) === '숨김'; });
 
@@ -3969,6 +3996,19 @@ function makeSpBox(s, isHidden) {
   txt.style.cssText = 'font-size:13px;color:var(--tx);line-height:1.55;white-space:pre-wrap;';
   txt.textContent = s.text;
   box.appendChild(hdr); box.appendChild(txt);
+
+  // 키워드 표시
+  if (s.keywords && s.keywords.length) {
+    var kwDiv = document.createElement('div');
+    kwDiv.style.cssText = 'display:flex;flex-wrap:wrap;gap:4px;margin-top:7px;';
+    s.keywords.forEach(function(kw) {
+      var tag = document.createElement('span');
+      tag.style.cssText = 'font-size:10px;color:var(--te);border:1px solid var(--te);border-radius:99px;padding:1px 7px;';
+      tag.textContent = '#' + kw;
+      kwDiv.appendChild(tag);
+    });
+    box.appendChild(kwDiv);
+  }
   return box;
 }
 
@@ -4050,9 +4090,8 @@ function saveTitleSetting() {
 }
 
 function openSpRegModal() {
-  // 날짜 기본값: 오늘
   document.getElementById('m-sp-text').value = '';
-  // 폴더 목록 갱신
+  document.getElementById('m-sp-kw').value = '';
   var sel = document.getElementById('m-sp-folder');
   sel.innerHTML = '<option value="">분류없음</option>';
   spFolders.filter(function(f) { return f.name !== '숨김'; })
@@ -4074,7 +4113,8 @@ function confirmSpReg() {
   if (!records[date]) records[date] = { sinMin: '', haeng: [], hak: [], speech: [], reso: '', members: [], activity: [] };
   if (!records[date].speech) records[date].speech = [];
   var newId = uid();
-  records[date].speech.push({ id: newId, text: text });
+  var kw = (document.getElementById('m-sp-kw').value || '').split(',').map(function(k){return k.trim();}).filter(Boolean);
+  records[date].speech.push({ id: newId, text: text, keywords: kw });
   // 폴더 지정
   if (folderId) {
     var folder = spFolders.find(function(f) { return f.id === folderId; });
@@ -4217,24 +4257,28 @@ function buildMarqMsgs() {
   var ed = forestCfg.endDate   ? new Date(forestCfg.endDate)   : null;
 
   var sinTotal = 0, actCnt = 0, bookSet = new Set(), serSet = new Set();
-  var bookPages = 0; // 도서 총 페이지
+  var bookPages = 0, serPages = 0; // 도서 총 페이지, 어서 총 페이지
   Object.entries(records).forEach(function(entry) {
     var dateStr = entry[0], r = entry[1];
-    // 창제 기간 필터
     if (sd || ed) {
       var d = new Date(dateStr);
       if (sd && d < sd) return;
       if (ed && d > ed) return;
     }
     sinTotal += parseInt(r.sinMin || 0);
-    (r.haeng || []).forEach(function(h) { if (h.name) actCnt++; });
+    // 격려 = 행에서 카테고리 '여자부'인 것
+    (r.haeng || []).forEach(function(h) {
+      if (h.name && (h.cat === '여자부' || !h.cat)) actCnt++;
+    });
     (r.hak || []).forEach(function(h) {
       if (!h.bookName) return;
+      var pg = Math.max(0, (parseInt(h.endPage) || 0) - (parseInt(h.startPage) || 0) + 1);
       if (h.bookType === '어서') {
         serSet.add(h.bookName);
+        serPages += pg;
       } else {
         bookSet.add(h.bookName);
-        bookPages += Math.max(0, (parseInt(h.endPage) || 0) - (parseInt(h.startPage) || 0) + 1);
+        bookPages += pg;
       }
     });
   });
@@ -4248,7 +4292,7 @@ function buildMarqMsgs() {
       .replace(/\(이름\)/g, name)
       .replace(/창제 \(n\)시간 \(n\)분/g, '창제 ' + (sinH > 0 ? sinH + '시간 ' : '') + sinM + '분')
       .replace(/\(n\)명이 격려받았어요/g, actCnt + '명이 격려받았어요')
-      .replace(/도서 \(n\)권과 어서 \(n\)편/g, '도서 ' + bookCnt + '권에서 ' + bookPages + 'p를 연찬했어요')
+      .replace(/도서 \(n\)권과 어서 \(n\)편/g, '도서 ' + bookCnt + '권 ' + bookPages + 'p, 어서 ' + serCnt + '편 ' + serPages + 'p 연찬!')
       .replace(/\(n\)/g, function() { return actCnt; });
   });
 }
