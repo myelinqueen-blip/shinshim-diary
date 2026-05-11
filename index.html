@@ -141,8 +141,11 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
   border:1.5px solid var(--bd);background:var(--bg);
   padding:0 7px;font-size:12px;color:var(--tx);
   appearance:none;-webkit-appearance:none;
+  max-width:100%;box-sizing:border-box;
 }
 .sel:focus{border-color:var(--g);}
+/* 기록 탭 드롭박스 너비 제한 */
+#tab-record .sel{max-width:200px;}
 .ta{
   width:100%;min-height:70px;resize:vertical;
   border-radius:var(--rs);border:1.5px solid var(--bd);
@@ -271,7 +274,8 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
 
 /* MODAL */
 .mo{position:fixed;inset:0;z-index:300;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.5);padding:16px;}
-.mb{width:100%;max-width:360px;max-height:88vh;overflow-y:auto;border-radius:var(--r);background:var(--sf);padding:20px;}
+.mb{width:100%;max-width:360px;max-height:88vh;overflow-y:auto;border-radius:var(--r);background:var(--sf);padding:20px;-webkit-overflow-scrolling:touch;}
+.mb textarea,.minp textarea,.mo textarea{-webkit-overflow-scrolling:touch;overflow-y:auto;touch-action:pan-y;}
 .mtit{font-size:15px;font-weight:800;color:var(--tx);margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;}
 .mlbl{font-size:12px;font-weight:600;color:var(--tx2);display:block;margin-bottom:5px;}
 .minp{width:100%;border-radius:var(--rs);border:1.5px solid var(--bd);background:var(--bg);padding:8px 12px;font-size:13px;color:var(--tx);margin-bottom:12px;direction:ltr;unicode-bidi:plaintext;}
@@ -529,7 +533,8 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
     </div>
     <div style="position:relative;">
       <span style="position:absolute;left:9px;top:50%;transform:translateY(-50%);font-size:12px;color:var(--tx3);">🔍</span>
-      <input type="text" class="inp" id="essay-search" placeholder="어서명·키워드·페이지 번호 검색..." style="width:100%;padding-left:28px;" oninput="renderChallenge()"/>
+      <input type="text" class="inp" id="essay-search" autocomplete="off" name="essay-search-field" placeholder="어서명·키워드·페이지 번호 검색..." style="width:100%;padding-left:28px;padding-right:28px;" oninput="renderChallenge();updateSearchClear('essay-search','essay-search-clear')"/>
+      <button id="essay-search-clear" onclick="clearSearch('essay-search','essay-search-clear');renderChallenge();" style="display:none;position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;font-size:15px;color:var(--tx3);cursor:pointer;line-height:1;">✕</button>
     </div>
   </div>
 
@@ -548,7 +553,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
     </div>
     <div style="position:relative;margin-bottom:4px;">
       <span style="position:absolute;left:9px;top:50%;transform:translateY(-50%);font-size:12px;color:var(--tx3);">🔍</span>
-      <input type="text" class="inp" id="essay-memo-search" placeholder="메모·어서명 검색..." style="width:100%;padding-left:28px;padding-right:28px;" oninput="renderChallenge();updateSearchClear('essay-memo-search','essay-memo-clear')"/>
+      <input type="text" class="inp" id="essay-memo-search" autocomplete="off" name="essay-memo-field" placeholder="메모·어서명 검색..." style="width:100%;padding-left:28px;padding-right:28px;" oninput="renderChallenge();updateSearchClear('essay-memo-search','essay-memo-clear')"/>
       <button id="essay-memo-clear" onclick="clearSearch('essay-memo-search','essay-memo-clear');renderChallenge();" style="display:none;position:absolute;right:9px;top:50%;transform:translateY(-50%);background:none;border:none;font-size:15px;color:var(--tx3);cursor:pointer;line-height:1;">✕</button>
     </div>
     <div id="essay-memo-bulk" style="display:none;gap:5px;align-items:center;flex-wrap:wrap;">
@@ -565,9 +570,10 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
       <button id="ch-fphr-btn" onclick="copyFixedPhrase()" style="height:28px;border-radius:var(--rs);border:1.5px solid var(--g);background:var(--gl);padding:0 8px;font-size:11px;font-weight:600;color:var(--g);flex-shrink:0;">고정 문구 복사</button>
       <button onclick="openFixedPhraseEdit()" style="height:28px;width:28px;border-radius:var(--rs);border:1px solid var(--bd);background:var(--sf);font-size:12px;flex-shrink:0;" title="고정 문구 수정">✏️</button>
     </div>
-    <div style="position:relative;">
+    <div style="position:relative;margin-bottom:5px;">
       <span style="position:absolute;left:8px;top:50%;transform:translateY(-50%);color:var(--tx3);font-size:13px;">🔍</span>
-      <input type="text" class="inp" id="ch-search" placeholder="스피치 검색..." style="width:100%;padding-left:28px;" oninput="renderChallenge()"/>
+      <input type="text" class="inp" id="ch-search" autocomplete="off" name="ch-search-field" placeholder="스피치 검색..." style="width:100%;padding-left:28px;padding-right:28px;" oninput="renderChallenge();updateSearchClear('ch-search','ch-search-clear')"/>
+      <button id="ch-search-clear" onclick="clearSearch('ch-search','ch-search-clear');renderChallenge();" style="display:none;position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;font-size:15px;color:var(--tx3);cursor:pointer;line-height:1;">✕</button>
     </div>
     <div id="bulk-bar" style="display:none;flex-wrap:wrap;gap:5px;align-items:center;margin-top:5px;">
       <span id="chk-cnt" style="font-size:11px;color:var(--tx3);"></span>
@@ -577,7 +583,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
     </div>
   </div>
 
-  <div id="ch-content" style="padding:0 12px;display:flex;flex-direction:column;gap:8px;margin-top:4px;overflow-y:auto;"></div>
+  <div id="ch-content" style="padding:0 12px;display:flex;flex-direction:column;gap:8px;margin-top:4px;overflow-y:auto;min-height:100px;padding-bottom:80px;"></div>
 </div>
 
 <!-- FOREST TAB -->
@@ -736,7 +742,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
   <div class="mb">
     <div class="mtit"><span>스피치 등록</span><button onclick="closeM('m-sp-reg')" style="font-size:18px;color:var(--tx3);">×</button></div>
     <label class="mlbl">폴더</label>
-    <select class="minp" id="m-sp-folder" style="width:100%;margin-bottom:12px;appearance:none;-webkit-appearance:none;"></select>
+    <select class="minp" id="m-sp-folder" style="width:100%;margin-bottom:12px;appearance:none;-webkit-appearance:none;" onchange="handleSpFolderSelect(this)"></select>
     <label class="mlbl">내용</label>
     <textarea class="minp" id="m-sp-text" rows="5" placeholder="스피치 내용 입력..." style="min-height:100px;resize:vertical;white-space:pre-wrap;margin-bottom:12px;"></textarea>
     <label class="mlbl">키워드 <span style="font-size:10px;font-weight:400;color:var(--tx3);">(쉼표로 구분, 검색에 반영)</span></label>
@@ -1292,7 +1298,7 @@ function restoreBackup(input) {
 
       if (data.goals) goals = data.goals;
       if (data.forestCfg) forestCfg = data.forestCfg;
-      if (data.forestMsgs) forestMsgs = data.forestMsgs;
+      if (data.forestMsgs && Array.isArray(data.forestMsgs) && data.forestMsgs.length >= 18) forestMsgs = data.forestMsgs;
       if (data.rptTemplate) rptTemplate = data.rptTemplate;
       if (data.fixedPhrase) fixedPhrase = data.fixedPhrase;
       if (data.spFolders) spFolders = data.spFolders;
@@ -1472,7 +1478,7 @@ function loadCloud() {
       if (cs.startDate) forestCfg.startDate = cs.startDate;
       if (cs.endDate)   forestCfg.endDate   = cs.endDate;
       if (cs.goalMin)   forestCfg.goalMin   = cs.goalMin;
-      if (cs.msgs && Array.isArray(cs.msgs) && cs.msgs.length) forestMsgs = cs.msgs;
+      if (cs.msgs && Array.isArray(cs.msgs) && cs.msgs.length >= 18) forestMsgs = cs.msgs;
       console.log('✅ chanjeSettings 복원');
     }
 
@@ -1572,7 +1578,17 @@ function fmtShort(s) {
   return (d.getMonth() + 1) + '/' + d.getDate();
 }
 
-function closeM(id) { document.getElementById(id).style.display = 'none'; }
+function closeM(id) {
+  document.getElementById(id).style.display = 'none';
+}
+
+// 모달 바깥 클릭 시 닫기
+document.addEventListener('click', function(e) {
+  if (!e.target.classList.contains('mo')) return;
+  // .mo 직접 클릭 (backdrop)
+  var id = e.target.id;
+  if (id && id !== 'm-confirm') e.target.style.display = 'none';
+});
 
 function saveLocal() {
   try {
@@ -1593,7 +1609,7 @@ function loadLocal() {
     if (d.records) records = d.records;
     if (d.goals) goals = d.goals;
     if (d.forestCfg) forestCfg = d.forestCfg;
-    if (d.forestMsgs && Array.isArray(d.forestMsgs) && d.forestMsgs.length) forestMsgs = d.forestMsgs;
+    if (d.forestMsgs && Array.isArray(d.forestMsgs) && d.forestMsgs.length >= 18) forestMsgs = d.forestMsgs;
     if (d.rptTemplate) rptTemplate = d.rptTemplate;
     if (d.fixedPhrase) fixedPhrase = d.fixedPhrase;
     if (d.spFolders) spFolders = d.spFolders;
@@ -2594,7 +2610,57 @@ function renderHakList(list) {
     nInp.placeholder = '도서명/어서명';
     nInp.value = item.bookName || '';
     nInp.style.cssText = 'flex:1;';
-    nInp.oninput = (function(it) { return function() { it.bookName = nInp.value; autoSave(); }; })(item);
+    var nWrap2 = document.createElement('div');
+    nWrap2.style.cssText = 'position:relative;flex:1;min-width:0;';
+    nInp.style.cssText = 'flex:1;width:100%;';
+
+    // 도서명 자동완성 드롭다운
+    var hakAcBox = document.createElement('div');
+    hakAcBox.style.cssText = 'position:absolute;left:0;top:100%;min-width:180px;background:var(--sf);border:1px solid var(--bd);border-radius:var(--rs);box-shadow:0 4px 12px rgba(0,0,0,.1);z-index:9999;max-height:150px;overflow-y:auto;display:none;';
+    nWrap2.appendChild(nInp); nWrap2.appendChild(hakAcBox);
+
+    function getRecentBookNames() {
+      var seen = {}, result = [];
+      Object.keys(records).sort().reverse().forEach(function(d) {
+        (records[d].hak || []).forEach(function(h) {
+          if (h.bookName && !seen[h.bookName]) { seen[h.bookName] = true; result.push(h.bookName); }
+        });
+      });
+      return result;
+    }
+
+    function showHakAC(q) {
+      var names = getRecentBookNames().filter(function(n){ return !q || n.includes(q); }).slice(0,8);
+      hakAcBox.innerHTML = '';
+      if (!names.length) { hakAcBox.style.display = 'none'; return; }
+      names.forEach(function(n) {
+        var opt = document.createElement('div');
+        opt.style.cssText = 'padding:6px 10px;font-size:12px;cursor:pointer;color:var(--tx);border-bottom:1px solid var(--bd);';
+        opt.textContent = n;
+        opt.onmousedown = function(e) {
+          e.preventDefault();
+          nInp.value = n; item.bookName = n; autoSave();
+          hakAcBox.style.display = 'none';
+          // 직전 끝 페이지 +1 자동 입력
+          if (!sInp.value) {
+            var lastEnd = 0;
+            Object.keys(records).sort().reverse().forEach(function(d) {
+              if (lastEnd) return;
+              (records[d].hak || []).forEach(function(h) {
+                if (h.bookName === n && h.endPage && !lastEnd) lastEnd = parseInt(h.endPage) || 0;
+              });
+            });
+            if (lastEnd > 0) { sInp.value = lastEnd + 1; item.startPage = String(lastEnd + 1); updatePg(); }
+          }
+        };
+        hakAcBox.appendChild(opt);
+      });
+      hakAcBox.style.display = 'block';
+    }
+
+    nInp.addEventListener('focus', function() { showHakAC(nInp.value); });
+    nInp.addEventListener('input', function() { item.bookName = nInp.value; autoSave(); showHakAC(nInp.value); });
+    nInp.addEventListener('blur', function() { setTimeout(function() { hakAcBox.style.display = 'none'; }, 200); });
 
     var del = document.createElement('button');
     del.className = 'delbtn';
@@ -2608,7 +2674,7 @@ function renderHakList(list) {
 
     var r1 = document.createElement('div');
     r1.style.cssText = 'display:flex;align-items:center;gap:5px;padding:2px 0;';
-    r1.appendChild(makeGrip()); r1.appendChild(bSel); r1.appendChild(nInp); r1.appendChild(del);
+    r1.appendChild(makeGrip()); r1.appendChild(bSel); r1.appendChild(nWrap2); r1.appendChild(del);
 
     var sInp = document.createElement('input');
     sInp.className = 'inp'; sInp.type = 'number'; sInp.placeholder = '시작';
@@ -2690,16 +2756,24 @@ function addSpeech() {
 // MEMBER (record)
 function parseMemberName(fullName) {
   if (!fullName) return { name: '', branch: '' };
-  // 정식/줄임 지부명 추출
-  var branch = extractNormalizedBranch(fullName);
-  if (branch) {
-    // 이름 부분 = 지부 관련 단어 제거
-    var namePart = fullName
-      .replace(/[가-힣]+지부[A-Za-z0-9]*/g, '')  // 정식 지부명
-      .replace(/\s+[가-힣]{1,4}[A-Za-z0-9]*\s*$/, '') // 줄임말 (마지막 단어)
-      .trim();
-    if (!namePart) namePart = fullName.trim().split(/\s+/)[0];
+  // 소속 키워드: 지부, 지역, 권, 방면, 블록, 그룹 등
+  var branchPattern = /([가-힣]+(?:지부|지역|권|방면|블록|그룹|구역)[A-Za-z0-9]*)/;
+  var m = fullName.match(branchPattern);
+  if (m) {
+    var branch = m[1];
+    var namePart = fullName.replace(branch, '').replace(/[A-Za-z0-9]+/g, '').trim();
+    if (!namePart) namePart = fullName.split(/\s+/)[0];
     return { name: namePart, branch: branch };
+  }
+  // 기존 extractNormalizedBranch fallback
+  var branch2 = extractNormalizedBranch(fullName);
+  if (branch2) {
+    var namePart2 = fullName
+      .replace(/[가-힣]+지부[A-Za-z0-9]*/g, '')
+      .replace(/\s+[가-힣]{1,4}[A-Za-z0-9]*\s*$/, '')
+      .trim();
+    if (!namePart2) namePart2 = fullName.trim().split(/\s+/)[0];
+    return { name: namePart2, branch: branch2 };
   }
   return { name: fullName, branch: '' };
 }
@@ -2877,7 +2951,7 @@ function loadRecentActivity() {
   var r = getRec(today);
   // 기존 항목에 추가 (중복 방지)
   srcList.forEach(function(a) {
-    r.activity.push({ id: uid(), date: a.date || '', name: a.name || '', memo: a.memo || '' });
+    r.activity.push({ id: uid(), date: a.date || '', name: a.name || '', type: a.type || '', custom: a.custom || '', memo: a.memo || '' });
   });
   renderActList(r.activity);
   autoSave();
@@ -2893,11 +2967,18 @@ function addActivity() {
 
 function copyActivity() {
   var k = dk(curDate), r = getRec(k);
-  var txt = (r.activity || []).filter(function(i) { return i.name; }).map(function(i) {
-    var t = getT(i);
-    return (i.date ? fmtShort(i.date) + ' ' : '') + i.name + (t ? ' ' + t : '') + (i.companion ? ' (동행:' + i.companion + ')' : '');
-  }).join('\n');
-  navigator.clipboard.writeText(txt).then(function() { showToast('📋 복사'); });
+  var items = (r.activity || []).filter(function(i) { return i.name; });
+  if (!items.length) { showToast('복사할 활동 일정이 없습니다'); return; }
+  var lines = items.map(function(i) {
+    var parts = [];
+    if (i.date) parts.push(fmtShort(i.date));
+    parts.push(i.name);
+    var t = i.type === '직접입력' ? (i.custom || '') : (getLbl(ACT_GROUPS, i.type) || i.type || '');
+    if (t) parts.push(t);
+    return parts.join(' ');
+  });
+  var txt = '▪️활동 일정\n' + lines.join('\n');
+  copyToClipboard(txt, function() { showToast('📋 활동 일정 복사'); });
 }
 
 // SAVE
@@ -3171,7 +3252,7 @@ function renderAllTab(cont, recs) {
   // 보고문구 버튼 - 전체탭 최상단
   var rptBar = document.createElement('div');
   rptBar.style.cssText = 'display:flex;gap:6px;align-items:center;margin-bottom:6px;';
-  rptBar.innerHTML = '<button onclick="copyFixedPhrase()" style="height:28px;border-radius:8px;border:1.5px solid var(--pu);background:var(--sf);padding:0 10px;font-size:11px;font-weight:700;color:var(--pu);">보고문구 복사</button><button onclick="openFixedPhraseEdit()" style="width:28px;height:28px;border-radius:8px;border:1px solid var(--bd);background:var(--sf);font-size:13px;">✏️</button>';
+  rptBar.innerHTML = '<button onclick="copyReport()" style="height:28px;border-radius:8px;border:1.5px solid var(--pu);background:var(--sf);padding:0 10px;font-size:11px;font-weight:700;color:var(--pu);">보고문구 복사</button><button onclick="openReportEdit()" style="width:28px;height:28px;border-radius:8px;border:1px solid var(--bd);background:var(--sf);font-size:13px;">✏️</button>';
   cont.appendChild(rptBar);
   var filled = recs.filter(function(r) {
     return (parseInt(r.sinMin || 0) > 0) ||
@@ -3196,7 +3277,7 @@ function renderAllTab(cont, recs) {
     var copyTxt = '✨ ' + (d.getMonth() + 1) + '/' + d.getDate() + '(' + DAYS[d.getDay()] + ')\n';
     if (sinN > 0) copyTxt += '▪️신 : ' + fmtMin(sinN) + '\n';
     if (haeng.length) copyTxt += '▪️행 : ' + haeng.map(function(h) { return h.name + ' ' + getT(h); }).join(', ') + '\n';
-    if (hak.length) copyTxt += '▪️학 : ' + hak.map(function(h) { return h.bookName + ' p.' + h.startPage + '~' + h.endPage; }).join(', ') + '\n';
+    if (hak.length) copyTxt += '▪️학 : ' + hak.map(function(h) { return (!h.startPage && !h.endPage) ? h.bookName : h.bookName + ' p.' + h.startPage + '~' + h.endPage; }).join(', ') + '\n';
     if (r.reso) copyTxt += '▪️결의 : ' + r.reso + '\n';
     if (mem.length) copyTxt += '▪️멤버 상황\n' + memFormatted + '\n';
     copyTxt = copyTxt.trim();
@@ -3226,7 +3307,10 @@ function renderAllTab(cont, recs) {
     var rows = [
       sinN > 0 && ['green', '신', fmtMin(sinN)],
       haeng.length > 0 && ['pink', '행', haeng.map(function(h) { return h.name + ' ' + getT(h); }).join(', ')],
-      hak.length > 0 && ['blue', '학', hak.map(function(h) { return h.bookName + ' p.' + h.startPage + '~' + h.endPage; }).join(', ')],
+      hak.length > 0 && ['blue', '학', hak.map(function(h) {
+        if (!h.startPage && !h.endPage) return h.bookName;
+        return h.bookName + ' p.' + h.startPage + '~' + h.endPage;
+      }).join(', ')],
       r.reso && ['purple', '결의', r.reso]
       // 멤버 상황은 박스에 미노출 (복사 시에만 포함)
     ].filter(Boolean);
@@ -3473,8 +3557,8 @@ function renderHakTab(cont, recs) {
       bm.get(k).pages += pg; bm.get(k).days.add(r.date);
     });
   });
-  var books = Array.from(bm.values()).filter(function(b) { return b.bookType === '도서'; }).sort(function(a, b) { return b.pages - a.pages; });
-  var essays = Array.from(bm.values()).filter(function(b) { return b.bookType === '어서'; }).sort(function(a, b) { return b.pages - a.pages; });
+  var books = Array.from(bm.values()).filter(function(b) { return b.bookType === '도서'; }).sort(function(a, b) { return a.bookName.localeCompare(b.bookName, 'ko'); });
+  var essays = Array.from(bm.values()).filter(function(b) { return b.bookType === '어서'; }).sort(function(a, b) { return a.bookName.localeCompare(b.bookName, 'ko'); });
 
   function makeSection(list, label, icon, color, bg) {
     if (!list.length) return;
@@ -3672,9 +3756,11 @@ function renderMemTab(cont) {
     (r.haeng || []).forEach(function(h) {
       if (!h.name) return;
       var t = getT(h);
-      // 카테고리 필터 적용
-      if (memCatFilter !== 'all' && h.cat !== memCatFilter) return;
-      if (!mp.has(h.name)) mp.set(h.name, { contacts: {}, lastDate: '', memos: [], cat: h.cat || '여자부' });
+      var itemCat = h.cat || '';
+      // cat 미선택이면 건너뜀, 카테고리 필터 적용
+      if (!itemCat) return; // 드롭박스 미선택 항목 제외
+      if (memCatFilter !== 'all' && itemCat !== memCatFilter) return;
+      if (!mp.has(h.name)) mp.set(h.name, { contacts: {}, lastDate: '', memos: [], cat: itemCat });
       var m = mp.get(h.name);
       m.contacts[t] = (m.contacts[t] || 0) + 1;
       if (!m.lastDate || r.date > m.lastDate) m.lastDate = r.date;
@@ -3910,45 +3996,34 @@ function makeSpBox(s, isHidden) {
   var editBtn = document.createElement('button');
   editBtn.style.cssText = 'width:22px;height:22px;border-radius:5px;border:1px solid var(--bd);background:var(--sf);display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--tx3);';
   editBtn.textContent = '✏️';
-  editBtn.onclick = (function(sp, b) {
-    return function() {
-      var txt = b.querySelector('div.sp-txt');
-      if (!txt) return;
-      var cur = sp.text;
-      var ta = document.createElement('textarea');
-      ta.value = cur;
-      ta.style.cssText = 'width:100%;min-height:60px;border-radius:var(--rs);border:1.5px solid var(--pu);background:var(--bg);padding:7px 9px;font-size:13px;color:var(--tx);resize:vertical;font-family:inherit;line-height:1.55;';
-      var saveB = document.createElement('button');
-      saveB.textContent = '저장';
-      saveB.style.cssText = 'margin-top:5px;height:26px;border-radius:var(--rs);background:var(--pu);padding:0 12px;font-size:11px;font-weight:700;color:#fff;border:none;cursor:pointer;';
-      var cancelB = document.createElement('button');
-      cancelB.textContent = '취소';
-      cancelB.style.cssText = 'margin-top:5px;margin-left:5px;height:26px;border-radius:var(--rs);background:var(--bg);padding:0 12px;font-size:11px;font-weight:700;color:var(--tx2);border:1px solid var(--bd);cursor:pointer;';
-      var edWrap = document.createElement('div');
-      edWrap.appendChild(ta); edWrap.appendChild(saveB); edWrap.appendChild(cancelB);
-      txt.replaceWith(edWrap);
-      saveB.onclick = function() {
-        sp.text = ta.value;
-        // update in records
-        Object.values(records).forEach(function(r) {
-          (r.speech || []).forEach(function(item) { if (item.id === sp.id) item.text = ta.value; });
+  editBtn.onclick = (function(sp) {
+    return function(e) {
+      e.stopPropagation();
+      // 수정 팝업 열기 (등록 팝업 재사용)
+      document.getElementById('m-sp-text').value = sp.text;
+      document.getElementById('m-sp-kw').value = (sp.keywords || []).join(', ');
+      // 폴더 선택
+      var sel = document.getElementById('m-sp-folder');
+      sel.innerHTML = '<option value="">분류없음</option><option value="__new__">+ 추가</option>';
+      var curFolder = null;
+      spFolders.filter(function(f) { return f.name !== '숨김'; })
+        .slice().sort(function(a, b) { return a.name.localeCompare(b.name, 'ko'); })
+        .forEach(function(f) {
+          var o = document.createElement('option');
+          o.value = f.id; o.textContent = f.name;
+          if ((f.speechIds || []).includes(sp.id)) { o.selected = true; curFolder = f.id; }
+          sel.appendChild(o);
         });
-        saveLocal(); saveCloud();
-        var newTxt = document.createElement('div');
-        newTxt.className = 'sp-txt';
-        newTxt.style.cssText = 'font-size:13px;color:var(--tx);line-height:1.55;white-space:pre-wrap;';
-        newTxt.textContent = ta.value;
-        edWrap.replaceWith(newTxt);
-      };
-      cancelB.onclick = function() {
-        var newTxt = document.createElement('div');
-        newTxt.className = 'sp-txt';
-        newTxt.style.cssText = 'font-size:13px;color:var(--tx);line-height:1.55;white-space:pre-wrap;';
-        newTxt.textContent = cur;
-        edWrap.replaceWith(newTxt);
-      };
+      if (curFolder) sel.value = curFolder;
+      // 수정 모드: ok버튼을 덮어쓰기
+      var okBtn = document.querySelector('#m-sp-reg .mok');
+      var origText = okBtn.textContent;
+      okBtn.textContent = '수정 완료';
+      okBtn._editMode = true;
+      okBtn._editSp = sp;
+      document.getElementById('m-sp-reg').style.display = 'flex';
     };
-  })(s, box);
+  })(s);
   btns.appendChild(editBtn);
 
   // 삭제 버튼
@@ -4092,39 +4167,66 @@ function saveTitleSetting() {
 function openSpRegModal() {
   document.getElementById('m-sp-text').value = '';
   document.getElementById('m-sp-kw').value = '';
+  var inl = document.getElementById('sp-inline-folder'); if (inl) inl.remove();
   var sel = document.getElementById('m-sp-folder');
-  sel.innerHTML = '<option value="">분류없음</option>';
+  sel.innerHTML = '<option value="">분류없음</option><option value="__new__">＋ 추가</option>';
   spFolders.filter(function(f) { return f.name !== '숨김'; })
     .slice().sort(function(a, b) { return a.name.localeCompare(b.name, 'ko'); })
     .forEach(function(f) {
-      var o = document.createElement('option');
-      o.value = f.id; o.textContent = f.name;
+      var o = document.createElement('option'); o.value = f.id; o.textContent = f.name;
       sel.appendChild(o);
     });
+  var okBtn = document.querySelector('#m-sp-reg .mok');
+  okBtn.textContent = '등록'; okBtn._editMode = false; okBtn._editSp = null;
   document.getElementById('m-sp-reg').style.display = 'flex';
+}
+
+function handleSpFolderSelect(sel) {
+  if (sel.value !== '__new__') return;
+  sel.value = '';
+  var existing = document.getElementById('sp-inline-folder'); if (existing) existing.remove();
+  var wrap = document.createElement('div'); wrap.id = 'sp-inline-folder'; wrap.style.cssText = 'margin-top:6px;';
+  var inp = document.createElement('input'); inp.type='text'; inp.placeholder='새 폴더 이름...'; inp.className='minp'; inp.style.cssText='margin-bottom:6px;';
+  var addBtn = document.createElement('button'); addBtn.textContent='추가'; addBtn.className='mok'; addBtn.style.cssText='width:100%;height:34px;';
+  wrap.appendChild(inp); wrap.appendChild(addBtn);
+  sel.parentNode.insertBefore(wrap, sel.nextSibling);
+  inp.focus();
+  addBtn.onclick = function() {
+    var name = inp.value.trim(); if (!name) return;
+    var newF = { id: uid(), name: name, speechIds: [] };
+    spFolders.push(newF); saveLocal();
+    var opt = document.createElement('option'); opt.value = newF.id; opt.textContent = newF.name;
+    sel.appendChild(opt); sel.value = newF.id; wrap.remove();
+  };
 }
 
 function confirmSpReg() {
   var text = document.getElementById('m-sp-text').value.trim();
   if (!text) { showToast('내용을 입력해주세요'); return; }
-  var date = dk(new Date());
   var folderId = document.getElementById('m-sp-folder').value;
-  // 해당 날짜 record에 speech 추가
+  if (folderId === '__new__') folderId = '';
+  var kw = (document.getElementById('m-sp-kw').value || '').split(',').map(function(k){return k.trim();}).filter(Boolean);
+  var okBtn = document.querySelector('#m-sp-reg .mok');
+  if (okBtn._editMode && okBtn._editSp) {
+    var sp = okBtn._editSp;
+    sp.text = text; sp.keywords = kw;
+    Object.values(records).forEach(function(r) {
+      (r.speech || []).forEach(function(item) { if (item.id === sp.id) { item.text = text; item.keywords = kw; } });
+    });
+    spFolders.forEach(function(f) { f.speechIds = (f.speechIds||[]).filter(function(id){return id!==sp.id;}); });
+    if (folderId) { var f2=spFolders.find(function(f){return f.id===folderId;}); if(f2){if(!f2.speechIds)f2.speechIds=[];f2.speechIds.push(sp.id);} }
+    okBtn.textContent = '등록'; okBtn._editMode = false; okBtn._editSp = null;
+    saveLocal(); saveCloud(); closeM('m-sp-reg'); showToast('✅ 수정 완료!'); renderChallenge(); return;
+  }
+  var date = dk(new Date());
   if (!records[date]) records[date] = { sinMin: '', haeng: [], hak: [], speech: [], reso: '', members: [], activity: [] };
   if (!records[date].speech) records[date].speech = [];
   var newId = uid();
-  var kw = (document.getElementById('m-sp-kw').value || '').split(',').map(function(k){return k.trim();}).filter(Boolean);
   records[date].speech.push({ id: newId, text: text, keywords: kw });
-  // 폴더 지정
-  if (folderId) {
-    var folder = spFolders.find(function(f) { return f.id === folderId; });
-    if (folder) { if (!folder.speechIds) folder.speechIds = []; folder.speechIds.push(newId); }
-  }
-  saveLocal(); saveCloud();
-  closeM('m-sp-reg');
-  showToast('✅ 스피치 등록 완료!');
-  renderCol();
+  if (folderId) { var folder=spFolders.find(function(f){return f.id===folderId;}); if(folder){if(!folder.speechIds)folder.speechIds=[];folder.speechIds.push(newId);} }
+  saveLocal(); saveCloud(); closeM('m-sp-reg'); showToast('✅ 스피치 등록 완료!'); renderChallenge();
 }
+
 function confirmFolder() {
   var name = document.getElementById('m-folder-inp').value.trim();
   if (name) { spFolders.push({ id: uid(), name: name, speechIds: [] }); saveLocal(); closeM('m-folder-name'); renderCol(); }
@@ -4256,8 +4358,10 @@ function buildMarqMsgs() {
   var sd = forestCfg.startDate ? new Date(forestCfg.startDate) : null;
   var ed = forestCfg.endDate   ? new Date(forestCfg.endDate)   : null;
 
+  // renderForest와 완전히 동일한 집계 기준
   var sinTotal = 0, actCnt = 0, bookSet = new Set(), serSet = new Set();
-  var bookPages = 0, serPages = 0; // 도서 총 페이지, 어서 총 페이지
+  var bookPages = 0, serPages = 0;
+
   Object.entries(records).forEach(function(entry) {
     var dateStr = entry[0], r = entry[1];
     if (sd || ed) {
@@ -4266,10 +4370,13 @@ function buildMarqMsgs() {
       if (ed && d > ed) return;
     }
     sinTotal += parseInt(r.sinMin || 0);
-    // 격려 = 행에서 카테고리 '여자부'인 것
+
+    // 격려 활동 = ACT_TYPES 기준 (renderForest와 동일)
     (r.haeng || []).forEach(function(h) {
-      if (h.name && (h.cat === '여자부' || !h.cat)) actCnt++;
+      if (h.name && ACT_TYPES.includes(getT(h))) actCnt++;
     });
+
+    // 도서/어서 집계
     (r.hak || []).forEach(function(h) {
       if (!h.bookName) return;
       var pg = Math.max(0, (parseInt(h.endPage) || 0) - (parseInt(h.startPage) || 0) + 1);
@@ -4290,9 +4397,12 @@ function buildMarqMsgs() {
   return msgs.map(function(m) {
     return m
       .replace(/\(이름\)/g, name)
-      .replace(/창제 \(n\)시간 \(n\)분/g, '창제 ' + (sinH > 0 ? sinH + '시간 ' : '') + sinM + '분')
+      .replace(/창제 \(n\)시간 \(n\)분/g,
+        sinTotal === 0 ? '창제 0분 달성!' :
+        (sinH > 0 ? '창제 ' + sinH + '시간 ' + sinM + '분 달성!' : '창제 ' + sinM + '분 달성!'))
       .replace(/\(n\)명이 격려받았어요/g, actCnt + '명이 격려받았어요')
-      .replace(/도서 \(n\)권과 어서 \(n\)편/g, '도서 ' + bookCnt + '권 ' + bookPages + 'p, 어서 ' + serCnt + '편 ' + serPages + 'p 연찬!')
+      .replace(/도서 \(n\)권과 어서 \(n\)편/g,
+        '도서 ' + bookCnt + '권 ' + bookPages + 'p, 어서 ' + serCnt + '편 ' + serPages + 'p 연찬!')
       .replace(/\(n\)/g, function() { return actCnt; });
   });
 }
@@ -4476,7 +4586,7 @@ function renderEViz(id, count, title, subtitle, color, bg, COLS, emojis) {
 var msgDragIdx = null;
 
 function openMsgModal() {
-  if (!forestMsgs || forestMsgs.length < 3) { forestMsgs = DEFAULT_MSGS.slice(); saveLocal(); }
+  if (!forestMsgs || forestMsgs.length < 18) { forestMsgs = DEFAULT_MSGS.slice(); saveLocal(); }
   var nameEl = document.getElementById('m-msg-name');
   if (nameEl) nameEl.value = forestCfg.name || '당신';
   renderMsgList();
@@ -4763,6 +4873,8 @@ function renderAll() {
 
 function init() {
   loadLocal();
+  // forestMsgs가 18개보다 적으면 최신 기본 문구로 강제 교체
+  if (!forestMsgs || forestMsgs.length < 18) { forestMsgs = DEFAULT_MSGS.slice(); saveLocal(); }
   rebuildHaengGroups();
   updateDateDisp();
   updateHdrTitle();
