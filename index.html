@@ -3854,24 +3854,27 @@ function debugMemberCat(name) {
 }
 
 function renderMemTab(cont) {
-  // 임시 디버그 버튼
-  var dbgBtn = document.createElement('button');
-  dbgBtn.textContent = '🔍 정보라 데이터 확인';
-  dbgBtn.style.cssText = 'width:100%;margin-bottom:8px;padding:8px;background:#fff3cd;border:1px solid #ffc107;border-radius:8px;font-size:12px;cursor:pointer;';
-  dbgBtn.onclick = function() { debugMemberCat('정보라'); };
-  cont.appendChild(dbgBtn);
-  // getPeriodRecs()로 기간 필터 통일 (신/행/학/결의와 동일한 기간 적용)
   var allRecs = getPeriodRecs();
+
+  // 먼저 r.members에 있는 이름 수집 → 이 이름들은 무조건 여자부로만
+  var memberNames = new Set();
+  allRecs.forEach(function(r) {
+    (r.members || []).forEach(function(m) { if (m.name) memberNames.add(m.name); });
+  });
+
   var mp = new Map();
   allRecs.forEach(function(r) {
     (r.haeng || []).forEach(function(h) {
       if (!h.name) return;
-      var t = getT(h);
       var itemCat = h.cat || '';
-      // cat이 HAENG_CAT 값(여자부/회합/좌담회/기타) 중 하나인 경우만 포함
       var validCats = ['여자부', '회합', '좌담회', '기타'];
+      // cat 없으면 건너뜀
       if (!itemCat || validCats.indexOf(itemCat) < 0) return;
+      // members에 있는 이름은 haeng에서 처리 안 함 (여자부로만 처리됨)
+      if (memberNames.has(h.name)) return;
+      // 카테고리 필터
       if (memCatFilter !== 'all' && itemCat !== memCatFilter) return;
+      var t = getT(h);
       if (!mp.has(h.name)) mp.set(h.name, { contacts: {}, lastDate: '', memos: [], cat: itemCat });
       var m = mp.get(h.name);
       m.contacts[t] = (m.contacts[t] || 0) + 1;
@@ -3879,10 +3882,8 @@ function renderMemTab(cont) {
     });
     (r.members || []).forEach(function(m) {
       if (!m.name) return;
-      // 멤버 상황은 전체/여자부 탭에서만 포함 (절대 다른 탭에 영향 안 줌)
+      // 멤버 상황 이름 → 항상 여자부, 전체/여자부 탭에서만
       if (memCatFilter !== 'all' && memCatFilter !== '여자부') return;
-      // haeng에서 이미 다른 cat으로 들어간 경우 무시 (오염 방지)
-      if (mp.has(m.name) && mp.get(m.name).cat && mp.get(m.name).cat !== '여자부') return;
       if (!mp.has(m.name)) mp.set(m.name, { contacts: {}, lastDate: '', memos: [], cat: '여자부' });
       var mem = mp.get(m.name);
       if (m.memo) mem.memos.push({ date: r.date, memo: m.memo });
@@ -3894,24 +3895,12 @@ function renderMemTab(cont) {
   var now = new Date();
   function totalCnt(e) { return Object.values(e[1].contacts).reduce(function(s, v) { return s + v; }, 0); }
   var sorted = Array.from(mp.entries());
-  // r.members에 있는 이름 목록 수집 (이 이름들은 여자부로만 인식)
-  var memberNames = new Set();
-  allRecs.forEach(function(r) {
-    (r.members || []).forEach(function(m) { if (m.name) memberNames.add(m.name); });
-  });
-
-  // 최종 필터: 해당 탭의 cat 기록이 없는 항목 제거
+  var memberNames2 = memberNames; // 이미 위에서 수집됨
+  // 최종 필터: memCatFilter 기준으로 재확인
   if (memCatFilter !== 'all') {
     sorted = sorted.filter(function(entry) {
-      var name = entry[0];
-      // r.members에 있는 이름 → 여자부 탭에서만
-      if (memberNames.has(name)) return memCatFilter === '여자부';
-      // haeng에서 해당 cat으로 기록된 적 있는지 확인
-      return allRecs.some(function(r) {
-        return (r.haeng || []).some(function(h) {
-          return h.name === name && h.cat === memCatFilter;
-        });
-      });
+      return mp.get(entry[0]) && mp.get(entry[0]).cat === memCatFilter
+        || (memCatFilter === '여자부' && memberNames2.has(entry[0]));
     });
   }
   if (sort === 'abc') sorted.sort(function(a, b) { return a[0].localeCompare(b[0], 'ko'); });
