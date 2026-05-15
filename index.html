@@ -2308,10 +2308,12 @@ function openTDrop(btnEl, groups, cur, cb) {
   di.textContent = '✏ 직접입력';
   di.onclick = function(e) { e.stopPropagation(); cb('직접입력'); closeTDrop(); };
   menu.appendChild(di);
-  var r = btnEl.getBoundingClientRect(), W = 190;
-  menu.style.left = '12px';
-  menu.style.right = '12px';
-  menu.style.width = 'auto';
+  var r = btnEl.getBoundingClientRect();
+  var W = 180;
+  var left = Math.min(r.left, window.innerWidth - W - 8);
+  menu.style.left = Math.max(8, left) + 'px';
+  menu.style.right = 'auto';
+  menu.style.width = W + 'px';
   menu.style.top = Math.min(r.bottom + 4, window.innerHeight - 300) + 'px';
   menu.style.display = 'block';
   document.getElementById('tdrop-ov').style.display = 'block';
@@ -3643,6 +3645,7 @@ function renderHakTab(cont, recs) {
   });
   var books = Array.from(bm.values()).filter(function(b) { return b.bookType === '도서'; }).sort(function(a, b) { return a.bookName.localeCompare(b.bookName, 'ko'); });
   var essays = Array.from(bm.values()).filter(function(b) { return b.bookType === '어서'; }).sort(function(a, b) { return a.bookName.localeCompare(b.bookName, 'ko'); });
+  var periodicals = Array.from(bm.values()).filter(function(b) { return b.bookType === '간행물'; }).sort(function(a, b) { return a.bookName.localeCompare(b.bookName, 'ko'); });
 
   function makeSection(list, label, icon, color, bg) {
     if (!list.length) return;
@@ -3658,6 +3661,7 @@ function renderHakTab(cont, recs) {
   }
   makeSection(books, '도서', '📚', 'var(--bl)', 'var(--bll)');
   makeSection(essays, '어서', '📄', 'var(--pu)', 'var(--pul)');
+  makeSection(periodicals, '간행물', '📰', 'var(--te)', 'var(--tel)');
 }
 
 var BRANCH_REGIONS = [
@@ -4593,15 +4597,16 @@ function renderForest() {
     .sort(function(a, b) { return a.bookName.localeCompare(b.bookName, 'ko'); });
   var ess = Array.from(bm.values()).filter(function(b) { return b.bookType === '어서'; })
     .sort(function(a, b) { return a.bookName.localeCompare(b.bookName, 'ko'); });
-  [[[bks, '도서', '📚', 'var(--bl)', 'var(--bll)'], [ess, '어서', '📄', 'var(--pu)', 'var(--pul)']]].forEach(function(pairs) {
-    pairs.forEach(function(p) {
-      var list = p[0], label = p[1], icon = p[2], color = p[3], bg = p[4];
-      if (!list.length) return;
-      var card = document.createElement('div'); card.className = 'bcard';
-      var totalP = list.reduce(function(s, b) { return s + b.pages; }, 0);
-      card.innerHTML = '<div style="display:flex;align-items:center;margin-bottom:9px;"><span style="font-size:12px;font-weight:800;color:var(--tx);flex:1;">' + icon + ' ' + label + '</span><span style="font-size:11px;color:var(--tx3);margin-right:7px;">' + list.length + (label === '도서' ? '권' : '편') + '</span><span style="font-size:14px;font-weight:900;color:' + color + ';">' + totalP.toLocaleString() + 'p</span></div><div style="display:flex;flex-wrap:wrap;gap:5px;">' + list.map(function(b) { return '<div style="background:' + bg + ';border-radius:99px;padding:4px 10px;display:inline-flex;gap:3px;align-items:center;"><span style="font-size:10px;color:var(--tx);">' + b.bookName + '</span><span style="font-size:9px;font-weight:700;color:' + color + ';">' + b.pages + 'p</span></div>'; }).join('') + '</div>';
-      bw.appendChild(card);
-    });
+  var per = Array.from(bm.values()).filter(function(b) { return b.bookType === '간행물'; })
+    .sort(function(a, b) { return a.bookName.localeCompare(b.bookName, 'ko'); });
+  [[bks, '도서', '📚', 'var(--bl)', 'var(--bll)'], [ess, '어서', '📄', 'var(--pu)', 'var(--pul)'], [per, '간행물', '📰', 'var(--te)', 'var(--tel)']].forEach(function(p) {
+    var list = p[0], label = p[1], icon = p[2], color = p[3], bg = p[4];
+    if (!list.length) return;
+    var card = document.createElement('div'); card.className = 'bcard';
+    var totalP = list.reduce(function(s, b) { return s + b.pages; }, 0);
+    var unit = label === '도서' ? '권' : label === '어서' ? '편' : '권';
+    card.innerHTML = '<div style="display:flex;align-items:center;margin-bottom:9px;"><span style="font-size:12px;font-weight:800;color:var(--tx);flex:1;">' + icon + ' ' + label + '</span><span style="font-size:11px;color:var(--tx3);margin-right:7px;">' + list.length + unit + '</span><span style="font-size:14px;font-weight:900;color:' + color + ';">' + totalP.toLocaleString() + 'p</span></div><div style="display:flex;flex-wrap:wrap;gap:5px;">' + list.map(function(b) { return '<div style="background:' + bg + ';border-radius:99px;padding:4px 10px;display:inline-flex;gap:3px;align-items:center;"><span style="font-size:10px;color:var(--tx);">' + b.bookName + '</span><span style="font-size:9px;font-weight:700;color:' + color + ';">' + b.pages + 'p</span></div>'; }).join('') + '</div>';
+    bw.appendChild(card);
   });
 }
 
