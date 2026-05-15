@@ -3871,6 +3871,8 @@ function renderMemTab(cont) {
   else if (sort === 'most') sorted.sort(function(a, b) { return totalCnt(b) - totalCnt(a) || a[0].localeCompare(b[0], 'ko'); });
   else if (sort === 'least') sorted.sort(function(a, b) { return totalCnt(a) - totalCnt(b) || a[0].localeCompare(b[0], 'ko'); });
 
+  if (!sorted.length) { return; } // 내용 없으면 공란
+
   // 알림 배너
   var allNames = new Set(mp.keys());
   var c2m = new Date(now); c2m.setMonth(c2m.getMonth() - 2);
