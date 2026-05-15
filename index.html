@@ -3834,6 +3834,25 @@ function getFirstRecordDate() {
   return dates.sort()[0];
 }
 
+function debugMemberCat(name) {
+  var result = [];
+  Object.entries(records).forEach(function(entry) {
+    var date = entry[0], r = entry[1];
+    (r.haeng || []).forEach(function(h) {
+      if (h.name && h.name.includes(name)) {
+        result.push('haeng ' + date + ': name="' + h.name + '" cat="' + (h.cat||'없음') + '" type="' + (h.type||'') + '"');
+      }
+    });
+    (r.members || []).forEach(function(m) {
+      if (m.name && m.name.includes(name)) {
+        result.push('members ' + date + ': name="' + m.name + '" memo="' + (m.memo||'').slice(0,20) + '"');
+      }
+    });
+  });
+  console.log('=== ' + name + ' 기록 ===\n' + result.join('\n'));
+  alert('=== ' + name + ' 기록 ===\n' + result.join('\n'));
+}
+
 function renderMemTab(cont) {
   // getPeriodRecs()로 기간 필터 통일 (신/행/학/결의와 동일한 기간 적용)
   var allRecs = getPeriodRecs();
@@ -3854,8 +3873,10 @@ function renderMemTab(cont) {
     });
     (r.members || []).forEach(function(m) {
       if (!m.name) return;
-      // 멤버 상황은 전체/여자부 탭에서만 포함
+      // 멤버 상황은 전체/여자부 탭에서만 포함 (절대 다른 탭에 영향 안 줌)
       if (memCatFilter !== 'all' && memCatFilter !== '여자부') return;
+      // haeng에서 이미 다른 cat으로 들어간 경우 무시 (오염 방지)
+      if (mp.has(m.name) && mp.get(m.name).cat && mp.get(m.name).cat !== '여자부') return;
       if (!mp.has(m.name)) mp.set(m.name, { contacts: {}, lastDate: '', memos: [], cat: '여자부' });
       var mem = mp.get(m.name);
       if (m.memo) mem.memos.push({ date: r.date, memo: m.memo });
@@ -3867,6 +3888,26 @@ function renderMemTab(cont) {
   var now = new Date();
   function totalCnt(e) { return Object.values(e[1].contacts).reduce(function(s, v) { return s + v; }, 0); }
   var sorted = Array.from(mp.entries());
+  // r.members에 있는 이름 목록 수집 (이 이름들은 여자부로만 인식)
+  var memberNames = new Set();
+  allRecs.forEach(function(r) {
+    (r.members || []).forEach(function(m) { if (m.name) memberNames.add(m.name); });
+  });
+
+  // 최종 필터: 해당 탭의 cat 기록이 없는 항목 제거
+  if (memCatFilter !== 'all') {
+    sorted = sorted.filter(function(entry) {
+      var name = entry[0];
+      // r.members에 있는 이름 → 여자부 탭에서만
+      if (memberNames.has(name)) return memCatFilter === '여자부';
+      // haeng에서 해당 cat으로 기록된 적 있는지 확인
+      return allRecs.some(function(r) {
+        return (r.haeng || []).some(function(h) {
+          return h.name === name && h.cat === memCatFilter;
+        });
+      });
+    });
+  }
   if (sort === 'abc') sorted.sort(function(a, b) { return a[0].localeCompare(b[0], 'ko'); });
   else if (sort === 'recent') sorted.sort(function(a, b) { return b[1].lastDate.localeCompare(a[1].lastDate) || a[0].localeCompare(b[0], 'ko'); });
   else if (sort === 'old') sorted.sort(function(a, b) { return a[1].lastDate.localeCompare(b[1].lastDate) || a[0].localeCompare(b[0], 'ko'); });
