@@ -2492,13 +2492,13 @@ function renderHaengList(list) {
     var catBtn = document.createElement('button');
     catBtn.className = 'tdb-sm';
     catBtn.style.cssText = 'flex-shrink:0;width:54px;min-width:54px;';
-    var catVal = item.cat || '여자부';
-    catBtn.textContent = catVal.slice(0, 2); // 최대 2글자
-    catBtn.title = catVal;
+    var catVal = item.cat || '';
+    catBtn.textContent = catVal ? catVal.slice(0, 2) : '구분';
+    catBtn.title = catVal || '구분';
     catBtn.onclick = (function(it, btn) {
       return function(e) {
         e.stopPropagation();
-        openTDrop(btn, [{ header: '구분', items: HAENG_CAT }], it.cat || '여자부', function(v) {
+        openTDrop(btn, [{ header: '구분', items: HAENG_CAT }], it.cat || '', function(v) {
           it.cat = v;
           btn.textContent = v.slice(0, 2);
           btn.title = v;
@@ -3843,8 +3843,9 @@ function renderMemTab(cont) {
       if (!h.name) return;
       var t = getT(h);
       var itemCat = h.cat || '';
-      // cat 미선택이면 건너뜀, 카테고리 필터 적용
-      if (!itemCat) return; // 드롭박스 미선택 항목 제외
+      // cat이 HAENG_CAT 값(여자부/회합/좌담회/기타) 중 하나인 경우만 포함
+      var validCats = ['여자부', '회합', '좌담회', '기타'];
+      if (!itemCat || validCats.indexOf(itemCat) < 0) return;
       if (memCatFilter !== 'all' && itemCat !== memCatFilter) return;
       if (!mp.has(h.name)) mp.set(h.name, { contacts: {}, lastDate: '', memos: [], cat: itemCat });
       var m = mp.get(h.name);
