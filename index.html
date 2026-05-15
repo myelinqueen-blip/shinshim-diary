@@ -3853,8 +3853,9 @@ function renderMemTab(cont) {
     });
     (r.members || []).forEach(function(m) {
       if (!m.name) return;
-      // 멤버 상황은 카테고리 필터와 무관하게 포함
-      if (!mp.has(m.name)) mp.set(m.name, { contacts: {}, lastDate: '', memos: [], cat: '' });
+      // 멤버 상황은 전체/여자부 탭에서만 포함
+      if (memCatFilter !== 'all' && memCatFilter !== '여자부') return;
+      if (!mp.has(m.name)) mp.set(m.name, { contacts: {}, lastDate: '', memos: [], cat: '여자부' });
       var mem = mp.get(m.name);
       if (m.memo) mem.memos.push({ date: r.date, memo: m.memo });
       if (!mem.lastDate || r.date > mem.lastDate) mem.lastDate = r.date;
