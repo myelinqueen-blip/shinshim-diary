@@ -33,8 +33,8 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
 /* HEADER */
 #hdr{
   background:linear-gradient(135deg,var(--g),var(--bl));
-  padding:10px 14px;display:flex;align-items:center;justify-content:space-between;
-  position:sticky;top:0;z-index:200;box-shadow:0 2px 10px rgba(91,173,128,.25);
+  padding:0 14px;height:44px;display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:200;box-shadow:0 2px 8px rgba(91,173,128,.2);
 }
 .logo{display:flex;align-items:center;gap:8px;}
 .logo-txt{font-size:16px;font-weight:900;color:#fff;}
@@ -57,8 +57,8 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
 
 /* TABBAR */
 #tabbar{
-  display:flex;height:44px;background:var(--sf);
-  border-bottom:1.5px solid var(--bd);position:sticky;top:52px;z-index:100;
+  display:flex;height:40px;background:var(--sf);
+  border-bottom:1.5px solid var(--bd);position:sticky;top:44px;z-index:100;
   padding:0 2px;
 }
 .tbtn{
@@ -80,8 +80,8 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
 
 /* DATE NAV */
 #dnav{
-  position:sticky;top:98px;z-index:50;
-  display:flex;align-items:center;gap:8px;height:52px;padding:0 12px;
+  position:sticky;top:84px;z-index:50;
+  display:flex;align-items:center;gap:8px;height:48px;padding:0 12px;
   background:var(--sf);border-bottom:1px solid var(--bd);
 }
 .arr{
@@ -260,9 +260,9 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
 .cdot{width:5px;height:5px;border-radius:50%;}
 
 /* FOREST */
-.marqwrap{background:var(--g);padding:10px 16px;display:flex;align-items:center;gap:8px;overflow:hidden;}
-.marqinner{flex:1;overflow:hidden;position:relative;display:flex;align-items:center;height:22px;}
-.marqtxt{white-space:nowrap;font-size:13px;font-weight:600;color:#fff;display:inline-block;will-change:transform;line-height:1;}
+.marqwrap{background:var(--g);padding:0 16px;display:flex;align-items:center;gap:8px;overflow:hidden;min-height:44px;}
+.marqinner{flex:1;overflow:hidden;position:relative;display:flex;align-items:center;justify-content:flex-start;}
+.marqtxt{white-space:nowrap;font-size:13px;font-weight:600;color:#fff;display:inline-block;will-change:transform;line-height:1.3;}
 .sgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:8px 12px 0;}
 .scell{border-radius:10px;padding:10px 4px;text-align:center;}
 .wchart{border-radius:var(--r);border:1px solid var(--bd);background:var(--sf);padding:12px;margin:12px 12px 0;}
@@ -418,7 +418,9 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
       <span class="ctit">결의</span>
     </div>
     <div class="cbdy">
-      <textarea class="ta" id="reso-inp" placeholder="오늘의 결의를 기록해주세요..." oninput="autoSave()"></textarea>
+      <div style="position:relative;">
+        <textarea class="ta" id="reso-inp" placeholder="클릭하면 팝업으로 작성..." readonly onclick="openResoPopup()" style="cursor:pointer;caret-color:transparent;min-height:40px;resize:none;"></textarea>
+      </div>
     </div>
   </div>
 
@@ -453,7 +455,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
 <div id="tab-collection" class="tcon">
 
   <!-- ① 서브탭 필터 (sticky) -->
-  <div class="fpills" id="fpills" style="position:sticky;top:52px;z-index:30;background:var(--sf);border-bottom:1px solid var(--bd);padding:12px 10px;display:flex;gap:4px;"></div>
+  <div class="fpills" id="fpills" style="position:sticky;top:84px;z-index:30;background:var(--sf);border-bottom:1px solid var(--bd);padding:10px 10px 10px;display:flex;gap:4px;"></div>
 
   <!-- ② 월 네비 영역: 월별=< n월 >, 나머지=기간 텍스트 -->
   <div id="col-mnav" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:10px 14px 0;min-height:40px;">
@@ -512,7 +514,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
 <!-- CHALLENGE TAB -->
 <div id="tab-challenge" class="tcon">
   <!-- 3탭 pill 스타일 -->
-  <div style="display:flex;gap:5px;background:var(--sf);position:sticky;top:52px;z-index:40;padding:12px 12px;border-bottom:1px solid var(--bd);">
+  <div style="display:flex;gap:5px;background:var(--sf);position:sticky;top:84px;z-index:40;padding:10px 12px;border-bottom:1px solid var(--bd);">
     <button id="ch-tab-chart" class="ch-stab on" onclick="switchChTab('chart',this)">어서 연찬표</button>
     <button id="ch-tab-essay" class="ch-stab"    onclick="switchChTab('essay',this)">어서</button>
     <button id="ch-tab-sp"    class="ch-stab"    onclick="switchChTab('speech',this)">스피치</button>
@@ -524,6 +526,8 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
       <select class="sel" id="essay-filter" style="width:100%;appearance:none;-webkit-appearance:none;padding-right:24px;" onchange="renderChallenge()">
         <option value="abc">가나다순</option>
         <option value="page">페이지순</option>
+        <option value="recent">최근 연찬</option>
+        <option value="multi">다회 연찬</option>
         <option value="reading">연찬중 중단</option>
         <option value="old">오래된 연찬</option>
         <option value="done">완독</option>
@@ -583,7 +587,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
     </div>
   </div>
 
-  <div id="ch-content" style="padding:0 12px;display:flex;flex-direction:column;gap:8px;margin-top:4px;overflow-y:auto;min-height:100px;padding-bottom:80px;"></div>
+  <div id="ch-content" style="padding:0 12px;display:flex;flex-direction:column;gap:8px;margin-top:4px;padding-bottom:80px;"></div>
 </div>
 
 <!-- FOREST TAB -->
@@ -640,6 +644,14 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
       <button id="m-confirm-cancel" style="flex:1;height:38px;border-radius:var(--rs);border:1.5px solid var(--bd);background:var(--bg);font-size:13px;font-weight:600;color:var(--tx3);">취소</button>
       <button id="m-confirm-ok" style="flex:1;height:38px;border-radius:var(--rs);border:none;background:var(--pk);font-size:13px;font-weight:700;color:#fff;">삭제</button>
     </div>
+  </div>
+</div>
+
+<div id="m-reso-popup" class="mo" style="display:none;">
+  <div class="mb" style="max-height:85vh;display:flex;flex-direction:column;">
+    <div class="mtit"><span>📝 결의</span><button onclick="closeResoPopup()" style="font-size:18px;color:var(--tx3);">×</button></div>
+    <textarea id="m-reso-ta" placeholder="오늘의 결의를 기록해주세요..." style="flex:1;min-height:200px;border-radius:var(--rs);border:1.5px solid var(--bd);background:var(--bg);padding:10px 12px;font-size:13px;color:var(--tx);resize:none;line-height:1.6;white-space:pre-wrap;-webkit-overflow-scrolling:touch;overflow-y:auto;touch-action:pan-y;"></textarea>
+    <div class="mfoot" style="margin-top:10px;"><button class="mcan" onclick="closeResoPopup()">취소</button><button class="mok" onclick="saveResoPopup()">저장</button></div>
   </div>
 </div>
 
@@ -1668,6 +1680,7 @@ function openEssayNote(name) {
   var memos = (note.memos && note.memos.length) ? note.memos : [''];
   memos.forEach(function(m) { addEssayMemoField(m); });
   document.getElementById('m-essay-note').style.display = 'flex';
+  addEbookPasteHandler(document.getElementById('m-essay-core'));
 }
 
 function addEssayMemoField(val) {
@@ -1774,6 +1787,8 @@ function renderEssayTab(cont) {
   // 정렬
   if (filter === 'abc') list.sort(function(a,b){return a.name.localeCompare(b.name,'ko');});
   else if (filter === 'page') list.sort(function(a,b){return a.startP-b.startP;});
+  else if (filter === 'recent') { list = list.filter(function(x){return x.readPages>0;}); list.sort(function(a,b){return b.lastDate.localeCompare(a.lastDate);});}
+  else if (filter === 'multi') { list = list.filter(function(x){return x.readCount>0;}); list.sort(function(a,b){return b.readCount-a.readCount||a.name.localeCompare(b.name,'ko');});}
   else if (filter === 'reading') { list = list.filter(function(x){return x.isReading;}); list.sort(function(a,b){return b.lastDate.localeCompare(a.lastDate);});}
   else if (filter === 'old') { list = list.filter(function(x){return x.readPages>0;}); list.sort(function(a,b){if(a.daysSince!==b.daysSince)return b.daysSince-a.daysSince;return a.name.localeCompare(b.name,'ko');});}
   else if (filter === 'done') { list = list.filter(function(x){return x.isDone;}); list.sort(function(a,b){return a.name.localeCompare(b.name,'ko');});}
@@ -2597,7 +2612,7 @@ function renderHakList(list) {
     var bSel = document.createElement('select');
     bSel.className = 'sel';
     bSel.style.cssText = 'width:52px;flex-shrink:0;';
-    ['도서', '어서'].forEach(function(opt) {
+    ['도서', '어서', '간행물'].forEach(function(opt) {
       var o = document.createElement('option');
       o.value = opt; o.textContent = opt;
       if ((item.bookType || '도서') === opt) o.selected = true;
@@ -2792,6 +2807,20 @@ function renderMemberList(list) {
     nInp.value = item.name || ''; nInp.style.cssText = 'width:120px;flex-shrink:0;font-size:12px;';
     nInp.oninput = (function(it) { return function() { it.name = nInp.value; autoSave(); }; })(item);
 
+    // 행 이름 자동완성
+    var memNWrap = document.createElement('div'); memNWrap.style.cssText = 'position:relative;flex-shrink:0;';
+    var memAcBox = document.createElement('div'); memAcBox.style.cssText = 'position:absolute;left:0;top:100%;min-width:150px;background:var(--sf);border:1px solid var(--bd);border-radius:var(--rs);box-shadow:0 4px 12px rgba(0,0,0,.1);z-index:9999;max-height:140px;overflow-y:auto;display:none;';
+    memNWrap.appendChild(nInp); memNWrap.appendChild(memAcBox);
+    function showMemAC(q) {
+      var names = getNameHistory().filter(function(n){ return !q || n.includes(q); }).slice(0,8);
+      memAcBox.innerHTML = ''; if (!names.length){ memAcBox.style.display='none'; return; }
+      names.forEach(function(n){ var d=document.createElement('div'); d.style.cssText='padding:5px 10px;font-size:12px;cursor:pointer;border-bottom:1px solid var(--bd);'; d.textContent=n; d.onmousedown=function(e){e.preventDefault();nInp.value=n;item.name=n;autoSave();memAcBox.style.display='none';}; memAcBox.appendChild(d); });
+      memAcBox.style.display='block';
+    }
+    nInp.addEventListener('focus', function(){showMemAC(nInp.value);});
+    nInp.addEventListener('input', function(){showMemAC(nInp.value);});
+    nInp.addEventListener('blur', function(){setTimeout(function(){memAcBox.style.display='none';},200);});
+
     var mInp = document.createElement('textarea');
     mInp.className = 'inp'; mInp.placeholder = '상황 메모';
     mInp.value = item.memo || ''; mInp.style.cssText = 'flex:1;min-width:0;min-height:34px;height:34px;resize:none;padding:7px 9px;line-height:1.5;cursor:pointer;caret-color:transparent;';
@@ -2809,7 +2838,7 @@ function renderMemberList(list) {
 
     var inner = document.createElement('div');
     inner.style.cssText = 'display:flex;align-items:flex-start;gap:5px;padding:2px 0;';
-    inner.appendChild(makeGrip()); inner.appendChild(nInp); inner.appendChild(mInp); inner.appendChild(del);
+    inner.appendChild(makeGrip()); inner.appendChild(memNWrap); inner.appendChild(mInp); inner.appendChild(del);
     row.appendChild(inner); el.appendChild(row);
   });
 }
@@ -2838,6 +2867,47 @@ function saveMemberMemo() {
   }
   autoSave();
   closeMemberMemo();
+}
+
+// ebook 붙여넣기 링크 자동 제거
+function cleanEbookPaste(text) {
+  // "소설 XXX 중에서\n교보eBook..." 패턴 제거
+  text = text.replace(/\s*중에서[\s\S]*?교보eBook에서 자세히 보기\s*:\s*https?:\/\/\S+/gi, '');
+  // "소설 " 프리픽스 제거
+  text = text.replace(/^소설\s+/i, '');
+  // 남은 URL 제거
+  text = text.replace(/https?:\/\/\S+/gi, '');
+  // 빈 줄 정리
+  text = text.replace(/\n{3,}/g, '\n\n').trim();
+  return text;
+}
+function addEbookPasteHandler(el) {
+  el.addEventListener('paste', function(e) {
+    var text = (e.clipboardData || window.clipboardData).getData('text');
+    var cleaned = cleanEbookPaste(text);
+    if (cleaned !== text) {
+      e.preventDefault();
+      var start = el.selectionStart, end = el.selectionEnd;
+      var val = el.value;
+      el.value = val.slice(0, start) + cleaned + val.slice(end);
+      el.selectionStart = el.selectionEnd = start + cleaned.length;
+      el.dispatchEvent(new Event('input'));
+    }
+  });
+}
+
+function openResoPopup() {
+  var val = document.getElementById('reso-inp').value;
+  document.getElementById('m-reso-ta').value = val;
+  document.getElementById('m-reso-popup').style.display = 'flex';
+  setTimeout(function() { document.getElementById('m-reso-ta').focus(); }, 100);
+}
+function closeResoPopup() { document.getElementById('m-reso-popup').style.display = 'none'; }
+function saveResoPopup() {
+  var val = document.getElementById('m-reso-ta').value;
+  document.getElementById('reso-inp').value = val;
+  var k = dk(curDate); getRec(k).reso = val; autoSave();
+  closeResoPopup();
 }
 
 function addMember() {
@@ -2950,8 +3020,11 @@ function loadRecentActivity() {
   if (!srcList.length) { showToast('불러올 활동 일정이 없습니다'); return; }
   var r = getRec(today);
   // 기존 항목에 추가 (중복 방지)
+  var todayStr = dk(curDate);
   srcList.forEach(function(a) {
-    r.activity.push({ id: uid(), date: a.date || '', name: a.name || '', type: a.type || '', custom: a.custom || '', memo: a.memo || '' });
+    // 당일 포함, 지난 날짜 자동 제거
+    var dateStr = a.date && a.date < todayStr ? '' : (a.date || '');
+    r.activity.push({ id: uid(), date: dateStr, name: a.name || '', type: a.type || '', custom: a.custom || '', memo: a.memo || '' });
   });
   renderActList(r.activity);
   autoSave();
@@ -2971,10 +3044,12 @@ function copyActivity() {
   if (!items.length) { showToast('복사할 활동 일정이 없습니다'); return; }
   var lines = items.map(function(i) {
     var parts = [];
-    if (i.date) parts.push(fmtShort(i.date));
+    if (i.date) {
+      var d = new Date(i.date);
+      parts.push((d.getMonth()+1) + '/' + d.getDate() + '(' + DAYS[d.getDay()] + ')');
+    }
     parts.push(i.name);
-    var t = i.type === '직접입력' ? (i.custom || '') : (getLbl(ACT_GROUPS, i.type) || i.type || '');
-    if (t) parts.push(t);
+    // 구분(type)은 복사하지 않음
     return parts.join(' ');
   });
   var txt = '▪️활동 일정\n' + lines.join('\n');
@@ -3280,6 +3355,15 @@ function renderAllTab(cont, recs) {
     if (hak.length) copyTxt += '▪️학 : ' + hak.map(function(h) { return (!h.startPage && !h.endPage) ? h.bookName : h.bookName + ' p.' + h.startPage + '~' + h.endPage; }).join(', ') + '\n';
     if (r.reso) copyTxt += '▪️결의 : ' + r.reso + '\n';
     if (mem.length) copyTxt += '▪️멤버 상황\n' + memFormatted + '\n';
+    var actItems = (r.activity || []).filter(function(a){ return a.name; });
+    if (actItems.length) {
+      copyTxt += '▪️활동 일정\n' + actItems.map(function(a) {
+        var parts = [];
+        if (a.date) { var ad=new Date(a.date); parts.push((ad.getMonth()+1)+'/'+ad.getDate()+'('+DAYS[ad.getDay()]+')'); }
+        parts.push(a.name);
+        return parts.join(' ');
+      }).join('\n') + '\n';
+    }
     copyTxt = copyTxt.trim();
 
     var card = document.createElement('div');
@@ -3646,9 +3730,7 @@ function renderBranchStats() {
   allRecs.forEach(function(r) {
     (r.haeng || []).forEach(function(h) {
       if (!h.name) return;
-      // 카테고리 필터
-      if (memCatFilter !== 'all' && h.cat !== memCatFilter) return;
-      // 줄임말 포함 지부명 추출
+      // 소속통계는 모든 행 데이터 취합 (cat 필터 없음)
       var branch = extractNormalizedBranch(h.name);
       if (branch) { branchCnt[branch] = (branchCnt[branch] || 0) + 1; }
     });
@@ -3815,7 +3897,7 @@ function renderMemTab(cont) {
   var memSearchWrap = document.createElement('div');
   memSearchWrap.style.cssText = 'position:relative;margin-bottom:8px;';
   memSearchWrap.innerHTML = '<span style="position:absolute;left:9px;top:50%;transform:translateY(-50%);font-size:12px;color:var(--tx3);">🔍</span>' +
-    '<input type="text" class="inp" id="mem-name-search" placeholder="이름 검색..." style="width:100%;padding-left:28px;padding-right:28px;" oninput="renderCol()"/>' +
+    '<input type="text" class="inp" id="mem-name-search" autocomplete="off" name="mem-search-noautofill" placeholder="이름 검색..." style="width:100%;padding-left:28px;padding-right:28px;" oninput="renderCol()"/>' +
     '<button id="mem-search-clear" onclick="clearSearch(\'mem-name-search\',\'mem-search-clear\');renderCol();" style="display:none;position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:none;font-size:15px;color:var(--tx3);cursor:pointer;">✕</button>';
   cont.appendChild(memSearchWrap);
 
@@ -4022,6 +4104,7 @@ function makeSpBox(s, isHidden) {
       okBtn._editMode = true;
       okBtn._editSp = sp;
       document.getElementById('m-sp-reg').style.display = 'flex';
+      addEbookPasteHandler(document.getElementById('m-sp-text'));
     };
   })(s);
   btns.appendChild(editBtn);
@@ -4179,6 +4262,7 @@ function openSpRegModal() {
   var okBtn = document.querySelector('#m-sp-reg .mok');
   okBtn.textContent = '등록'; okBtn._editMode = false; okBtn._editSp = null;
   document.getElementById('m-sp-reg').style.display = 'flex';
+  addEbookPasteHandler(document.getElementById('m-sp-text'));
 }
 
 function handleSpFolderSelect(sel) {
@@ -4244,17 +4328,8 @@ function saveFixedPhrase() { fixedPhrase = document.getElementById('m-fp-ta').va
 
 // REPORT
 function copyReport() {
-  var recs = getPeriodRecs().sort(function(a, b) { return a.date.localeCompare(b.date); });
-  var txt = rptTemplate + '\n\n' + recs.map(function(r) {
-    var t = fmtFull(r.date) + '\n▪️신 : ' + parseInt(r.sinMin || 0) + '분';
-    var h = (r.haeng || []).filter(function(x) { return x.name; });
-    if (h.length) t += '\n▪️행 : ' + h.map(function(x) { return x.name + (getT(x) ? ' ' + getT(x) : ''); }).join(', ');
-    var k2 = (r.hak || []).filter(function(x) { return x.bookName; });
-    if (k2.length) t += '\n▪️학 : ' + k2.map(function(x) { return x.bookName + ' (' + x.startPage + '~' + x.endPage + 'p)'; }).join(', ');
-    if (r.reso) t += '\n▪️결의 : ' + r.reso;
-    return t;
-  }).join('\n\n');
-  copyToClipboard(txt, function() { showToast('📋 보고문구 복사됨!'); });
+  // 연필 이모지로 저장한 rptTemplate만 복사
+  copyToClipboard(rptTemplate, function() { showToast('📋 보고문구 복사됨!'); });
 }
 
 function openReportEdit() { document.getElementById('m-rpt-ta').value = rptTemplate; document.getElementById('m-rpt-edit').style.display = 'flex'; }
@@ -4494,7 +4569,7 @@ function renderForest() {
   var pe = document.getElementById('forest-prayer'); if(pe) pe.style.display = 'none';
 
   // EMOJI VIZ
-  renderEViz('act-viz', actCnt, '🌸 격려 활동', '광포의 꽃에 피었습니다', 'var(--pk)', 'linear-gradient(135deg,var(--pkl) 80%,var(--gl) 40%)', 10, ['🌱', '🌳', '🌸']);
+  renderEViz('act-viz', actCnt, '🌸 격려 활동', '광포의 꽃이 피었습니다', 'var(--pk)', 'linear-gradient(135deg,var(--pkl) 80%,var(--gl) 40%)', 10, ['🌱', '🌳', '🌸']);
   renderEViz('meet-viz', meetCnt, '✨ 회합 참석', '함께한 순간이 빛나요', '#D4A017', 'linear-gradient(135deg,#FFFBEC,#FFF8D0)', 10, ['✨', '✨', '⭐']);
 
   // BOOKS
