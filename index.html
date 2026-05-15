@@ -3854,6 +3854,12 @@ function debugMemberCat(name) {
 }
 
 function renderMemTab(cont) {
+  // 임시 디버그 버튼
+  var dbgBtn = document.createElement('button');
+  dbgBtn.textContent = '🔍 정보라 데이터 확인';
+  dbgBtn.style.cssText = 'width:100%;margin-bottom:8px;padding:8px;background:#fff3cd;border:1px solid #ffc107;border-radius:8px;font-size:12px;cursor:pointer;';
+  dbgBtn.onclick = function() { debugMemberCat('정보라'); };
+  cont.appendChild(dbgBtn);
   // getPeriodRecs()로 기간 필터 통일 (신/행/학/결의와 동일한 기간 적용)
   var allRecs = getPeriodRecs();
   var mp = new Map();
