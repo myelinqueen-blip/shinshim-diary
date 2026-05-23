@@ -504,7 +504,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
   <!-- ⑤ 검색창 -->
   <div id="col-search-wrap" style="padding:4px 12px 2px;position:relative;">
     <span style="position:absolute;left:20px;top:50%;transform:translateY(-50%);color:var(--tx3);font-size:13px;">🔍</span>
-    <input type="text" class="inp" id="col-search" placeholder="검색..." style="width:100%;padding-left:30px;padding-right:28px;" oninput="renderCol();updateSearchClear('col-search','col-search-clear')"/>
+    <input type="text" class="inp" id="col-search" autocomplete="off" name="col-search-nofill" placeholder="검색..." style="width:100%;padding-left:30px;padding-right:28px;" oninput="renderCol();updateSearchClear('col-search','col-search-clear')"/>
     <button id="col-search-clear" onclick="clearSearch('col-search','col-search-clear')" style="display:none;position:absolute;right:18px;top:50%;transform:translateY(-50%);background:none;border:none;font-size:15px;color:var(--tx3);cursor:pointer;line-height:1;">✕</button>
   </div>
 
@@ -1622,8 +1622,8 @@ function loadLocal() {
     if (d.goals) goals = d.goals;
     if (d.forestCfg) forestCfg = d.forestCfg;
     if (d.forestMsgs && Array.isArray(d.forestMsgs) && d.forestMsgs.length >= 18) forestMsgs = d.forestMsgs;
-    if (d.rptTemplate) rptTemplate = d.rptTemplate;
-    if (d.fixedPhrase) fixedPhrase = d.fixedPhrase;
+    if (d.rptTemplate !== undefined) rptTemplate = d.rptTemplate;
+    if (d.fixedPhrase !== undefined) fixedPhrase = d.fixedPhrase;
     if (d.spFolders) spFolders = d.spFolders;
     if (d.spDone) d.spDone && (spDone = d.spDone);
     if (d.essayNotes) essayNotes = d.essayNotes;
@@ -3730,14 +3730,35 @@ function renderBranchStats() {
 
   var allRecs = getPeriodRecs();
   var branchCnt = {};
+  var validCats = ['여자부', '회합', '좌담회', '기타'];
+
+  // r.members에 있는 이름 수집 (여자부로만 인식)
+  var memberNames = new Set();
+  allRecs.forEach(function(r) {
+    (r.members || []).forEach(function(m) { if (m.name) memberNames.add(m.name); });
+  });
 
   allRecs.forEach(function(r) {
     (r.haeng || []).forEach(function(h) {
       if (!h.name) return;
-      // 소속통계는 모든 행 데이터 취합 (cat 필터 없음)
+      var itemCat = h.cat || '';
+      // members에 있는 이름은 여자부로 처리
+      if (memberNames.has(h.name)) itemCat = '여자부';
+      // cat 없거나 유효하지 않으면 제외
+      if (!itemCat || validCats.indexOf(itemCat) < 0) return;
+      // 현재 탭 필터 적용
+      if (memCatFilter !== 'all' && itemCat !== memCatFilter) return;
       var branch = extractNormalizedBranch(h.name);
       if (branch) { branchCnt[branch] = (branchCnt[branch] || 0) + 1; }
     });
+    // 여자부/전체 탭에서 members도 포함
+    if (memCatFilter === 'all' || memCatFilter === '여자부') {
+      (r.members || []).forEach(function(m) {
+        if (!m.name) return;
+        var branch = extractNormalizedBranch(m.name);
+        if (branch) { branchCnt[branch] = (branchCnt[branch] || 0) + 1; }
+      });
+    }
   });
 
   // 지역별 합산 + 지부별 세부 (통합 표시)
@@ -4804,11 +4825,15 @@ function setupTouch(row, field) {
   var touchStartY = 0, dragging = false;
   row.addEventListener('touchstart', function(e) {
     touchStartY = e.touches[0].clientY;
+    row._touchStartX = e.touches[0].clientX;
     dragging = false;
   }, { passive: true });
   row.addEventListener('touchmove', function(e) {
     var dy = Math.abs(e.touches[0].clientY - touchStartY);
-    if (dy > 8) {
+    var dx = Math.abs(e.touches[0].clientX - (row._touchStartX || e.touches[0].clientX));
+    // 세로 이동이 크면 스크롤 허용 (preventDefault 안 함)
+    if (dy > dx && dy > 5) { dragging = false; return; }
+    if (dy > 8 || dx > 8) {
       dragging = true;
       e.preventDefault();
       var touch = e.touches[0];
