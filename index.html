@@ -1773,15 +1773,32 @@ function renderEssayTab(cont) {
     return { name, startP, endP, totalPages, readPages, pct, lastDate, daysSince, readCount, isDone, isReading, isUnread, note, kws };
   });
 
-  // 검색 필터 - 숫자만 입력 시 페이지 검색
-  var isPageSearch = q && /^\d+$/.test(q.trim());
+  // 검색 필터 - 어서명, 키워드, 페이지 번호 혼합 검색 지원
   if (q) {
-    if (isPageSearch) {
-      var qNum = parseInt(q.trim());
-      list = list.filter(function(x) { return qNum >= x.startP && qNum <= x.endP; });
-    } else {
-      list = list.filter(function(x) { return x.name.toLowerCase().includes(q) || x.kws.includes(q); });
-    }
+    // 검색어를 공백으로 구분
+    var queryParts = q.trim().split(/\s+/);
+    var pageQueries = [];
+    var textQueries = [];
+    
+    queryParts.forEach(function(part) {
+      if (/^\d+$/.test(part)) {
+        pageQueries.push(parseInt(part));
+      } else if (part.length > 0) {
+        textQueries.push(part);
+      }
+    });
+    
+    list = list.filter(function(x) {
+      // 페이지 조건 확인: 입력된 모든 페이지 번호가 범위에 있어야 함
+      var pageMatch = pageQueries.length === 0 || pageQueries.some(function(p) { return p >= x.startP && p <= x.endP; });
+      
+      // 텍스트 조건 확인: 입력된 모든 텍스트가 어서명 또는 키워드에 포함되어야 함
+      var textMatch = textQueries.length === 0 || textQueries.every(function(t) {
+        return x.name.toLowerCase().includes(t) || x.kws.includes(t);
+      });
+      
+      return pageMatch && textMatch;
+    });
   }
 
   // 정렬
@@ -4197,8 +4214,18 @@ function makeSpBox(s, isHidden) {
   var cpBtn = document.createElement('button');
   cpBtn.style.cssText = 'width:22px;height:22px;border-radius:5px;border:1px solid var(--bd);background:var(--sf);display:flex;align-items:center;justify-content:center;';
   cpBtn.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
-  // 복사 시 서명 자동 추가
-  cpBtn.onclick = (function(text) { return function() { copyToClipboard(text, function(){ showToast('📋 복사'); }); }; })(s.text);
+  // 복사 시 해시태그를 먼저 표시하고 내용 추가
+  cpBtn.onclick = (function(text, keywords) { 
+    return function() { 
+      var copyText = '';
+      // 키워드가 있으면 해시태그 형식으로 추가
+      if (keywords && keywords.length > 0) {
+        copyText = keywords.map(function(k) { return '#' + k; }).join(' ') + '\n\n';
+      }
+      copyText += text;
+      copyToClipboard(copyText, function(){ showToast('📋 복사'); }); 
+    }; 
+  })(s.text, s.keywords);
 
   if (isHidden) {
     var rst = document.createElement('button');
@@ -4247,7 +4274,16 @@ function updateBulkBar() {
 function bulkMoveFolder() { if (!Object.keys(spChecked).length) return; openFolderMove(Object.keys(spChecked)); }
 function bulkCopy() {
   var all = getAllSpeech().filter(function(s) { return spChecked[s.id]; });
-  navigator.clipboard.writeText(all.map(function(s) { return s.text; }).join('\n')).then(function() { showToast('📋 일괄 복사'); });
+  var copyTexts = all.map(function(s) {
+    var text = '';
+    // 키워드가 있으면 해시태그 형식으로 추가
+    if (s.keywords && s.keywords.length > 0) {
+      text = s.keywords.map(function(k) { return '#' + k; }).join(' ') + '\n\n';
+    }
+    text += s.text;
+    return text;
+  });
+  navigator.clipboard.writeText(copyTexts.join('\n\n')).then(function() { showToast('📋 일괄 복사'); });
 }
 function bulkDone() { Object.keys(spChecked).forEach(function(id) { spDone[id] = true; }); spChecked = {}; saveLocal(); renderCol(); }
 
@@ -4358,6 +4394,19 @@ function confirmSpReg() {
   var folderId = document.getElementById('m-sp-folder').value;
   if (folderId === '__new__') folderId = '';
   var kw = (document.getElementById('m-sp-kw').value || '').split(',').map(function(k){return k.trim();}).filter(Boolean);
+  
+  // 폴더명을 첫번째 해시태그로 자동 추가
+  var folderName = '';
+  if (folderId) {
+    var folder = spFolders.find(function(f) { return f.id === folderId; });
+    if (folder) folderName = folder.name;
+  }
+  
+  // 폴더명이 있고 이미 키워드에 없으면 맨 앞에 추가
+  if (folderName && !kw.includes(folderName)) {
+    kw.unshift(folderName);
+  }
+  
   var okBtn = document.querySelector('#m-sp-reg .mok');
   if (okBtn._editMode && okBtn._editSp) {
     var sp = okBtn._editSp;
