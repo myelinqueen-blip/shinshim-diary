@@ -305,6 +305,10 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
       <img id="uphoto" src="" alt="" style="cursor:pointer;width:26px;height:26px;border-radius:50%;border:2px solid rgba(255,255,255,.6);" onclick="showToast(document.getElementById('uname-data').textContent)"/>
       <span id="uname-data" style="display:none;"></span>
     </div>
+    <!-- 진단 버튼 -->
+    <button id="diagbtn" class="hicobtn" onclick="openDiagnostic()" title="🔧 시스템 진단" style="font-size:16px;line-height:1;">
+      🔧
+    </button>
     <!-- 자물쇠(열림) = 로그아웃 -->
     <button id="lout" class="hicobtn" onclick="logoutUser()" title="로그아웃" style="display:none;">
       <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -1163,8 +1167,10 @@ var DAYS = ['일', '월', '화', '수', '목', '금', '토'];
 // ====== FIREBASE ======
 function initFirebase() {
   if (typeof firebase === 'undefined') {
-    setTimeout(initFirebase, 300); return;
+    setTimeout(initFirebase, 300); 
+    return;
   }
+  
   var cfg = {
     apiKey: "AIzaSyAvtgUROy9sqe4mnjcb3HV4TzRQ6bXsCQA",
     authDomain: "shinshim-diary.firebaseapp.com",
@@ -1174,18 +1180,32 @@ function initFirebase() {
     messagingSenderId: "736639802328",
     appId: "1:736639802328:web:1a8dabc364c22af453f0ad"
   };
+  
   try {
-    if (!firebase.apps.length) firebase.initializeApp(cfg);
+    if (!firebase.apps.length) {
+      firebase.initializeApp(cfg);
+    }
     db = firebase.database();
-    firebase.auth().onAuthStateChanged(function(u) {
-      if (u) {
-        curUser = u;
+    console.log("✅ Firebase 초기화 완료");
+    
+    // 인증 상태 감지
+    firebase.auth().onAuthStateChanged(function(user) {
+      if (user) {
+        curUser = user;
+        console.log("✅ 로그인 상태:", user.email);
         document.getElementById('gbtn').style.display = 'none';
         document.getElementById('uinfo').style.display = 'flex';
         document.getElementById('lout').style.display = 'flex';
-        document.getElementById('uphoto').src = u.photoURL || '';
-        document.getElementById('uname-data').textContent = (u.displayName || u.email || '').split(' ')[0];
-        loadCloud();
+        document.getElementById('uphoto').src = user.photoURL || '';
+        document.getElementById('uname-data').textContent = (user.displayName || user.email || '').split(' ')[0];
+        
+        // 로그인 후 3초 뒤 데이터 동기화 (선택사항)
+        setTimeout(function() {
+          if (!records || Object.keys(records).length === 0) {
+            console.log("로컬 데이터 없음 - Firebase에서 불러오기 시도");
+            loadCloud();
+          }
+        }, 3000);
       } else {
         curUser = null;
         document.getElementById('gbtn').style.display = 'flex';
@@ -1195,36 +1215,46 @@ function initFirebase() {
     });
   } catch (e) {
     console.error('Firebase 초기화 오류:', e.message);
-    setTimeout(initFirebase, 500);
+    setTimeout(initFirebase, 1000);
   }
 }
 
 
 function loginGoogle() {
-  if (!db) { initFirebase(); setTimeout(loginGoogle, 900); return; }
-  if (!firebase || !firebase.auth) { showToast('인증 초기화 중...'); return; }
+  if (!db) { 
+    initFirebase(); 
+    setTimeout(loginGoogle, 1000); 
+    return; 
+  }
+  
+  if (!firebase || !firebase.auth) { 
+    setTimeout(loginGoogle, 1500);
+    return; 
+  }
+  
   var p = new firebase.auth.GoogleAuthProvider();
   p.addScope('email');
   p.setCustomParameters({ prompt: 'select_account' });
-  // 팝업 방식만 사용 - redirect는 메일앱 열리는 버그 발생
+  
   firebase.auth().signInWithPopup(p)
     .then(function(result) {
       if (result && result.user) {
-        showToast('✅ 로그인: ' + (result.user.displayName || result.user.email));
+        console.log("✅ Google 로그인 성공:", result.user.email);
       }
     })
     .catch(function(e) {
-      console.warn('popup error:', e.code, e.message);
+      console.error('Google 로그인 오류:', e.code, e.message);
+      
+      // 팝업이 사용자에 의해 닫힌 경우 - 무시
       if (e.code === 'auth/popup-closed-by-user' || e.code === 'auth/cancelled-popup-request') {
-        // 사용자가 직접 닫은 것 - 무시
         return;
       }
+      
+      // 팝업 차단
       if (e.code === 'auth/popup-blocked') {
-        // 팝업 차단: 안내만 표시
-        showToast('팝업이 차단됐어요. 브라우저 설정에서 팝업을 허용해주세요.');
+        console.warn('팝업 차단됨. 브라우저 설정 확인');
         return;
       }
-      showToast('로그인 오류: ' + (e.code || e.message));
     });
 }
 
@@ -5158,24 +5188,104 @@ function renderAll() {
 
 function init() {
   loadLocal();
+  
   // forestMsgs가 18개보다 적으면 최신 기본 문구로 강제 교체
-  if (!forestMsgs || forestMsgs.length < 18) { forestMsgs = DEFAULT_MSGS.slice(); saveLocal(); }
+  if (!forestMsgs || forestMsgs.length < 18) { 
+    forestMsgs = DEFAULT_MSGS.slice(); 
+    saveLocal(); 
+  }
+  
   rebuildHaengGroups();
   updateDateDisp();
   updateHdrTitle();
+  
   var k = dk(curDate);
   ensureDef(k);
-  renderRecord();
-  renderFPills();
-  renderForest();
+  
+  try {
+    renderRecord();
+    renderFPills();
+    renderForest();
+  } catch (e) {
+    console.error('렌더링 오류:', e);
+  }
+  
   // 기간 버튼 초기값: 월별
   var pbMonth = document.getElementById('pb-month');
   if (pbMonth) pbMonth.classList.add('on');
-  document.getElementById('savebtn').style.display = 'block';
-  initFirebase();
+  
+  var savebtn = document.getElementById('savebtn');
+  if (savebtn) savebtn.style.display = 'block';
+  
+  // Firebase 초기화 (비동기, 에러 무시)
+  setTimeout(function() {
+    try {
+      initFirebase();
+    } catch (e) {
+      console.error('Firebase 초기화 오류:', e);
+    }
+  }, 500);
+}
+
+// ====== 진단 함수 ======
+function openDiagnostic() {
+  try {
+    var userStatus = curUser ? ('✅ ' + (curUser.displayName || curUser.email)) : '❌ 로그인 안 됨';
+    var fbStatus = db ? '✅ 연결됨' : '❌ 미연결';
+    var localCount = records ? Object.keys(records).length : 0;
+    var localStatus = localCount > 0 ? ('✅ ' + localCount + '개 기록') : '⚠️ 데이터 없음';
+    var cloudStatus = curUser ? '✅ 확인 중...' : '⚠️ 로그인 필요';
+    var browserInfo = (navigator.userAgent || 'Unknown').substring(0, 40) + '...';
+    
+    var diag = document.getElementById('m-diag');
+    if (diag) {
+      document.getElementById('diag-user').textContent = userStatus;
+      document.getElementById('diag-firebase').textContent = fbStatus;
+      document.getElementById('diag-local').textContent = localStatus;
+      document.getElementById('diag-cloud').textContent = cloudStatus;
+      document.getElementById('diag-browser').textContent = browserInfo;
+      diag.style.display = 'flex';
+    }
+  } catch (e) {
+    console.error('진단 오류:', e);
+  }
 }
 
 init();
 </script>
+
+<!-- 진단 모달 -->
+<div id="m-diag" class="mo" style="display:none;">
+  <div class="mcon" style="max-width:420px;">
+    <div class="mtit"><span>🔧 시스템 진단</span><button onclick="closeM('m-diag')" style="font-size:18px;color:var(--tx3);">×</button></div>
+    <div class="mbody" style="font-size:12px;line-height:2;color:var(--tx);font-family:monospace;padding:16px;background:var(--bg);">
+      <div style="margin-bottom:12px;padding:8px;border-left:3px solid var(--pu);background:var(--sf);">
+        <strong>로그인 상태</strong><br/>
+        <span id="diag-user">확인 중...</span>
+      </div>
+      <div style="margin-bottom:12px;padding:8px;border-left:3px solid var(--g);background:var(--sf);">
+        <strong>Firebase 연결</strong><br/>
+        <span id="diag-firebase">확인 중...</span>
+      </div>
+      <div style="margin-bottom:12px;padding:8px;border-left:3px solid var(--bd);background:var(--sf);">
+        <strong>로컬 데이터</strong><br/>
+        <span id="diag-local">확인 중...</span>
+      </div>
+      <div style="margin-bottom:12px;padding:8px;border-left:3px solid var(--bd);background:var(--sf);">
+        <strong>클라우드 데이터</strong><br/>
+        <span id="diag-cloud">확인 중...</span>
+      </div>
+      <div style="margin-bottom:0;padding:8px;border-left:3px solid #999;background:var(--sf);">
+        <strong>브라우저</strong><br/>
+        <span id="diag-browser">확인 중...</span>
+      </div>
+    </div>
+    <div class="mfoot">
+      <button class="mcan" onclick="closeM('m-diag')">닫기</button>
+      <button class="mok" onclick="location.reload()">새로고침</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
