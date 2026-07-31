@@ -4370,22 +4370,44 @@ function openSpRegModal() {
 }
 
 function handleSpFolderSelect(sel) {
-  if (sel.value !== '__new__') return;
-  sel.value = '';
-  var existing = document.getElementById('sp-inline-folder'); if (existing) existing.remove();
-  var wrap = document.createElement('div'); wrap.id = 'sp-inline-folder'; wrap.style.cssText = 'margin-top:6px;';
-  var inp = document.createElement('input'); inp.type='text'; inp.placeholder='새 폴더 이름...'; inp.className='minp'; inp.style.cssText='margin-bottom:6px;';
-  var addBtn = document.createElement('button'); addBtn.textContent='추가'; addBtn.className='mok'; addBtn.style.cssText='width:100%;height:34px;';
-  wrap.appendChild(inp); wrap.appendChild(addBtn);
-  sel.parentNode.insertBefore(wrap, sel.nextSibling);
-  inp.focus();
-  addBtn.onclick = function() {
-    var name = inp.value.trim(); if (!name) return;
-    var newF = { id: uid(), name: name, speechIds: [] };
-    spFolders.push(newF); saveLocal();
-    var opt = document.createElement('option'); opt.value = newF.id; opt.textContent = newF.name;
-    sel.appendChild(opt); sel.value = newF.id; wrap.remove();
-  };
+  // 새 폴더 추가 모드
+  if (sel.value === '__new__') {
+    sel.value = '';
+    var existing = document.getElementById('sp-inline-folder'); if (existing) existing.remove();
+    var wrap = document.createElement('div'); wrap.id = 'sp-inline-folder'; wrap.style.cssText = 'margin-top:6px;';
+    var inp = document.createElement('input'); inp.type='text'; inp.placeholder='새 폴더 이름...'; inp.className='minp'; inp.style.cssText='margin-bottom:6px;';
+    var addBtn = document.createElement('button'); addBtn.textContent='추가'; addBtn.className='mok'; addBtn.style.cssText='width:100%;height:34px;';
+    wrap.appendChild(inp); wrap.appendChild(addBtn);
+    sel.parentNode.insertBefore(wrap, sel.nextSibling);
+    inp.focus();
+    addBtn.onclick = function() {
+      var name = inp.value.trim(); if (!name) return;
+      var newF = { id: uid(), name: name, speechIds: [] };
+      spFolders.push(newF); saveLocal();
+      var opt = document.createElement('option'); opt.value = newF.id; opt.textContent = newF.name;
+      sel.appendChild(opt); sel.value = newF.id; wrap.remove();
+      updateSpKeywordForFolder(newF.name); // 키워드 입력창 업데이트
+    };
+    return;
+  }
+  
+  // 기존 폴더 선택 시: 키워드 입력창에 자동 반영
+  var folderName = sel.options[sel.selectedIndex].text;
+  if (folderName && folderName !== '분류없음') {
+    updateSpKeywordForFolder(folderName);
+  }
+}
+
+// 폴더 선택 시 키워드 입력창 업데이트
+function updateSpKeywordForFolder(folderName) {
+  var kwEl = document.getElementById('m-sp-kw');
+  if (!kwEl) return;
+  var current = (kwEl.value || '').split(',').map(function(k) { return k.trim(); }).filter(Boolean);
+  // 기존 폴더명 제거
+  current = current.filter(function(k) { return k !== folderName; });
+  // 맨 앞에 추가
+  current.unshift(folderName);
+  kwEl.value = current.join(', ');
 }
 
 function confirmSpReg() {
@@ -4395,16 +4417,17 @@ function confirmSpReg() {
   if (folderId === '__new__') folderId = '';
   var kw = (document.getElementById('m-sp-kw').value || '').split(',').map(function(k){return k.trim();}).filter(Boolean);
   
-  // 폴더명을 첫번째 해시태그로 자동 추가
+  // 폴더명을 항상 첫번째 해시태그로 설정
   var folderName = '';
   if (folderId) {
     var folder = spFolders.find(function(f) { return f.id === folderId; });
     if (folder) folderName = folder.name;
   }
   
-  // 폴더명이 있고 이미 키워드에 없으면 맨 앞에 추가
-  if (folderName && !kw.includes(folderName)) {
-    kw.unshift(folderName);
+  // 폴더명이 있으면: 기존 키워드에서 폴더명 제거 후, 맨 앞에 추가
+  if (folderName) {
+    kw = kw.filter(function(k) { return k !== folderName; }); // 기존 폴더명 제거
+    kw.unshift(folderName); // 맨 앞에 추가
   }
   
   var okBtn = document.querySelector('#m-sp-reg .mok');
