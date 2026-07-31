@@ -756,9 +756,9 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
     <label class="mlbl">폴더</label>
     <select class="minp" id="m-sp-folder" style="width:100%;margin-bottom:12px;appearance:none;-webkit-appearance:none;" onchange="handleSpFolderSelect(this)"></select>
     <label class="mlbl">내용</label>
-    <textarea class="minp" id="m-sp-text" rows="5" placeholder="스피치 내용 입력..." style="min-height:100px;resize:vertical;white-space:pre-wrap;margin-bottom:12px;"></textarea>
+    <textarea class="minp" id="m-sp-text" rows="5" placeholder="스피치 내용 입력..." style="min-height:100px;resize:vertical;white-space:pre-wrap;margin-bottom:12px;" oninput="saveSpTempData()"></textarea>
     <label class="mlbl">키워드 <span style="font-size:10px;font-weight:400;color:var(--tx3);">(쉼표로 구분, 검색에 반영)</span></label>
-    <input type="text" class="minp" id="m-sp-kw" placeholder="예: 용기, 화합, 청년" style="margin-bottom:0;"/>
+    <input type="text" class="minp" id="m-sp-kw" placeholder="예: 용기, 화합, 청년" style="margin-bottom:0;" oninput="saveSpTempData()"/>
     <div class="mfoot"><button class="mcan" onclick="closeM('m-sp-reg')">취소</button><button class="mok" onclick="confirmSpReg()">등록</button></div>
   </div>
 </div>
@@ -1774,6 +1774,7 @@ function renderEssayTab(cont) {
   });
 
   // 검색 필터 - 어서명, 키워드, 페이지 번호 혼합 검색 지원
+  var isPageSearch = false; // 페이지만 검색하는 경우
   if (q) {
     // 검색어를 공백으로 구분
     var queryParts = q.trim().split(/\s+/);
@@ -1787,6 +1788,11 @@ function renderEssayTab(cont) {
         textQueries.push(part);
       }
     });
+    
+    // 숫자만 입력한 경우를 따로 처리
+    if (pageQueries.length > 0 && textQueries.length === 0) {
+      isPageSearch = true;
+    }
     
     list = list.filter(function(x) {
       // 페이지 조건 확인: 입력된 모든 페이지 번호가 범위에 있어야 함
@@ -1931,10 +1937,27 @@ function renderEssayBody(body, x, prog) {
 
   // 2. 핵심 (배경색 없이)
   if (note.core) {
+    var coreLabelRow = document.createElement('div');
+    coreLabelRow.style.cssText = 'display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px;';
+    
     var coreLabel = document.createElement('div');
-    coreLabel.style.cssText = 'font-size:10px;font-weight:700;color:var(--tx3);margin-bottom:4px;';
+    coreLabel.style.cssText = 'font-size:10px;font-weight:700;color:var(--tx3);';
     coreLabel.textContent = '📌 핵심';
-    body.appendChild(coreLabel);
+    coreLabelRow.appendChild(coreLabel);
+    
+    var coreCopyBtn = document.createElement('button');
+    coreCopyBtn.style.cssText = 'font-size:11px;font-weight:600;color:var(--pu);background:none;border:none;cursor:pointer;padding:0;';
+    coreCopyBtn.textContent = '복사';
+    coreCopyBtn.onclick = (function(essayName, coreText) {
+      return function(e) {
+        e.stopPropagation();
+        var copyText = '#' + essayName + ' (' + x.startP + 'p~' + x.endP + 'p)\n\n' + coreText;
+        copyToClipboard(copyText, function() { showToast('📋 핵심 복사'); });
+      };
+    })(x.name, note.core);
+    coreLabelRow.appendChild(coreCopyBtn);
+    
+    body.appendChild(coreLabelRow);
     var coreEl = document.createElement('div');
     coreEl.style.cssText = 'font-size:12px;color:var(--tx);line-height:1.7;white-space:pre-wrap;margin-bottom:12px;';
     coreEl.textContent = note.core;
@@ -1966,10 +1989,27 @@ function renderEssayBody(body, x, prog) {
     body.appendChild(memoLabel);
     note.memos.forEach(function(memo) {
       if (!memo) return;
+      var memoRow = document.createElement('div');
+      memoRow.style.cssText = 'display:flex;gap:8px;margin-bottom:8px;';
+      
+      var memoCopyBtn = document.createElement('button');
+      memoCopyBtn.style.cssText = 'font-size:11px;font-weight:600;color:var(--pu);background:none;border:none;cursor:pointer;padding:0;flex-shrink:0;';
+      memoCopyBtn.textContent = '📋';
+      memoCopyBtn.onclick = (function(essayName, memoText) {
+        return function(e) {
+          e.stopPropagation();
+          var copyText = '#' + essayName + ' (' + x.startP + 'p~' + x.endP + 'p)\n\n' + memoText;
+          copyToClipboard(copyText, function() { showToast('📋 메모 복사'); });
+        };
+      })(x.name, memo);
+      
       var memoEl = document.createElement('div');
-      memoEl.style.cssText = 'font-size:12px;color:var(--tx);line-height:1.6;white-space:pre-wrap;margin-bottom:8px;padding-left:8px;border-left:2px solid var(--bd);';
+      memoEl.style.cssText = 'flex:1;font-size:12px;color:var(--tx);line-height:1.6;white-space:pre-wrap;padding-left:8px;border-left:2px solid var(--bd);';
       memoEl.textContent = memo;
-      body.appendChild(memoEl);
+      
+      memoRow.appendChild(memoCopyBtn);
+      memoRow.appendChild(memoEl);
+      body.appendChild(memoRow);
     });
   }
 }
@@ -4351,9 +4391,35 @@ function saveTitleSetting() {
   showToast('✅ 설정 저장 완료!');
 }
 
-function openSpRegModal() {
-  document.getElementById('m-sp-text').value = '';
-  document.getElementById('m-sp-kw').value = '';
+function saveSpTempData() {
+  var text = document.getElementById('m-sp-text').value;
+  var kw = document.getElementById('m-sp-kw').value;
+  var tempData = { text: text, kw: kw };
+  localStorage.setItem('tempSpReg', JSON.stringify(tempData));
+}
+
+function clearSpTempData() {
+  localStorage.removeItem('tempSpReg');
+}
+  // 이전에 입력하던 값 복구 (편집 모드 아닐 때만)
+  var okBtn = document.querySelector('#m-sp-reg .mok');
+  if (!okBtn._editMode) {
+    var tempSpReg = localStorage.getItem('tempSpReg');
+    if (tempSpReg) {
+      try {
+        var data = JSON.parse(tempSpReg);
+        document.getElementById('m-sp-text').value = data.text || '';
+        document.getElementById('m-sp-kw').value = data.kw || '';
+      } catch (e) {}
+    } else {
+      document.getElementById('m-sp-text').value = '';
+      document.getElementById('m-sp-kw').value = '';
+    }
+  } else {
+    document.getElementById('m-sp-text').value = '';
+    document.getElementById('m-sp-kw').value = '';
+  }
+  
   var inl = document.getElementById('sp-inline-folder'); if (inl) inl.remove();
   var sel = document.getElementById('m-sp-folder');
   sel.innerHTML = '<option value="">분류없음</option><option value="__new__">＋ 추가</option>';
@@ -4363,7 +4429,6 @@ function openSpRegModal() {
       var o = document.createElement('option'); o.value = f.id; o.textContent = f.name;
       sel.appendChild(o);
     });
-  var okBtn = document.querySelector('#m-sp-reg .mok');
   okBtn.textContent = '등록'; okBtn._editMode = false; okBtn._editSp = null;
   document.getElementById('m-sp-reg').style.display = 'flex';
   addEbookPasteHandler(document.getElementById('m-sp-text'));
@@ -4440,7 +4505,7 @@ function confirmSpReg() {
     spFolders.forEach(function(f) { f.speechIds = (f.speechIds||[]).filter(function(id){return id!==sp.id;}); });
     if (folderId) { var f2=spFolders.find(function(f){return f.id===folderId;}); if(f2){if(!f2.speechIds)f2.speechIds=[];f2.speechIds.push(sp.id);} }
     okBtn.textContent = '등록'; okBtn._editMode = false; okBtn._editSp = null;
-    saveLocal(); saveCloud(); closeM('m-sp-reg'); showToast('✅ 수정 완료!'); renderChallenge(); return;
+    saveLocal(); saveCloud(); closeM('m-sp-reg'); clearSpTempData(); showToast('✅ 수정 완료!'); renderChallenge(); return;
   }
   var date = dk(new Date());
   if (!records[date]) records[date] = { sinMin: '', haeng: [], hak: [], speech: [], reso: '', members: [], activity: [] };
@@ -4448,7 +4513,7 @@ function confirmSpReg() {
   var newId = uid();
   records[date].speech.push({ id: newId, text: text, keywords: kw });
   if (folderId) { var folder=spFolders.find(function(f){return f.id===folderId;}); if(folder){if(!folder.speechIds)folder.speechIds=[];folder.speechIds.push(newId);} }
-  saveLocal(); saveCloud(); closeM('m-sp-reg'); showToast('✅ 스피치 등록 완료!'); renderChallenge();
+  saveLocal(); saveCloud(); closeM('m-sp-reg'); clearSpTempData(); showToast('✅ 스피치 등록 완료!'); renderChallenge();
 }
 
 function confirmFolder() {
