@@ -273,7 +273,14 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
 .bounce{animation:bounce 1.4s ease-in-out infinite;display:inline-block;}
 
 /* MODAL */
-.mo{position:fixed;inset:0;z-index:300;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.5);padding:16px;}
+/* 앱 컬럼(390px) 안에 고정 + 화면 밖으로 벗어나지 않도록 스크롤 허용 */
+.mo{position:fixed;top:0;bottom:0;left:50%;transform:translateX(-50%);
+    width:100%;max-width:390px;z-index:300;
+    display:flex;align-items:center;justify-content:center;
+    background:rgba(0,0,0,.5);box-shadow:0 0 0 100vmax rgba(0,0,0,.5);
+    padding:16px;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+/* flex 중앙정렬 시 내용이 길면 위쪽이 잘려 접근 불가해지는 문제 방지 */
+.mo>.mb{margin:auto;flex-shrink:0;}
 .mb{width:100%;max-width:360px;max-height:88vh;overflow-y:auto;border-radius:var(--r);background:var(--sf);padding:20px;-webkit-overflow-scrolling:touch;}
 .mb textarea,.minp textarea,.mo textarea{-webkit-overflow-scrolling:touch;overflow-y:auto;touch-action:pan-y;}
 .mtit{font-size:15px;font-weight:800;color:var(--tx);margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;}
@@ -287,7 +294,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
 /* TOAST */
 #toast{position:fixed;top:70px;left:50%;transform:translateX(-50%) translateY(-20px);background:var(--tx);color:#fff;border-radius:20px;padding:8px 18px;font-size:13px;font-weight:600;z-index:500;opacity:0;pointer-events:none;transition:all .3s;white-space:nowrap;}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
-</style></style>
+</style>
 </head>
 <body>
 <div id="app">
@@ -571,7 +578,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
     <div style="display:flex;gap:4px;align-items:center;flex-wrap:wrap;margin-bottom:5px;">
       <button onclick="openSpRegModal()" style="height:28px;border-radius:var(--rs);border:1.5px solid var(--pu);background:var(--pu);padding:0 9px;font-size:11px;font-weight:700;color:#fff;flex-shrink:0;">스피치 등록</button>
       <button onclick="openSpFolderManager()" style="height:28px;border-radius:var(--rs);border:1.5px solid var(--pu);background:var(--pul);padding:0 9px;font-size:11px;font-weight:600;color:var(--pu);flex-shrink:0;">📁 폴더 관리</button>
-      <button id="ch-fphr-btn" onclick="copyFixedPhrase()" style="height:28px;border-radius:var(--rs);border:1.5px solid var(--g);background:var(--gl);padding:0 8px;font-size:11px;font-weight:600;color:var(--g);flex-shrink:0;">고정 문구 복사</button>
+      <button id="ch-fphr-btn" onclick="copyFixedPhrase()" style="height:28px;border-radius:var(--rs);border:1.5px solid var(--g);background:var(--gl);padding:0 8px;font-size:11px;font-weight:600;color:var(--g);flex-shrink:0;">문구 복사</button>
       <button onclick="openFixedPhraseEdit()" style="height:28px;width:28px;border-radius:var(--rs);border:1px solid var(--bd);background:var(--sf);font-size:12px;flex-shrink:0;" title="고정 문구 수정">✏️</button>
     </div>
     <div style="position:relative;margin-bottom:5px;">
@@ -753,8 +760,15 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
 <div id="m-sp-reg" class="mo" style="display:none;">
   <div class="mb">
     <div class="mtit"><span>스피치 등록</span><button onclick="closeM('m-sp-reg')" style="font-size:18px;color:var(--tx3);">×</button></div>
-    <label class="mlbl">폴더</label>
-    <select class="minp" id="m-sp-folder" style="width:100%;margin-bottom:12px;appearance:none;-webkit-appearance:none;" onchange="handleSpFolderSelect(this)"></select>
+    <label class="mlbl">폴더 <span style="font-size:10px;font-weight:400;color:var(--tx3);">(입력해서 검색 · 새 폴더도 바로 추가)</span></label>
+    <div id="sp-folder-box" style="position:relative;margin-bottom:12px;">
+      <input type="text" class="minp" id="m-sp-folder-q" autocomplete="off" placeholder="폴더 검색 또는 선택..."
+             style="margin-bottom:0;padding-right:32px;" oninput="renderSpFolderOpts(true)" onfocus="renderSpFolderOpts(true)"/>
+      <button type="button" onclick="toggleSpFolderList(event)" aria-label="폴더 목록"
+              style="position:absolute;right:6px;top:50%;transform:translateY(-50%);width:24px;height:24px;font-size:10px;color:var(--tx3);">▼</button>
+      <div id="m-sp-folder-list" style="display:none;position:absolute;left:0;right:0;top:calc(100% + 4px);max-height:190px;overflow-y:auto;background:var(--sf);border:1.5px solid var(--bd);border-radius:var(--rs);z-index:20;box-shadow:0 8px 22px rgba(0,0,0,.14);"></div>
+      <select id="m-sp-folder" style="display:none;"></select>
+    </div>
     <label class="mlbl">내용</label>
     <textarea class="minp" id="m-sp-text" rows="5" placeholder="스피치 내용 입력..." style="min-height:100px;resize:vertical;white-space:pre-wrap;margin-bottom:12px;"></textarea>
     <label class="mlbl">키워드 <span style="font-size:10px;font-weight:400;color:var(--tx3);">(쉼표로 구분, 검색에 반영)</span></label>
@@ -765,7 +779,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
 </div>
 
 <div id="m-folder-mgr" class="mo" style="display:none;">
-  <div class="mb" style="max-height:85vh;display:flex;flex-direction:column;width:320px;max-width:95vw;">
+  <div class="mb" style="max-height:80vh;display:flex;flex-direction:column;width:100%;max-width:340px;">
     <div class="mtit">
       <span id="m-folder-mgr-title" style="font-size:14px;font-weight:800;">📁 폴더 관리</span>
       <button onclick="closeM('m-folder-mgr')" style="font-size:18px;color:var(--tx3);">×</button>
@@ -4246,20 +4260,14 @@ function makeSpBox(s, isHidden) {
       e.stopPropagation();
       // 수정 팝업 열기 (등록 팝업 재사용)
       document.getElementById('m-sp-text').value = sp.text;
-      document.getElementById('m-sp-kw').value = (sp.keywords || []).join(', ');
-      // 폴더 선택
+      document.getElementById('m-sp-kw').value = toArr(sp.keywords).join(', ');
+      // 폴더 선택 (검색형 선택 위젯)
+      syncSpFolderSelect();
+      closeSpFolderList();
       var sel = document.getElementById('m-sp-folder');
-      sel.innerHTML = '<option value="">분류없음</option><option value="__new__">+ 추가</option>';
-      var curFolder = null;
-      spFolders.filter(function(f) { return f.name !== '숨김'; })
-        .slice().sort(function(a, b) { return a.name.localeCompare(b.name, 'ko'); })
-        .forEach(function(f) {
-          var o = document.createElement('option');
-          o.value = f.id; o.textContent = f.name;
-          if ((f.speechIds || []).includes(sp.id)) { o.selected = true; curFolder = f.id; }
-          sel.appendChild(o);
-        });
-      if (curFolder) sel.value = curFolder;
+      var cur = spFolders.find(function(f) { return (f.speechIds || []).includes(sp.id); });
+      sel.value = cur ? cur.id : '';
+      document.getElementById('m-sp-folder-q').value = cur ? cur.name : '';
       // 수정 모드: ok버튼을 덮어쓰기
       var okBtn = document.querySelector('#m-sp-reg .mok');
       var origText = okBtn.textContent;
@@ -4445,20 +4453,17 @@ function clearSpRegDraft() {
 
 function openSpRegModal() {
   var inl = document.getElementById('sp-inline-folder'); if (inl) inl.remove();
-  var sel = document.getElementById('m-sp-folder');
-  sel.innerHTML = '<option value="">분류없음</option><option value="__new__">＋ 추가</option>';
-  spFolders.filter(function(f) { return f.name !== '숨김'; })
-    .slice().sort(function(a, b) { return a.name.localeCompare(b.name, 'ko'); })
-    .forEach(function(f) {
-      var o = document.createElement('option'); o.value = f.id; o.textContent = f.name;
-      sel.appendChild(o);
-    });
+  syncSpFolderSelect();
+  closeSpFolderList();
 
   // 이전에 작성 중이던 내용 복원
   var d = spRegDraft || { text: '', kw: '', folderId: '' };
   document.getElementById('m-sp-text').value = d.text || '';
   document.getElementById('m-sp-kw').value = d.kw || '';
-  if (d.folderId && sel.querySelector('option[value="' + d.folderId + '"]')) sel.value = d.folderId;
+  var sel = document.getElementById('m-sp-folder');
+  var df = d.folderId && spFolders.find(function(f) { return f.id === d.folderId; });
+  sel.value = df ? df.id : '';
+  document.getElementById('m-sp-folder-q').value = df ? df.name : '';
 
   var okBtn = document.querySelector('#m-sp-reg .mok');
   okBtn.textContent = '등록'; okBtn._editMode = false; okBtn._editSp = null;
@@ -4466,32 +4471,101 @@ function openSpRegModal() {
   // 입력할 때마다 임시저장
   var t = document.getElementById('m-sp-text'), k = document.getElementById('m-sp-kw');
   t.oninput = saveSpRegDraft; k.oninput = saveSpRegDraft;
-  sel.addEventListener('change', saveSpRegDraft);
 
   document.getElementById('m-sp-reg').style.display = 'flex';
   if (d.text) showToast('✍️ 작성 중이던 내용을 불러왔어요');
   addEbookPasteHandler(document.getElementById('m-sp-text'));
 }
 
-function handleSpFolderSelect(sel) {
-  if (sel.value !== '__new__') return;
-  sel.value = '';
-  var existing = document.getElementById('sp-inline-folder'); if (existing) existing.remove();
-  var wrap = document.createElement('div'); wrap.id = 'sp-inline-folder'; wrap.style.cssText = 'margin-top:6px;';
-  var inp = document.createElement('input'); inp.type='text'; inp.placeholder='새 폴더 이름...'; inp.className='minp'; inp.style.cssText='margin-bottom:6px;';
-  var addBtn = document.createElement('button'); addBtn.textContent='추가'; addBtn.className='mok'; addBtn.style.cssText='width:100%;height:34px;';
-  wrap.appendChild(inp); wrap.appendChild(addBtn);
-  sel.parentNode.insertBefore(wrap, sel.nextSibling);
-  inp.focus();
-  addBtn.onclick = function() {
-    var name = inp.value.trim(); if (!name) return;
-    var newF = { id: uid(), name: name, speechIds: [] };
-    spFolders.push(newF); saveLocal();
-    var opt = document.createElement('option'); opt.value = newF.id; opt.textContent = newF.name;
-    sel.appendChild(opt); sel.value = newF.id; wrap.remove();
-    saveSpRegDraft();
-  };
+// ===== 스피치 폴더 검색형 선택 =====
+function spFolderOptions() {
+  return spFolders.filter(function(f) { return f.name !== '숨김'; })
+    .slice().sort(function(a, b) { return a.name.localeCompare(b.name, 'ko'); });
 }
+
+// 숨겨진 select에 옵션 채우기 (기존 코드가 .value를 읽으므로 유지)
+function syncSpFolderSelect() {
+  var sel = document.getElementById('m-sp-folder');
+  var cur = sel.value;
+  sel.innerHTML = '<option value=""></option>';
+  spFolderOptions().forEach(function(f) {
+    var o = document.createElement('option'); o.value = f.id; o.textContent = f.name;
+    sel.appendChild(o);
+  });
+  if (cur && sel.querySelector('option[value="' + cur + '"]')) sel.value = cur;
+}
+
+function setSpFolder(id, name) {
+  var sel = document.getElementById('m-sp-folder');
+  syncSpFolderSelect();
+  sel.value = id || '';
+  document.getElementById('m-sp-folder-q').value = name || '';
+  closeSpFolderList();
+  saveSpRegDraft();
+}
+
+function closeSpFolderList() {
+  var l = document.getElementById('m-sp-folder-list'); if (l) l.style.display = 'none';
+}
+
+function toggleSpFolderList(e) {
+  if (e) e.stopPropagation();
+  var l = document.getElementById('m-sp-folder-list');
+  if (l && l.style.display === 'block') closeSpFolderList();
+  else renderSpFolderOpts(true);
+}
+
+function renderSpFolderOpts(open) {
+  var qEl = document.getElementById('m-sp-folder-q');
+  var list = document.getElementById('m-sp-folder-list');
+  if (!qEl || !list) return;
+  var raw = qEl.value.trim();
+  var qn = normQ(raw);
+  list.innerHTML = '';
+
+  function row(label, sub, onClick, color) {
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.style.cssText = 'display:block;width:100%;text-align:left;padding:9px 12px;font-size:13px;color:' + (color || 'var(--tx)') + ';border-bottom:1px solid var(--bd);background:none;';
+    b.textContent = label + (sub ? '  ' + sub : '');
+    b.onmousedown = function(ev) { ev.preventDefault(); };
+    b.onclick = function(ev) { ev.stopPropagation(); onClick(); };
+    list.appendChild(b);
+  }
+
+  var opts = spFolderOptions();
+  var matched = qn ? opts.filter(function(f) { return normQ(f.name).includes(qn); }) : opts;
+
+  if (!qn) row('📌 분류없음', '', function() { setSpFolder('', ''); }, 'var(--tx3)');
+
+  matched.forEach(function(f) {
+    var cnt = (f.speechIds || []).length;
+    row('📁 ' + f.name, cnt ? '(' + cnt + ')' : '', function() { setSpFolder(f.id, f.name); });
+  });
+
+  var exact = opts.some(function(f) { return f.name === raw; });
+  if (raw && !exact) {
+    row('＋ "' + raw + '" 새 폴더로 추가', '', function() {
+      var nf = { id: uid(), name: raw, speechIds: [] };
+      spFolders.push(nf);
+      saveLocal();
+      try { if (curUser && db) saveCloud(); } catch (e) {}
+      setSpFolder(nf.id, nf.name);
+      showToast('📁 폴더 추가: ' + raw);
+    }, 'var(--pu)');
+  }
+
+  if (!list.children.length) {
+    list.innerHTML = '<div style="padding:12px;text-align:center;font-size:12px;color:var(--tx3);">검색 결과가 없습니다</div>';
+  }
+  list.style.display = open === false ? 'none' : 'block';
+}
+
+// 목록 바깥 클릭 시 닫기
+document.addEventListener('click', function(e) {
+  var box = document.getElementById('sp-folder-box');
+  if (box && !box.contains(e.target)) closeSpFolderList();
+});
 
 function confirmSpReg() {
   var text = document.getElementById('m-sp-text').value.trim();
@@ -4541,8 +4615,8 @@ function confirmFolder() {
 function copyFixedPhrase() {
   copyToClipboard(fixedPhrase, function() {
     var btn = document.getElementById('ch-fphr-btn') || document.getElementById('fphr-btn');
-    if (btn) { btn.textContent = '복사 완료!'; setTimeout(function() { btn.textContent = '고정 문구 복사'; }, 2500); }
-    showToast('📋 고정 문구 복사됨');
+    if (btn) { btn.textContent = '복사 완료!'; setTimeout(function() { btn.textContent = '문구 복사'; }, 2500); }
+    showToast('📋 문구 복사됨');
   });
 }
 function openFixedPhraseEdit() { document.getElementById('m-fp-ta').value = fixedPhrase; document.getElementById('m-fixed-phrase').style.display = 'flex'; }
