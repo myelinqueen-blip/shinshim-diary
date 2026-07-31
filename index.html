@@ -305,10 +305,6 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
       <img id="uphoto" src="" alt="" style="cursor:pointer;width:26px;height:26px;border-radius:50%;border:2px solid rgba(255,255,255,.6);" onclick="showToast(document.getElementById('uname-data').textContent)"/>
       <span id="uname-data" style="display:none;"></span>
     </div>
-    <!-- 진단 버튼 -->
-    <button id="diagbtn" class="hicobtn" onclick="openDiagnostic()" title="🔧 시스템 진단" style="font-size:16px;line-height:1;">
-      🔧
-    </button>
     <!-- 자물쇠(열림) = 로그아웃 -->
     <button id="lout" class="hicobtn" onclick="logoutUser()" title="로그아웃" style="display:none;">
       <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -760,10 +756,11 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
     <label class="mlbl">폴더</label>
     <select class="minp" id="m-sp-folder" style="width:100%;margin-bottom:12px;appearance:none;-webkit-appearance:none;" onchange="handleSpFolderSelect(this)"></select>
     <label class="mlbl">내용</label>
-    <textarea class="minp" id="m-sp-text" rows="5" placeholder="스피치 내용 입력..." style="min-height:100px;resize:vertical;white-space:pre-wrap;margin-bottom:12px;" oninput="saveSpTempData()"></textarea>
+    <textarea class="minp" id="m-sp-text" rows="5" placeholder="스피치 내용 입력..." style="min-height:100px;resize:vertical;white-space:pre-wrap;margin-bottom:12px;"></textarea>
     <label class="mlbl">키워드 <span style="font-size:10px;font-weight:400;color:var(--tx3);">(쉼표로 구분, 검색에 반영)</span></label>
-    <input type="text" class="minp" id="m-sp-kw" placeholder="예: 용기, 화합, 청년" style="margin-bottom:0;" oninput="saveSpTempData()"/>
-    <div class="mfoot"><button class="mcan" onclick="closeM('m-sp-reg')">취소</button><button class="mok" onclick="confirmSpReg()">등록</button></div>
+    <input type="text" class="minp" id="m-sp-kw" placeholder="예: 용기, 화합, 청년" style="margin-bottom:0;"/>
+    <div style="font-size:10px;color:var(--tx3);margin-top:6px;">💡 창을 닫아도 작성 중이던 내용은 유지됩니다 (폴더명이 첫 해시태그로 자동 추가돼요)</div>
+    <div class="mfoot"><button class="mcan" onclick="clearSpRegDraft()">지우기</button><button class="mcan" onclick="closeM('m-sp-reg')">닫기</button><button class="mok" onclick="confirmSpReg()">등록</button></div>
   </div>
 </div>
 
@@ -1167,10 +1164,8 @@ var DAYS = ['일', '월', '화', '수', '목', '금', '토'];
 // ====== FIREBASE ======
 function initFirebase() {
   if (typeof firebase === 'undefined') {
-    setTimeout(initFirebase, 300); 
-    return;
+    setTimeout(initFirebase, 300); return;
   }
-  
   var cfg = {
     apiKey: "AIzaSyAvtgUROy9sqe4mnjcb3HV4TzRQ6bXsCQA",
     authDomain: "shinshim-diary.firebaseapp.com",
@@ -1180,32 +1175,18 @@ function initFirebase() {
     messagingSenderId: "736639802328",
     appId: "1:736639802328:web:1a8dabc364c22af453f0ad"
   };
-  
   try {
-    if (!firebase.apps.length) {
-      firebase.initializeApp(cfg);
-    }
+    if (!firebase.apps.length) firebase.initializeApp(cfg);
     db = firebase.database();
-    console.log("✅ Firebase 초기화 완료");
-    
-    // 인증 상태 감지
-    firebase.auth().onAuthStateChanged(function(user) {
-      if (user) {
-        curUser = user;
-        console.log("✅ 로그인 상태:", user.email);
+    firebase.auth().onAuthStateChanged(function(u) {
+      if (u) {
+        curUser = u;
         document.getElementById('gbtn').style.display = 'none';
         document.getElementById('uinfo').style.display = 'flex';
         document.getElementById('lout').style.display = 'flex';
-        document.getElementById('uphoto').src = user.photoURL || '';
-        document.getElementById('uname-data').textContent = (user.displayName || user.email || '').split(' ')[0];
-        
-        // 로그인 후 3초 뒤 데이터 동기화 (선택사항)
-        setTimeout(function() {
-          if (!records || Object.keys(records).length === 0) {
-            console.log("로컬 데이터 없음 - Firebase에서 불러오기 시도");
-            loadCloud();
-          }
-        }, 3000);
+        document.getElementById('uphoto').src = u.photoURL || '';
+        document.getElementById('uname-data').textContent = (u.displayName || u.email || '').split(' ')[0];
+        loadCloud();
       } else {
         curUser = null;
         document.getElementById('gbtn').style.display = 'flex';
@@ -1215,46 +1196,36 @@ function initFirebase() {
     });
   } catch (e) {
     console.error('Firebase 초기화 오류:', e.message);
-    setTimeout(initFirebase, 1000);
+    setTimeout(initFirebase, 500);
   }
 }
 
 
 function loginGoogle() {
-  if (!db) { 
-    initFirebase(); 
-    setTimeout(loginGoogle, 1000); 
-    return; 
-  }
-  
-  if (!firebase || !firebase.auth) { 
-    setTimeout(loginGoogle, 1500);
-    return; 
-  }
-  
+  if (!db) { initFirebase(); setTimeout(loginGoogle, 900); return; }
+  if (!firebase || !firebase.auth) { showToast('인증 초기화 중...'); return; }
   var p = new firebase.auth.GoogleAuthProvider();
   p.addScope('email');
   p.setCustomParameters({ prompt: 'select_account' });
-  
+  // 팝업 방식만 사용 - redirect는 메일앱 열리는 버그 발생
   firebase.auth().signInWithPopup(p)
     .then(function(result) {
       if (result && result.user) {
-        console.log("✅ Google 로그인 성공:", result.user.email);
+        showToast('✅ 로그인: ' + (result.user.displayName || result.user.email));
       }
     })
     .catch(function(e) {
-      console.error('Google 로그인 오류:', e.code, e.message);
-      
-      // 팝업이 사용자에 의해 닫힌 경우 - 무시
+      console.warn('popup error:', e.code, e.message);
       if (e.code === 'auth/popup-closed-by-user' || e.code === 'auth/cancelled-popup-request') {
+        // 사용자가 직접 닫은 것 - 무시
         return;
       }
-      
-      // 팝업 차단
       if (e.code === 'auth/popup-blocked') {
-        console.warn('팝업 차단됨. 브라우저 설정 확인');
+        // 팝업 차단: 안내만 표시
+        showToast('팝업이 차단됐어요. 브라우저 설정에서 팝업을 허용해주세요.');
         return;
       }
+      showToast('로그인 오류: ' + (e.code || e.message));
     });
 }
 
@@ -1459,7 +1430,10 @@ function saveCloud() {
     fixedPhrase: fixedPhrase || '',
     spFolders: spFolders || [],
     spDone: spDone || {},
-    customHaengItems: customHaengItems || []
+    customHaengItems: customHaengItems || [],
+    // ▼ 어서 노트/메모 폴더도 클라우드 동기화 (PC↔모바일)
+    essayNotes: essayNotes || {},
+    essayMemoFolders: essayMemoFolders || []
   };
   base.child('shinGoal').set(shinGoalData)
     .then(function() { showToast('☁️ 저장 완료'); })
@@ -1535,6 +1509,30 @@ function loadCloud() {
       if (sg.spFolders)        spFolders          = sg.spFolders;
       if (sg.spDone)           spDone             = sg.spDone;
       if (sg.customHaengItems) { customHaengItems = sg.customHaengItems; rebuildHaengGroups(); }
+      // ▼ 어서 노트/메모 폴더 복원 (로컬에 있는 것은 유지하며 병합)
+      if (sg.essayNotes && typeof sg.essayNotes === 'object') {
+        Object.keys(sg.essayNotes).forEach(function(nm) {
+          var cn = sg.essayNotes[nm] || {};
+          var ln = essayNotes[nm];
+          // 로컬에 더 많은 내용이 있으면 로컬 우선, 아니면 클라우드로 채움
+          if (!ln || ((ln.memos||[]).length + (ln.core?1:0)) < ((cn.memos||[]).length + (cn.core?1:0))) {
+            essayNotes[nm] = {
+              core: cn.core || '',
+              keywords: Array.isArray(cn.keywords) ? cn.keywords : [],
+              memos: Array.isArray(cn.memos) ? cn.memos : (cn.memos ? Object.values(cn.memos) : [])
+            };
+          }
+        });
+      }
+      if (sg.essayMemoFolders) {
+        var emf = Array.isArray(sg.essayMemoFolders) ? sg.essayMemoFolders : Object.values(sg.essayMemoFolders);
+        if (emf.length >= (essayMemoFolders || []).length) {
+          essayMemoFolders = emf.map(function(f) {
+            return { id: f.id, name: f.name, open: f.open !== false,
+                     memoIds: Array.isArray(f.memoIds) ? f.memoIds : (f.memoIds ? Object.values(f.memoIds) : []) };
+          });
+        }
+      }
       console.log('✅ shinGoal 복원');
     }
 
@@ -1551,14 +1549,9 @@ function loadCloud() {
     updateHdrTitle();
 
     // records 정규화 (누락 필드 보장)
-    Object.keys(records).forEach(function(k) {
-      var r = records[k];
-      if (!Array.isArray(r.haeng)) r.haeng = [];
-      if (!Array.isArray(r.hak)) r.hak = [];
-      if (!Array.isArray(r.speech)) r.speech = [];
-      if (!Array.isArray(r.members)) r.members = [];
-      if (!Array.isArray(r.activity)) r.activity = [];
-    });
+    // ※ Firebase는 중간에 빈 값이 있는 배열을 '객체'로 되돌려주기 때문에
+    //   Array.isArray()만 보고 []로 밀어버리면 PC에서 데이터가 통째로 사라짐 → 객체도 배열로 복구
+    normalizeRecords();
 
     // 화면 갱신: 날짜 표시 후 전체 렌더
     var recCount = Object.keys(records).length;
@@ -1567,6 +1560,7 @@ function loadCloud() {
     renderCol();
     renderCal();
     renderForest();
+    renderChallenge();
 
     showToast('☁️ ' + recCount + '일 기록 불러오기 완료!');
   }).catch(function(e) {
@@ -1576,6 +1570,51 @@ function loadCloud() {
 }
 
 // ====== UTILS ======
+// Firebase가 배열을 객체로 돌려줘도 안전하게 배열로 복구
+function toArr(v) {
+  if (Array.isArray(v)) return v.filter(function(x) { return x !== null && x !== undefined; });
+  if (v && typeof v === 'object') {
+    return Object.keys(v)
+      .sort(function(a, b) { return (parseInt(a) || 0) - (parseInt(b) || 0); })
+      .map(function(k) { return v[k]; })
+      .filter(function(x) { return x !== null && x !== undefined; });
+  }
+  return [];
+}
+
+function normalizeRecords() {
+  Object.keys(records).forEach(function(k) {
+    var r = records[k];
+    if (!r || typeof r !== 'object') { records[k] = { sinMin:'', haeng:[], hak:[], speech:[], reso:'', members:[], activity:[] }; return; }
+    r.haeng    = toArr(r.haeng);
+    r.hak      = toArr(r.hak);
+    r.speech   = toArr(r.speech);
+    r.members  = toArr(r.members);
+    r.activity = toArr(r.activity);
+  });
+}
+
+// 검색용 정규화: 소문자 + 공백/중점/가운뎃점 제거
+function normQ(s) {
+  return String(s == null ? '' : s).toLowerCase().replace(/[\s·・.,~"'`\-]/g, '');
+}
+
+// 해시태그 만들기 (#앞붙임, 내부 공백 제거)
+function toHashTag(s) {
+  var t = String(s == null ? '' : s).trim().replace(/^#+/, '').replace(/\s+/g, '');
+  return t ? '#' + t : '';
+}
+
+// 해시태그 여러 개 → "#a #b\n\n" 헤더 문자열
+function buildTagHeader(list) {
+  var seen = {}, out = [];
+  (list || []).forEach(function(x) {
+    var t = toHashTag(x);
+    if (t && !seen[t]) { seen[t] = 1; out.push(t); }
+  });
+  return out.length ? out.join(' ') + '\n\n' : '';
+}
+
 function pad(n) { return String(n).padStart(2, '0'); }
 function dk(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
 function getT(h) { return h.type === '직접입력' ? (h.custom || '') : (h.type || ''); }
@@ -1692,9 +1731,16 @@ function renderChallenge() {
   var cont = document.getElementById('ch-content');
   if (!cont) return;
   cont.innerHTML = '';
-  if (curChTab === 'speech') renderSpTab(cont, 'ch-search');
-  else if (curChTab === 'chart') renderEssayTab(cont);
-  else if (curChTab === 'essay') renderEssayMemoTab(cont);
+  try {
+    if (curChTab === 'speech') renderSpTab(cont, 'ch-search');
+    else if (curChTab === 'chart') renderEssayTab(cont);
+    else if (curChTab === 'essay') renderEssayMemoTab(cont);
+  } catch (err) {
+    // 오류가 나도 화면이 백지가 되지 않도록 방어 (PC 백지 현상 대응)
+    console.error('renderChallenge 오류:', err);
+    try { normalizeRecords(); } catch (e2) {}
+    cont.innerHTML = '<div style="text-align:center;padding:36px 12px;color:var(--tx3);font-size:12px;line-height:1.7;">일시적인 오류가 발생했어요.<br><button onclick="renderChallenge()" style="margin-top:10px;height:30px;padding:0 14px;border-radius:var(--rs);border:1.5px solid var(--pu);background:var(--pul);color:var(--pu);font-size:12px;font-weight:700;">다시 불러오기</button></div>';
+  }
 }
 
 var _openEssayNote = '';
@@ -1737,6 +1783,7 @@ function saveEssayNote() {
   var memoTas = document.getElementById('m-essay-memos').querySelectorAll('textarea');
   essayNotes[name].memos = Array.from(memoTas).map(function(ta){return ta.value.trim();}).filter(Boolean);
   saveLocal();
+  try { if (curUser && db) saveCloud(); } catch (e) {}
   closeM('m-essay-note');
   renderChallenge();
 }
@@ -1748,7 +1795,9 @@ function getEssayProgress() {
   var sorted = Object.entries(records).sort(function(a,b){return a[0].localeCompare(b[0]);});
   sorted.forEach(function(entry) {
     var date = entry[0], r = entry[1];
-    (r.hak || []).forEach(function(h) {
+    if (!r || typeof r !== 'object') return;
+    toArr(r.hak).forEach(function(h) {
+      if (!h || typeof h !== 'object') return;
       if (h.bookType !== '어서' || !h.bookName) return;
       var name = h.bookName.trim();
       if (!prog[name]) prog[name] = { readPages: new Set(), lastDate:'', readCount:0, sessions:[] };
@@ -1799,42 +1848,27 @@ function renderEssayTab(cont) {
     var isReading = readPages > 0 && !isDone;
     var isUnread = readPages === 0;
     var note = essayNotes[name] || {};
-    var kws = (note.keywords || []).join(' ').toLowerCase();
-    return { name, startP, endP, totalPages, readPages, pct, lastDate, daysSince, readCount, isDone, isReading, isUnread, note, kws };
+    var kws = toArr(note.keywords).join(' ');
+    var memoTxt = toArr(note.memos).join(' ');
+    var body = (note.core || '') + ' ' + memoTxt;
+    return { name, startP, endP, totalPages, readPages, pct, lastDate, daysSince, readCount, isDone, isReading, isUnread, note,
+             kws: kws,
+             nName: normQ(name), nKws: normQ(kws), nBody: normQ(body) };
   });
 
-  // 검색 필터 - 어서명, 키워드, 페이지 번호 혼합 검색 지원
-  var isPageSearch = false; // 페이지만 검색하는 경우
-  if (q) {
-    // 검색어를 공백으로 구분
-    var queryParts = q.trim().split(/\s+/);
-    var pageQueries = [];
-    var textQueries = [];
-    
-    queryParts.forEach(function(part) {
-      if (/^\d+$/.test(part)) {
-        pageQueries.push(parseInt(part));
-      } else if (part.length > 0) {
-        textQueries.push(part);
-      }
-    });
-    
-    // 숫자만 입력한 경우를 따로 처리
-    if (pageQueries.length > 0 && textQueries.length === 0) {
-      isPageSearch = true;
-    }
-    
-    list = list.filter(function(x) {
-      // 페이지 조건 확인: 입력된 모든 페이지 번호가 범위에 있어야 함
-      var pageMatch = pageQueries.length === 0 || pageQueries.some(function(p) { return p >= x.startP && p <= x.endP; });
-      
-      // 텍스트 조건 확인: 입력된 모든 텍스트가 어서명 또는 키워드에 포함되어야 함
-      var textMatch = textQueries.length === 0 || textQueries.every(function(t) {
-        return x.name.toLowerCase().includes(t) || x.kws.includes(t);
+  // ── 검색 필터 ──────────────────────────────────────────
+  // 숫자만 입력 → 페이지 검색 / 그 외 → 어서명·키워드·핵심·메모 검색 (공백 무시)
+  var qn = normQ(q);
+  var isPageSearch = !!qn && /^\d+$/.test(qn);
+  if (qn) {
+    if (isPageSearch) {
+      var qNum = parseInt(qn, 10);
+      list = list.filter(function(x) { return qNum >= x.startP && qNum <= x.endP; });
+    } else {
+      list = list.filter(function(x) {
+        return x.nName.includes(qn) || x.nKws.includes(qn) || x.nBody.includes(qn);
       });
-      
-      return pageMatch && textMatch;
-    });
+    }
   }
 
   // 정렬
@@ -1861,12 +1895,16 @@ function renderEssayTab(cont) {
   }
 
   if (isPageSearch) {
-    renderSection(list, '📄 ' + parseInt(q) + 'p 해당 어서');
+    renderSection(list, '📄 ' + parseInt(qn, 10) + 'p 해당 어서');
+  } else if (qn) {
+    var byName = list.filter(function(x){ return x.nName.includes(qn); });
+    var byKw   = list.filter(function(x){ return !x.nName.includes(qn) && x.nKws.includes(qn); });
+    var byBody = list.filter(function(x){ return !x.nName.includes(qn) && !x.nKws.includes(qn) && x.nBody.includes(qn); });
+    renderSection(byName, '📖 어서명 검색 결과');
+    renderSection(byKw,   '🔑 키워드 검색 결과');
+    renderSection(byBody, '📝 핵심·메모 검색 결과');
   } else {
-    var byName = q ? list.filter(function(x){return x.name.toLowerCase().includes(q);}) : list;
-    var byKw   = q ? list.filter(function(x){return !x.name.toLowerCase().includes(q) && x.kws.includes(q);}) : [];
-    renderSection(byName, q ? '📖 어서명 검색 결과' : '');
-    renderSection(byKw, '🔑 키워드 검색 결과');
+    renderSection(list, '');
   }
 }
 
@@ -1967,27 +2005,10 @@ function renderEssayBody(body, x, prog) {
 
   // 2. 핵심 (배경색 없이)
   if (note.core) {
-    var coreLabelRow = document.createElement('div');
-    coreLabelRow.style.cssText = 'display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px;';
-    
     var coreLabel = document.createElement('div');
-    coreLabel.style.cssText = 'font-size:10px;font-weight:700;color:var(--tx3);';
+    coreLabel.style.cssText = 'font-size:10px;font-weight:700;color:var(--tx3);margin-bottom:4px;';
     coreLabel.textContent = '📌 핵심';
-    coreLabelRow.appendChild(coreLabel);
-    
-    var coreCopyBtn = document.createElement('button');
-    coreCopyBtn.style.cssText = 'font-size:11px;font-weight:600;color:var(--pu);background:none;border:none;cursor:pointer;padding:0;';
-    coreCopyBtn.textContent = '복사';
-    coreCopyBtn.onclick = (function(essayName, coreText) {
-      return function(e) {
-        e.stopPropagation();
-        var copyText = '#' + essayName + ' (' + x.startP + 'p~' + x.endP + 'p)\n\n' + coreText;
-        copyToClipboard(copyText, function() { showToast('📋 핵심 복사'); });
-      };
-    })(x.name, note.core);
-    coreLabelRow.appendChild(coreCopyBtn);
-    
-    body.appendChild(coreLabelRow);
+    body.appendChild(coreLabel);
     var coreEl = document.createElement('div');
     coreEl.style.cssText = 'font-size:12px;color:var(--tx);line-height:1.7;white-space:pre-wrap;margin-bottom:12px;';
     coreEl.textContent = note.core;
@@ -2019,27 +2040,10 @@ function renderEssayBody(body, x, prog) {
     body.appendChild(memoLabel);
     note.memos.forEach(function(memo) {
       if (!memo) return;
-      var memoRow = document.createElement('div');
-      memoRow.style.cssText = 'display:flex;gap:8px;margin-bottom:8px;';
-      
-      var memoCopyBtn = document.createElement('button');
-      memoCopyBtn.style.cssText = 'font-size:11px;font-weight:600;color:var(--pu);background:none;border:none;cursor:pointer;padding:0;flex-shrink:0;';
-      memoCopyBtn.textContent = '📋';
-      memoCopyBtn.onclick = (function(essayName, memoText) {
-        return function(e) {
-          e.stopPropagation();
-          var copyText = '#' + essayName + ' (' + x.startP + 'p~' + x.endP + 'p)\n\n' + memoText;
-          copyToClipboard(copyText, function() { showToast('📋 메모 복사'); });
-        };
-      })(x.name, memo);
-      
       var memoEl = document.createElement('div');
-      memoEl.style.cssText = 'flex:1;font-size:12px;color:var(--tx);line-height:1.6;white-space:pre-wrap;padding-left:8px;border-left:2px solid var(--bd);';
+      memoEl.style.cssText = 'font-size:12px;color:var(--tx);line-height:1.6;white-space:pre-wrap;margin-bottom:8px;padding-left:8px;border-left:2px solid var(--bd);';
       memoEl.textContent = memo;
-      
-      memoRow.appendChild(memoCopyBtn);
-      memoRow.appendChild(memoEl);
-      body.appendChild(memoRow);
+      body.appendChild(memoEl);
     });
   }
 }
@@ -2195,12 +2199,13 @@ function renderEssayMemoTab(cont) {
   ESSAYS.forEach(function(e) {
     var name=e[0],startP=e[1];
     var note = essayNotes[name]||{};
-    (note.memos||[]).forEach(function(memo,idx) {
+    toArr(note.memos).forEach(function(memo,idx) {
       if (!memo) return;
       allMemos.push({memoId:name+':'+idx, essayName:name, memoText:memo, startP:startP});
     });
   });
-  if (q) allMemos=allMemos.filter(function(m){return m.memoText.toLowerCase().includes(q)||m.essayName.toLowerCase().includes(q);});
+  var qn = normQ(q);
+  if (qn) allMemos=allMemos.filter(function(m){return normQ(m.memoText).includes(qn)||normQ(m.essayName).includes(qn);});
   allMemos.sort(function(a,b){return sort==='page'?a.startP-b.startP:a.essayName.localeCompare(b.essayName,'ko');});
   if (!allMemos.length) {
     cont.innerHTML='<div style="text-align:center;padding:48px 0;color:var(--tx3);font-size:13px;">'+(q?'검색 결과가 없습니다':'저장된 메모가 없습니다<br><span style="font-size:11px;">어서 연찬표 + 버튼으로 추가해보세요</span>')+'</div>';
@@ -2217,7 +2222,8 @@ function renderEssayMemoTab(cont) {
     chk.style.cssText='width:14px;height:14px;flex-shrink:0;margin-top:2px;accent-color:var(--te);cursor:pointer;';
     chk.onchange=function(){if(chk.checked)essayMemoChecked[m.memoId]=true;else delete essayMemoChecked[m.memoId];box.style.borderColor=chk.checked?'var(--te)':'var(--bd)';updateEssayBulkBar();};
     var txt=document.createElement('div'); txt.style.cssText='flex:1;font-size:12px;color:var(--tx);line-height:1.6;white-space:pre-wrap;min-width:0;'; txt.textContent=m.memoText;
-    var cpBtn=makeCpBtn(m.memoText+'\n- '+m.essayName);
+    // 복사 형식: #어서명 (엔터)(엔터) 내용
+    var cpBtn=makeCpBtn(buildTagHeader([m.essayName])+m.memoText);
     topRow.appendChild(chk); topRow.appendChild(txt); topRow.appendChild(cpBtn); box.appendChild(topRow);
     var nameTag=document.createElement('div'); nameTag.style.cssText='font-size:10px;color:var(--tx3);margin-top:5px;'; nameTag.textContent='- '+m.essayName;
     box.appendChild(nameTag); return box;
@@ -4101,7 +4107,8 @@ function renderMemTab(cont) {
 function getAllSpeech() {
   var items = [];
   Object.entries(records).forEach(function(e) {
-    (e[1].speech || []).filter(function(s) { return s.text; }).forEach(function(s) { items.push(Object.assign({}, s, { date: e[0] })); });
+    if (!e[1] || typeof e[1] !== 'object') return;
+    toArr(e[1].speech).filter(function(s) { return s && s.text; }).forEach(function(s) { items.push(Object.assign({}, s, { date: e[0], keywords: toArr(s.keywords) })); });
   });
   return items.sort(function(a, b) { return b.date.localeCompare(a.date); });
 }
@@ -4116,16 +4123,18 @@ function renderSpTab(cont, searchId) {
   var all = getAllSpeech();
   var searchEl = document.getElementById(searchId);
   var q = searchEl ? searchEl.value.toLowerCase() : '';
-  var filtered = q ? all.filter(function(s) {
-    if (s.text.toLowerCase().includes(q)) return true;
-    if (s.keywords && s.keywords.some(function(k){ return k.toLowerCase().includes(q); })) return true;
+  var qn = normQ(q);
+  var filtered = qn ? all.filter(function(s) {
+    if (normQ(s.text).includes(qn)) return true;
+    if (toArr(s.keywords).some(function(k){ return normQ(k).includes(qn); })) return true;
+    if (normQ(getSpFolderName(s.id) || '').includes(qn)) return true;
     return false;
   }) : all;
   var visible = filtered.filter(function(s) { return !spDone[s.id] && getSpFolderName(s.id) !== '숨김'; });
   var hidden = filtered.filter(function(s) { return spDone[s.id] || getSpFolderName(s.id) === '숨김'; });
 
   // 검색어 있으면: 매칭 결과 먼저(하이라이트), 폴더 구조 생략
-  if (q) {
+  if (qn) {
     var matchHdr = document.createElement('div');
     matchHdr.style.cssText = 'font-size:11px;font-weight:700;color:var(--tx3);padding:4px 0 8px;';
     matchHdr.textContent = '🔍 검색 결과 ' + visible.length + '개';
@@ -4284,18 +4293,14 @@ function makeSpBox(s, isHidden) {
   var cpBtn = document.createElement('button');
   cpBtn.style.cssText = 'width:22px;height:22px;border-radius:5px;border:1px solid var(--bd);background:var(--sf);display:flex;align-items:center;justify-content:center;';
   cpBtn.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
-  // 복사 시 해시태그를 먼저 표시하고 내용 추가
-  cpBtn.onclick = (function(text, keywords) { 
-    return function() { 
-      var copyText = '';
-      // 키워드가 있으면 해시태그 형식으로 추가
-      if (keywords && keywords.length > 0) {
-        copyText = keywords.map(function(k) { return '#' + k; }).join(' ') + '\n\n';
-      }
-      copyText += text;
-      copyToClipboard(copyText, function(){ showToast('📋 복사'); }); 
-    }; 
-  })(s.text, s.keywords);
+  // 복사 형식: #해시태그 #해시태그 (엔터)(엔터) 내용
+  cpBtn.onclick = (function(sp, fname) {
+    return function() {
+      var tags = toArr(sp.keywords).slice();
+      if (fname && fname !== '분류없음' && fname !== '숨김') tags.unshift(fname);
+      copyToClipboard(buildTagHeader(tags) + sp.text, function(){ showToast('📋 복사'); });
+    };
+  })(s, folderName);
 
   if (isHidden) {
     var rst = document.createElement('button');
@@ -4344,16 +4349,13 @@ function updateBulkBar() {
 function bulkMoveFolder() { if (!Object.keys(spChecked).length) return; openFolderMove(Object.keys(spChecked)); }
 function bulkCopy() {
   var all = getAllSpeech().filter(function(s) { return spChecked[s.id]; });
-  var copyTexts = all.map(function(s) {
-    var text = '';
-    // 키워드가 있으면 해시태그 형식으로 추가
-    if (s.keywords && s.keywords.length > 0) {
-      text = s.keywords.map(function(k) { return '#' + k; }).join(' ') + '\n\n';
-    }
-    text += s.text;
-    return text;
-  });
-  navigator.clipboard.writeText(copyTexts.join('\n\n')).then(function() { showToast('📋 일괄 복사'); });
+  var txt = all.map(function(s) {
+    var tags = toArr(s.keywords).slice();
+    var fn = getSpFolderName(s.id);
+    if (fn && fn !== '분류없음' && fn !== '숨김') tags.unshift(fn);
+    return buildTagHeader(tags) + s.text;
+  }).join('\n\n──────────\n\n');
+  copyToClipboard(txt, function() { showToast('📋 일괄 복사'); });
 }
 function bulkDone() { Object.keys(spChecked).forEach(function(id) { spDone[id] = true; }); spChecked = {}; saveLocal(); renderCol(); }
 
@@ -4421,35 +4423,27 @@ function saveTitleSetting() {
   showToast('✅ 설정 저장 완료!');
 }
 
-function saveSpTempData() {
-  var text = document.getElementById('m-sp-text').value;
-  var kw = document.getElementById('m-sp-kw').value;
-  var tempData = { text: text, kw: kw };
-  localStorage.setItem('tempSpReg', JSON.stringify(tempData));
+// ▼ 스피치 등록창 임시저장 (창이 닫혀도 입력 내용 유지)
+var spRegDraft = null;
+
+function saveSpRegDraft() {
+  var okBtn = document.querySelector('#m-sp-reg .mok');
+  if (okBtn && okBtn._editMode) return; // 수정 모드는 임시저장 대상 아님
+  var t = document.getElementById('m-sp-text'), k = document.getElementById('m-sp-kw'), f = document.getElementById('m-sp-folder');
+  if (!t) return;
+  if (!t.value && !(k && k.value)) { spRegDraft = null; return; }
+  spRegDraft = { text: t.value, kw: k ? k.value : '', folderId: f ? f.value : '' };
 }
 
-function clearSpTempData() {
-  localStorage.removeItem('tempSpReg');
+function clearSpRegDraft() {
+  spRegDraft = null;
+  document.getElementById('m-sp-text').value = '';
+  document.getElementById('m-sp-kw').value = '';
+  var f = document.getElementById('m-sp-folder'); if (f) f.value = '';
+  showToast('🗑 임시저장 내용 삭제');
 }
-  // 이전에 입력하던 값 복구 (편집 모드 아닐 때만)
-  var okBtn = document.querySelector('#m-sp-reg .mok');
-  if (!okBtn._editMode) {
-    var tempSpReg = localStorage.getItem('tempSpReg');
-    if (tempSpReg) {
-      try {
-        var data = JSON.parse(tempSpReg);
-        document.getElementById('m-sp-text').value = data.text || '';
-        document.getElementById('m-sp-kw').value = data.kw || '';
-      } catch (e) {}
-    } else {
-      document.getElementById('m-sp-text').value = '';
-      document.getElementById('m-sp-kw').value = '';
-    }
-  } else {
-    document.getElementById('m-sp-text').value = '';
-    document.getElementById('m-sp-kw').value = '';
-  }
-  
+
+function openSpRegModal() {
   var inl = document.getElementById('sp-inline-folder'); if (inl) inl.remove();
   var sel = document.getElementById('m-sp-folder');
   sel.innerHTML = '<option value="">분류없음</option><option value="__new__">＋ 추가</option>';
@@ -4459,50 +4453,44 @@ function clearSpTempData() {
       var o = document.createElement('option'); o.value = f.id; o.textContent = f.name;
       sel.appendChild(o);
     });
+
+  // 이전에 작성 중이던 내용 복원
+  var d = spRegDraft || { text: '', kw: '', folderId: '' };
+  document.getElementById('m-sp-text').value = d.text || '';
+  document.getElementById('m-sp-kw').value = d.kw || '';
+  if (d.folderId && sel.querySelector('option[value="' + d.folderId + '"]')) sel.value = d.folderId;
+
+  var okBtn = document.querySelector('#m-sp-reg .mok');
   okBtn.textContent = '등록'; okBtn._editMode = false; okBtn._editSp = null;
+
+  // 입력할 때마다 임시저장
+  var t = document.getElementById('m-sp-text'), k = document.getElementById('m-sp-kw');
+  t.oninput = saveSpRegDraft; k.oninput = saveSpRegDraft;
+  sel.addEventListener('change', saveSpRegDraft);
+
   document.getElementById('m-sp-reg').style.display = 'flex';
+  if (d.text) showToast('✍️ 작성 중이던 내용을 불러왔어요');
   addEbookPasteHandler(document.getElementById('m-sp-text'));
 }
 
 function handleSpFolderSelect(sel) {
-  // 새 폴더 추가 모드
-  if (sel.value === '__new__') {
-    sel.value = '';
-    var existing = document.getElementById('sp-inline-folder'); if (existing) existing.remove();
-    var wrap = document.createElement('div'); wrap.id = 'sp-inline-folder'; wrap.style.cssText = 'margin-top:6px;';
-    var inp = document.createElement('input'); inp.type='text'; inp.placeholder='새 폴더 이름...'; inp.className='minp'; inp.style.cssText='margin-bottom:6px;';
-    var addBtn = document.createElement('button'); addBtn.textContent='추가'; addBtn.className='mok'; addBtn.style.cssText='width:100%;height:34px;';
-    wrap.appendChild(inp); wrap.appendChild(addBtn);
-    sel.parentNode.insertBefore(wrap, sel.nextSibling);
-    inp.focus();
-    addBtn.onclick = function() {
-      var name = inp.value.trim(); if (!name) return;
-      var newF = { id: uid(), name: name, speechIds: [] };
-      spFolders.push(newF); saveLocal();
-      var opt = document.createElement('option'); opt.value = newF.id; opt.textContent = newF.name;
-      sel.appendChild(opt); sel.value = newF.id; wrap.remove();
-      updateSpKeywordForFolder(newF.name); // 키워드 입력창 업데이트
-    };
-    return;
-  }
-  
-  // 기존 폴더 선택 시: 키워드 입력창에 자동 반영
-  var folderName = sel.options[sel.selectedIndex].text;
-  if (folderName && folderName !== '분류없음') {
-    updateSpKeywordForFolder(folderName);
-  }
-}
-
-// 폴더 선택 시 키워드 입력창 업데이트
-function updateSpKeywordForFolder(folderName) {
-  var kwEl = document.getElementById('m-sp-kw');
-  if (!kwEl) return;
-  var current = (kwEl.value || '').split(',').map(function(k) { return k.trim(); }).filter(Boolean);
-  // 기존 폴더명 제거
-  current = current.filter(function(k) { return k !== folderName; });
-  // 맨 앞에 추가
-  current.unshift(folderName);
-  kwEl.value = current.join(', ');
+  if (sel.value !== '__new__') return;
+  sel.value = '';
+  var existing = document.getElementById('sp-inline-folder'); if (existing) existing.remove();
+  var wrap = document.createElement('div'); wrap.id = 'sp-inline-folder'; wrap.style.cssText = 'margin-top:6px;';
+  var inp = document.createElement('input'); inp.type='text'; inp.placeholder='새 폴더 이름...'; inp.className='minp'; inp.style.cssText='margin-bottom:6px;';
+  var addBtn = document.createElement('button'); addBtn.textContent='추가'; addBtn.className='mok'; addBtn.style.cssText='width:100%;height:34px;';
+  wrap.appendChild(inp); wrap.appendChild(addBtn);
+  sel.parentNode.insertBefore(wrap, sel.nextSibling);
+  inp.focus();
+  addBtn.onclick = function() {
+    var name = inp.value.trim(); if (!name) return;
+    var newF = { id: uid(), name: name, speechIds: [] };
+    spFolders.push(newF); saveLocal();
+    var opt = document.createElement('option'); opt.value = newF.id; opt.textContent = newF.name;
+    sel.appendChild(opt); sel.value = newF.id; wrap.remove();
+    saveSpRegDraft();
+  };
 }
 
 function confirmSpReg() {
@@ -4511,20 +4499,17 @@ function confirmSpReg() {
   var folderId = document.getElementById('m-sp-folder').value;
   if (folderId === '__new__') folderId = '';
   var kw = (document.getElementById('m-sp-kw').value || '').split(',').map(function(k){return k.trim();}).filter(Boolean);
-  
-  // 폴더명을 항상 첫번째 해시태그로 설정
-  var folderName = '';
-  if (folderId) {
-    var folder = spFolders.find(function(f) { return f.id === folderId; });
-    if (folder) folderName = folder.name;
+
+  // ▼ 선택한 폴더(카테고리)명을 첫 번째 해시태그로 자동 추가
+  var selFolder = folderId ? spFolders.find(function(f){ return f.id === folderId; }) : null;
+  var folderNames = spFolders.map(function(f){ return f.name; });
+  // 다른 폴더명이 태그에 남아 있으면 제거 (폴더 변경 시 옛 태그 정리)
+  kw = kw.filter(function(k){ return !(folderNames.indexOf(k) > -1) || (selFolder && k === selFolder.name); });
+  if (selFolder && selFolder.name && selFolder.name !== '숨김') {
+    kw = kw.filter(function(k){ return k !== selFolder.name; });
+    kw.unshift(selFolder.name);
   }
-  
-  // 폴더명이 있으면: 기존 키워드에서 폴더명 제거 후, 맨 앞에 추가
-  if (folderName) {
-    kw = kw.filter(function(k) { return k !== folderName; }); // 기존 폴더명 제거
-    kw.unshift(folderName); // 맨 앞에 추가
-  }
-  
+
   var okBtn = document.querySelector('#m-sp-reg .mok');
   if (okBtn._editMode && okBtn._editSp) {
     var sp = okBtn._editSp;
@@ -4535,7 +4520,8 @@ function confirmSpReg() {
     spFolders.forEach(function(f) { f.speechIds = (f.speechIds||[]).filter(function(id){return id!==sp.id;}); });
     if (folderId) { var f2=spFolders.find(function(f){return f.id===folderId;}); if(f2){if(!f2.speechIds)f2.speechIds=[];f2.speechIds.push(sp.id);} }
     okBtn.textContent = '등록'; okBtn._editMode = false; okBtn._editSp = null;
-    saveLocal(); saveCloud(); closeM('m-sp-reg'); clearSpTempData(); showToast('✅ 수정 완료!'); renderChallenge(); return;
+    spRegDraft = null;
+    saveLocal(); saveCloud(); closeM('m-sp-reg'); showToast('✅ 수정 완료!'); renderChallenge(); return;
   }
   var date = dk(new Date());
   if (!records[date]) records[date] = { sinMin: '', haeng: [], hak: [], speech: [], reso: '', members: [], activity: [] };
@@ -4543,7 +4529,8 @@ function confirmSpReg() {
   var newId = uid();
   records[date].speech.push({ id: newId, text: text, keywords: kw });
   if (folderId) { var folder=spFolders.find(function(f){return f.id===folderId;}); if(folder){if(!folder.speechIds)folder.speechIds=[];folder.speechIds.push(newId);} }
-  saveLocal(); saveCloud(); closeM('m-sp-reg'); clearSpTempData(); showToast('✅ 스피치 등록 완료!'); renderChallenge();
+  spRegDraft = null;
+  saveLocal(); saveCloud(); closeM('m-sp-reg'); showToast('✅ 스피치 등록 완료!'); renderChallenge();
 }
 
 function confirmFolder() {
@@ -5188,104 +5175,24 @@ function renderAll() {
 
 function init() {
   loadLocal();
-  
   // forestMsgs가 18개보다 적으면 최신 기본 문구로 강제 교체
-  if (!forestMsgs || forestMsgs.length < 18) { 
-    forestMsgs = DEFAULT_MSGS.slice(); 
-    saveLocal(); 
-  }
-  
+  if (!forestMsgs || forestMsgs.length < 18) { forestMsgs = DEFAULT_MSGS.slice(); saveLocal(); }
   rebuildHaengGroups();
   updateDateDisp();
   updateHdrTitle();
-  
   var k = dk(curDate);
   ensureDef(k);
-  
-  try {
-    renderRecord();
-    renderFPills();
-    renderForest();
-  } catch (e) {
-    console.error('렌더링 오류:', e);
-  }
-  
+  renderRecord();
+  renderFPills();
+  renderForest();
   // 기간 버튼 초기값: 월별
   var pbMonth = document.getElementById('pb-month');
   if (pbMonth) pbMonth.classList.add('on');
-  
-  var savebtn = document.getElementById('savebtn');
-  if (savebtn) savebtn.style.display = 'block';
-  
-  // Firebase 초기화 (비동기, 에러 무시)
-  setTimeout(function() {
-    try {
-      initFirebase();
-    } catch (e) {
-      console.error('Firebase 초기화 오류:', e);
-    }
-  }, 500);
-}
-
-// ====== 진단 함수 ======
-function openDiagnostic() {
-  try {
-    var userStatus = curUser ? ('✅ ' + (curUser.displayName || curUser.email)) : '❌ 로그인 안 됨';
-    var fbStatus = db ? '✅ 연결됨' : '❌ 미연결';
-    var localCount = records ? Object.keys(records).length : 0;
-    var localStatus = localCount > 0 ? ('✅ ' + localCount + '개 기록') : '⚠️ 데이터 없음';
-    var cloudStatus = curUser ? '✅ 확인 중...' : '⚠️ 로그인 필요';
-    var browserInfo = (navigator.userAgent || 'Unknown').substring(0, 40) + '...';
-    
-    var diag = document.getElementById('m-diag');
-    if (diag) {
-      document.getElementById('diag-user').textContent = userStatus;
-      document.getElementById('diag-firebase').textContent = fbStatus;
-      document.getElementById('diag-local').textContent = localStatus;
-      document.getElementById('diag-cloud').textContent = cloudStatus;
-      document.getElementById('diag-browser').textContent = browserInfo;
-      diag.style.display = 'flex';
-    }
-  } catch (e) {
-    console.error('진단 오류:', e);
-  }
+  document.getElementById('savebtn').style.display = 'block';
+  initFirebase();
 }
 
 init();
 </script>
-
-<!-- 진단 모달 -->
-<div id="m-diag" class="mo" style="display:none;">
-  <div class="mcon" style="max-width:420px;">
-    <div class="mtit"><span>🔧 시스템 진단</span><button onclick="closeM('m-diag')" style="font-size:18px;color:var(--tx3);">×</button></div>
-    <div class="mbody" style="font-size:12px;line-height:2;color:var(--tx);font-family:monospace;padding:16px;background:var(--bg);">
-      <div style="margin-bottom:12px;padding:8px;border-left:3px solid var(--pu);background:var(--sf);">
-        <strong>로그인 상태</strong><br/>
-        <span id="diag-user">확인 중...</span>
-      </div>
-      <div style="margin-bottom:12px;padding:8px;border-left:3px solid var(--g);background:var(--sf);">
-        <strong>Firebase 연결</strong><br/>
-        <span id="diag-firebase">확인 중...</span>
-      </div>
-      <div style="margin-bottom:12px;padding:8px;border-left:3px solid var(--bd);background:var(--sf);">
-        <strong>로컬 데이터</strong><br/>
-        <span id="diag-local">확인 중...</span>
-      </div>
-      <div style="margin-bottom:12px;padding:8px;border-left:3px solid var(--bd);background:var(--sf);">
-        <strong>클라우드 데이터</strong><br/>
-        <span id="diag-cloud">확인 중...</span>
-      </div>
-      <div style="margin-bottom:0;padding:8px;border-left:3px solid #999;background:var(--sf);">
-        <strong>브라우저</strong><br/>
-        <span id="diag-browser">확인 중...</span>
-      </div>
-    </div>
-    <div class="mfoot">
-      <button class="mcan" onclick="closeM('m-diag')">닫기</button>
-      <button class="mok" onclick="location.reload()">새로고침</button>
-    </div>
-  </div>
-</div>
-
 </body>
 </html>
