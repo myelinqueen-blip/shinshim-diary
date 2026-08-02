@@ -759,7 +759,15 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
 
 <div id="m-sp-reg" class="mo" style="display:none;">
   <div class="mb">
-    <div class="mtit"><span>스피치 등록</span><button onclick="closeM('m-sp-reg')" style="font-size:18px;color:var(--tx3);">×</button></div>
+    <div class="mtit">
+      <span id="m-sp-title">스피치 등록</span>
+      <div style="display:flex;align-items:center;gap:6px;">
+        <button type="button" id="m-sp-fav" onclick="toggleSpRegFav()" title="즐겨찾기"
+                style="flex:none;width:30px;height:30px;border-radius:50%;border:1.5px solid var(--bd);background:var(--sf);font-size:15px;line-height:1;color:var(--tx3);display:flex;align-items:center;justify-content:center;">☆</button>
+        <button class="mok" id="m-sp-ok" onclick="confirmSpReg()" style="flex:none;padding:0 16px;height:30px;font-size:12px;border-radius:15px;">등록</button>
+        <button onclick="closeM('m-sp-reg')" style="font-size:18px;color:var(--tx3);">×</button>
+      </div>
+    </div>
     <label class="mlbl">폴더 <span style="font-size:10px;font-weight:400;color:var(--tx3);">(입력해서 검색 · 새 폴더도 바로 추가)</span></label>
     <div id="sp-folder-box" style="position:relative;margin-bottom:12px;">
       <input type="text" class="minp" id="m-sp-folder-q" autocomplete="off" placeholder="폴더 검색 또는 선택..."
@@ -773,8 +781,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
     <textarea class="minp" id="m-sp-text" rows="5" placeholder="스피치 내용 입력..." style="min-height:100px;resize:vertical;white-space:pre-wrap;margin-bottom:12px;"></textarea>
     <label class="mlbl">키워드 <span style="font-size:10px;font-weight:400;color:var(--tx3);">(쉼표로 구분, 검색에 반영)</span></label>
     <input type="text" class="minp" id="m-sp-kw" placeholder="예: 용기, 화합, 청년" style="margin-bottom:0;"/>
-    <div style="font-size:10px;color:var(--tx3);margin-top:6px;">💡 창을 닫아도 작성 중이던 내용은 유지됩니다 (폴더명이 첫 해시태그로 자동 추가돼요)</div>
-    <div class="mfoot"><button class="mcan" onclick="clearSpRegDraft()">지우기</button><button class="mcan" onclick="closeM('m-sp-reg')">닫기</button><button class="mok" onclick="confirmSpReg()">등록</button></div>
+    <div class="mfoot"><button class="mcan" onclick="clearSpRegDraft()">지우기</button><button class="mcan" onclick="closeM('m-sp-reg')">닫기</button></div>
   </div>
 </div>
 
@@ -1149,6 +1156,8 @@ var fixedPhrase = '(고정 문구를 여기에 입력하세요)';
 var spFolders = [];
 var customHaengItems = []; // 사용자 추가 행 드롭다운 항목
 var spDone = {};
+var spFav = {}; // ★ 즐겨찾기한 스피치 id 모음
+var _favSectionOpen = true;
 var spChecked = {};
 var memPeriodMonths = 3;
 var memPeriodStart = '';
@@ -1268,6 +1277,7 @@ function downloadBackup() {
     fixedPhrase: fixedPhrase,
     spFolders: spFolders,
     spDone: spDone,
+    spFav: spFav,
     customHaengItems: customHaengItems
   };
   var json = JSON.stringify(backup, null, 2);
@@ -1330,6 +1340,7 @@ function restoreBackup(input) {
       if (data.fixedPhrase) fixedPhrase = data.fixedPhrase;
       if (data.spFolders) spFolders = data.spFolders;
       if (data.spDone) spDone = data.spDone;
+      if (data.spFav) spFav = data.spFav;
       if (data.customHaengItems) customHaengItems = data.customHaengItems;
 
       var cnt = Object.keys(newRecs).length;
@@ -1368,6 +1379,7 @@ function restoreBackup(input) {
             fixedPhrase: fixedPhrase,
             spFolders: spFolders,
             spDone: spDone,
+            spFav: spFav,
             customHaengItems: customHaengItems
           }
         }).then(function() {
@@ -1444,6 +1456,7 @@ function saveCloud() {
     fixedPhrase: fixedPhrase || '',
     spFolders: spFolders || [],
     spDone: spDone || {},
+    spFav: spFav || {},
     customHaengItems: customHaengItems || [],
     // ▼ 어서 노트/메모 폴더도 클라우드 동기화 (PC↔모바일)
     essayNotes: essayNotes || {},
@@ -1522,6 +1535,7 @@ function loadCloud() {
       if (sg.fixedPhrase)      fixedPhrase        = sg.fixedPhrase;
       if (sg.spFolders)        spFolders          = sg.spFolders;
       if (sg.spDone)           spDone             = sg.spDone;
+      if (sg.spFav)            spFav              = sg.spFav;
       if (sg.customHaengItems) { customHaengItems = sg.customHaengItems; rebuildHaengGroups(); }
       // ▼ 어서 노트/메모 폴더 복원 (로컬에 있는 것은 유지하며 병합)
       if (sg.essayNotes && typeof sg.essayNotes === 'object') {
@@ -1690,7 +1704,7 @@ function saveLocal() {
     localStorage.setItem('sd4', JSON.stringify({
       records: records, goals: goals, forestCfg: forestCfg,
       forestMsgs: forestMsgs, rptTemplate: rptTemplate,
-      fixedPhrase: fixedPhrase, spFolders: spFolders, spDone: spDone,
+      fixedPhrase: fixedPhrase, spFolders: spFolders, spDone: spDone, spFav: spFav,
       customHaengItems: customHaengItems, essayNotes: essayNotes, essayMemoFolders: essayMemoFolders
     }));
   } catch (e) {}
@@ -1709,6 +1723,7 @@ function loadLocal() {
     if (d.fixedPhrase !== undefined) fixedPhrase = d.fixedPhrase;
     if (d.spFolders) spFolders = d.spFolders;
     if (d.spDone) d.spDone && (spDone = d.spDone);
+    if (d.spFav) spFav = d.spFav;
     if (d.essayNotes) essayNotes = d.essayNotes;
     if (d.essayMemoFolders && Array.isArray(d.essayMemoFolders)) essayMemoFolders = d.essayMemoFolders;
   } catch (e) {}
@@ -4166,6 +4181,44 @@ function renderSpTab(cont, searchId) {
   var nonHiddenFolders = spFolders.filter(function(f) { return f.name !== '숨김'; })
     .slice().sort(function(a, b) { return a.name.localeCompare(b.name, 'ko'); });
 
+  // ⭐ 즐겨찾기 — 고정 섹션, 실제 폴더와 무관하게 즐겨찾기된 항목만 모아서 표시
+  var favItems = visible.filter(function(s) { return spFav[s.id]; });
+  if (favItems.length) {
+    var favWrap = document.createElement('div');
+    favWrap.style.cssText = 'border-radius:var(--rs);border:1.5px solid #FFB020;overflow:hidden;margin-bottom:8px;';
+
+    var favOpen = (_favSectionOpen !== false);
+    var favHdr = document.createElement('div');
+    favHdr.style.cssText = 'display:flex;align-items:center;gap:6px;padding:9px 12px;background:#FFF7E6;cursor:pointer;';
+
+    var favIcon = document.createElement('span');
+    favIcon.style.cssText = 'font-size:12px;font-weight:700;color:#B8790A;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
+    favIcon.textContent = '⭐ 즐겨찾기';
+
+    var favCnt = document.createElement('span');
+    favCnt.style.cssText = 'font-size:11px;color:#B8790A;opacity:.8;flex-shrink:0;';
+    favCnt.textContent = favItems.length + '개';
+
+    var favArrow = document.createElement('span');
+    favArrow.style.cssText = 'font-size:11px;color:#B8790A;flex-shrink:0;';
+    favArrow.textContent = favOpen ? '▲' : '▼';
+
+    favHdr.appendChild(favIcon); favHdr.appendChild(favCnt); favHdr.appendChild(favArrow);
+
+    var favBody = document.createElement('div');
+    favBody.style.cssText = 'display:' + (favOpen ? 'block' : 'none') + ';padding:6px;background:var(--sf);';
+    favItems.forEach(function(s) { favBody.appendChild(makeSpBox(s, false)); });
+
+    favHdr.onclick = function(e) {
+      if (e.target.tagName === 'BUTTON') return;
+      _favSectionOpen = favBody.style.display === 'none';
+      favBody.style.display = _favSectionOpen ? 'block' : 'none';
+      favArrow.textContent = _favSectionOpen ? '▲' : '▼';
+    };
+
+    favWrap.appendChild(favHdr); favWrap.appendChild(favBody); cont.appendChild(favWrap);
+  }
+
   nonHiddenFolders.forEach(function(folder) {
     var items = visible.filter(function(s) { return (folder.speechIds || []).includes(s.id); });
     var wrap = document.createElement('div');
@@ -4248,6 +4301,19 @@ function makeSpBox(s, isHidden) {
   ftag.textContent = isHidden ? '숨김' : folderName;
   ftag.onclick = (function(id) { return function() { openFolderMove([id]); }; })(s.id);
 
+  var favBtn = document.createElement('button');
+  favBtn.style.cssText = 'width:22px;height:22px;border-radius:5px;border:none;background:none;display:flex;align-items:center;justify-content:center;font-size:15px;line-height:1;flex-shrink:0;color:' + (spFav[s.id] ? '#FFB020' : 'var(--tx3)') + ';';
+  favBtn.textContent = spFav[s.id] ? '★' : '☆';
+  favBtn.title = spFav[s.id] ? '즐겨찾기 해제' : '즐겨찾기 추가';
+  favBtn.onclick = (function(id) {
+    return function(e) {
+      e.stopPropagation();
+      if (spFav[id]) delete spFav[id]; else spFav[id] = true;
+      saveLocal(); try { if (curUser && db) saveCloud(); } catch (err) {}
+      renderChallenge();
+    };
+  })(s.id);
+
   var btns = document.createElement('div');
   btns.style.cssText = 'display:flex;gap:4px;align-items:center;margin-left:auto;';
 
@@ -4268,9 +4334,11 @@ function makeSpBox(s, isHidden) {
       var cur = spFolders.find(function(f) { return (f.speechIds || []).includes(sp.id); });
       sel.value = cur ? cur.id : '';
       document.getElementById('m-sp-folder-q').value = cur ? cur.name : '';
-      // 수정 모드: ok버튼을 덮어쓰기
-      var okBtn = document.querySelector('#m-sp-reg .mok');
-      var origText = okBtn.textContent;
+      setSpRegFav(!!spFav[sp.id]);
+      // 수정 모드: 상단 제목 + 등록 버튼을 '수정 완료'로
+      var okBtn = document.getElementById('m-sp-ok');
+      var titleEl = document.getElementById('m-sp-title');
+      if (titleEl) titleEl.textContent = '스피치 수정';
       okBtn.textContent = '수정 완료';
       okBtn._editMode = true;
       okBtn._editSp = sp;
@@ -4291,7 +4359,7 @@ function makeSpBox(s, isHidden) {
         var r = records[k];
         if (r && r.speech) r.speech = r.speech.filter(function(sp) { return sp.id !== sid; });
       });
-      delete spDone[sid]; delete spChecked[sid];
+      delete spDone[sid]; delete spChecked[sid]; delete spFav[sid];
       saveLocal(); renderChallenge();
       try { saveCloud(); } catch(err) {}
     });
@@ -4324,7 +4392,7 @@ function makeSpBox(s, isHidden) {
     btns.appendChild(doneBtn);
   }
   btns.appendChild(cpBtn);
-  hdr.appendChild(chk); hdr.appendChild(ftag); hdr.appendChild(btns);
+  hdr.appendChild(chk); hdr.appendChild(favBtn); hdr.appendChild(ftag); hdr.appendChild(btns);
 
   var txt = document.createElement('div');
   txt.className = 'sp-txt';
@@ -4435,12 +4503,14 @@ function saveTitleSetting() {
 var spRegDraft = null;
 
 function saveSpRegDraft() {
-  var okBtn = document.querySelector('#m-sp-reg .mok');
+  var okBtn = document.getElementById('m-sp-ok');
   if (okBtn && okBtn._editMode) return; // 수정 모드는 임시저장 대상 아님
   var t = document.getElementById('m-sp-text'), k = document.getElementById('m-sp-kw'), f = document.getElementById('m-sp-folder');
   if (!t) return;
-  if (!t.value && !(k && k.value)) { spRegDraft = null; return; }
-  spRegDraft = { text: t.value, kw: k ? k.value : '', folderId: f ? f.value : '' };
+  var fav = document.getElementById('m-sp-fav');
+  var isFav = fav && fav._fav;
+  if (!t.value && !(k && k.value) && !isFav) { spRegDraft = null; return; }
+  spRegDraft = { text: t.value, kw: k ? k.value : '', folderId: f ? f.value : '', fav: !!isFav };
 }
 
 function clearSpRegDraft() {
@@ -4448,7 +4518,25 @@ function clearSpRegDraft() {
   document.getElementById('m-sp-text').value = '';
   document.getElementById('m-sp-kw').value = '';
   var f = document.getElementById('m-sp-folder'); if (f) f.value = '';
+  setSpRegFav(false);
   showToast('🗑 임시저장 내용 삭제');
+}
+
+// 등록창의 ★ 즐겨찾기 토글
+function setSpRegFav(on) {
+  var btn = document.getElementById('m-sp-fav');
+  if (!btn) return;
+  btn._fav = !!on;
+  btn.textContent = on ? '★' : '☆';
+  btn.style.color = on ? '#FFB020' : 'var(--tx3)';
+  btn.style.borderColor = on ? '#FFB020' : 'var(--bd)';
+  btn.style.background = on ? '#FFF7E6' : 'var(--sf)';
+}
+
+function toggleSpRegFav() {
+  var btn = document.getElementById('m-sp-fav');
+  setSpRegFav(!(btn && btn._fav));
+  saveSpRegDraft();
 }
 
 function openSpRegModal() {
@@ -4457,15 +4545,18 @@ function openSpRegModal() {
   closeSpFolderList();
 
   // 이전에 작성 중이던 내용 복원
-  var d = spRegDraft || { text: '', kw: '', folderId: '' };
+  var d = spRegDraft || { text: '', kw: '', folderId: '', fav: false };
   document.getElementById('m-sp-text').value = d.text || '';
   document.getElementById('m-sp-kw').value = d.kw || '';
   var sel = document.getElementById('m-sp-folder');
   var df = d.folderId && spFolders.find(function(f) { return f.id === d.folderId; });
   sel.value = df ? df.id : '';
   document.getElementById('m-sp-folder-q').value = df ? df.name : '';
+  setSpRegFav(!!d.fav);
 
-  var okBtn = document.querySelector('#m-sp-reg .mok');
+  var okBtn = document.getElementById('m-sp-ok');
+  var titleEl = document.getElementById('m-sp-title');
+  if (titleEl) titleEl.textContent = '스피치 등록';
   okBtn.textContent = '등록'; okBtn._editMode = false; okBtn._editSp = null;
 
   // 입력할 때마다 임시저장
@@ -4584,7 +4675,10 @@ function confirmSpReg() {
     kw.unshift(selFolder.name);
   }
 
-  var okBtn = document.querySelector('#m-sp-reg .mok');
+  var okBtn = document.getElementById('m-sp-ok');
+  var favBtn = document.getElementById('m-sp-fav');
+  var isFav = !!(favBtn && favBtn._fav);
+
   if (okBtn._editMode && okBtn._editSp) {
     var sp = okBtn._editSp;
     sp.text = text; sp.keywords = kw;
@@ -4593,7 +4687,9 @@ function confirmSpReg() {
     });
     spFolders.forEach(function(f) { f.speechIds = (f.speechIds||[]).filter(function(id){return id!==sp.id;}); });
     if (folderId) { var f2=spFolders.find(function(f){return f.id===folderId;}); if(f2){if(!f2.speechIds)f2.speechIds=[];f2.speechIds.push(sp.id);} }
+    if (isFav) spFav[sp.id] = true; else delete spFav[sp.id];
     okBtn.textContent = '등록'; okBtn._editMode = false; okBtn._editSp = null;
+    var tEl = document.getElementById('m-sp-title'); if (tEl) tEl.textContent = '스피치 등록';
     spRegDraft = null;
     saveLocal(); saveCloud(); closeM('m-sp-reg'); showToast('✅ 수정 완료!'); renderChallenge(); return;
   }
@@ -4603,6 +4699,7 @@ function confirmSpReg() {
   var newId = uid();
   records[date].speech.push({ id: newId, text: text, keywords: kw });
   if (folderId) { var folder=spFolders.find(function(f){return f.id===folderId;}); if(folder){if(!folder.speechIds)folder.speechIds=[];folder.speechIds.push(newId);} }
+  if (isFav) spFav[newId] = true;
   spRegDraft = null;
   saveLocal(); saveCloud(); closeM('m-sp-reg'); showToast('✅ 스피치 등록 완료!'); renderChallenge();
 }
