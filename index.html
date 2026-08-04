@@ -758,8 +758,8 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
 </div>
 
 <div id="m-sp-reg" class="mo" style="display:none;">
-  <div class="mb">
-    <div class="mtit">
+  <div class="mb" style="padding:18px 20px;">
+    <div class="mtit" style="margin-bottom:10px;">
       <span id="m-sp-title">스피치 등록</span>
       <div style="display:flex;align-items:center;gap:6px;">
         <button type="button" id="m-sp-fav" onclick="toggleSpRegFav()" title="즐겨찾기"
@@ -768,8 +768,8 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
         <button onclick="closeM('m-sp-reg')" style="font-size:18px;color:var(--tx3);">×</button>
       </div>
     </div>
-    <label class="mlbl">폴더 <span style="font-size:10px;font-weight:400;color:var(--tx3);">(입력해서 검색 · 새 폴더도 바로 추가)</span></label>
-    <div id="sp-folder-box" style="position:relative;margin-bottom:12px;">
+    <label class="mlbl" style="margin-bottom:4px;">폴더 <span style="font-size:10px;font-weight:400;color:var(--tx3);">(입력해서 검색 · 새 폴더도 바로 추가)</span></label>
+    <div id="sp-folder-box" style="position:relative;margin-bottom:9px;">
       <input type="text" class="minp" id="m-sp-folder-q" autocomplete="off" placeholder="폴더 검색 또는 선택..."
              style="margin-bottom:0;padding-right:32px;" oninput="renderSpFolderOpts(true)" onfocus="renderSpFolderOpts(true)"/>
       <button type="button" onclick="toggleSpFolderList(event)" aria-label="폴더 목록"
@@ -777,11 +777,18 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
       <div id="m-sp-folder-list" style="display:none;position:absolute;left:0;right:0;top:calc(100% + 4px);max-height:190px;overflow-y:auto;background:var(--sf);border:1.5px solid var(--bd);border-radius:var(--rs);z-index:20;box-shadow:0 8px 22px rgba(0,0,0,.14);"></div>
       <select id="m-sp-folder" style="display:none;"></select>
     </div>
-    <label class="mlbl">내용</label>
-    <textarea class="minp" id="m-sp-text" rows="5" placeholder="스피치 내용 입력..." style="min-height:100px;resize:vertical;white-space:pre-wrap;margin-bottom:12px;"></textarea>
-    <label class="mlbl">키워드 <span style="font-size:10px;font-weight:400;color:var(--tx3);">(쉼표로 구분, 검색에 반영)</span></label>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+      <label class="mlbl" style="margin-bottom:0;">내용</label>
+      <button type="button" id="m-sp-bold-btn" onclick="toggleBoldSelection()" title="선택한 글자 볼드 처리 (Ctrl/Cmd+B)"
+              style="width:26px;height:22px;border-radius:5px;border:1px solid var(--bd);background:var(--sf);font-size:12px;font-weight:800;color:var(--tx2);flex-shrink:0;">B</button>
+    </div>
+    <textarea class="minp" id="m-sp-text" rows="4" placeholder="스피치 내용 입력... (일부 선택 후 B로 볼드 처리)" style="min-height:82px;resize:vertical;white-space:pre-wrap;margin-bottom:9px;"></textarea>
+    <label class="mlbl" style="margin-bottom:4px;">키워드 <span style="font-size:10px;font-weight:400;color:var(--tx3);">(쉼표로 구분, 검색에 반영)</span></label>
     <input type="text" class="minp" id="m-sp-kw" placeholder="예: 용기, 화합, 청년" style="margin-bottom:0;"/>
-    <div class="mfoot"><button class="mcan" onclick="clearSpRegDraft()">지우기</button><button class="mcan" onclick="closeM('m-sp-reg')">닫기</button></div>
+    <div class="mfoot" style="margin-top:12px;">
+      <button class="mcan" onclick="clearSpRegDraft()" style="height:32px;padding:0;font-size:12px;">지우기</button>
+      <button class="mcan" onclick="closeM('m-sp-reg')" style="height:32px;padding:0;font-size:12px;">닫기</button>
+    </div>
   </div>
 </div>
 
@@ -1624,7 +1631,7 @@ function normalizeRecords() {
 
 // 검색용 정규화: 소문자 + 공백/중점/가운뎃점 제거
 function normQ(s) {
-  return String(s == null ? '' : s).toLowerCase().replace(/[\s·・.,~"'`\-]/g, '');
+  return String(s == null ? '' : s).toLowerCase().replace(/[\s·・.,~"'`\-*]/g, '');
 }
 
 // 해시태그 만들기 (#앞붙임, 내부 공백 제거)
@@ -3437,6 +3444,28 @@ function hlText(text, q) {
   return frag;
 }
 
+// 스피치 본문에서 **볼드** 마커를 실제 볼드로 렌더링 (검색어 하이라이트와 함께 사용 가능)
+function renderSpText(text, q) {
+  var frag = document.createDocumentFragment();
+  if (!text) return frag;
+  var re = /\*\*(.+?)\*\*/g;
+  var last = 0, m;
+  while ((m = re.exec(text)) !== null) {
+    if (m.index > last) frag.appendChild(q ? hlText(text.slice(last, m.index), q) : document.createTextNode(text.slice(last, m.index)));
+    var b = document.createElement('b');
+    if (q) b.appendChild(hlText(m[1], q)); else b.textContent = m[1];
+    frag.appendChild(b);
+    last = re.lastIndex;
+  }
+  if (last < text.length) frag.appendChild(q ? hlText(text.slice(last), q) : document.createTextNode(text.slice(last)));
+  return frag;
+}
+
+// 복사/검색 등에 쓸 때 마커 제거한 순수 텍스트
+function stripBold(text) {
+  return String(text == null ? '' : text).replace(/\*\*(.+?)\*\*/g, '$1');
+}
+
 function makeTag(color, label) {
   var s = document.createElement('span');
   s.className = 'tag';
@@ -4171,7 +4200,7 @@ function renderSpTab(cont, searchId) {
     visible.forEach(function(s) {
       var box = makeSpBox(s, false);
       var txtEl = box.querySelector('.sp-txt');
-      if (txtEl) { txtEl.textContent = ''; txtEl.appendChild(hlText(s.text, q)); }
+      if (txtEl) { txtEl.textContent = ''; txtEl.appendChild(renderSpText(s.text, q)); }
       cont.appendChild(box);
     });
     return;
@@ -4342,6 +4371,12 @@ function makeSpBox(s, isHidden) {
       okBtn.textContent = '수정 완료';
       okBtn._editMode = true;
       okBtn._editSp = sp;
+      document.getElementById('m-sp-text').onkeydown = function(e) {
+        if ((e.ctrlKey || e.metaKey) && (e.key === 'b' || e.key === 'B')) {
+          e.preventDefault();
+          toggleBoldSelection();
+        }
+      };
       document.getElementById('m-sp-reg').style.display = 'flex';
       addEbookPasteHandler(document.getElementById('m-sp-text'));
     };
@@ -4374,7 +4409,7 @@ function makeSpBox(s, isHidden) {
     return function() {
       var tags = toArr(sp.keywords).slice();
       if (fname && fname !== '분류없음' && fname !== '숨김') tags.unshift(fname);
-      copyToClipboard(buildTagHeader(tags) + sp.text, function(){ showToast('📋 복사'); });
+      copyToClipboard(buildTagHeader(tags) + stripBold(sp.text), function(){ showToast('📋 복사'); });
     };
   })(s, folderName);
 
@@ -4397,7 +4432,8 @@ function makeSpBox(s, isHidden) {
   var txt = document.createElement('div');
   txt.className = 'sp-txt';
   txt.style.cssText = 'font-size:13px;color:var(--tx);line-height:1.55;white-space:pre-wrap;';
-  txt.textContent = s.text;
+  txt.textContent = '';
+  txt.appendChild(renderSpText(s.text, ''));
 
   // 키워드: hdr 아래, 본문 위
   box.appendChild(hdr);
@@ -4429,7 +4465,7 @@ function bulkCopy() {
     var tags = toArr(s.keywords).slice();
     var fn = getSpFolderName(s.id);
     if (fn && fn !== '분류없음' && fn !== '숨김') tags.unshift(fn);
-    return buildTagHeader(tags) + s.text;
+    return buildTagHeader(tags) + stripBold(s.text);
   }).join('\n\n──────────\n\n');
   copyToClipboard(txt, function() { showToast('📋 일괄 복사'); });
 }
@@ -4522,7 +4558,7 @@ function clearSpRegDraft() {
   showToast('🗑 임시저장 내용 삭제');
 }
 
-// 등록창의 ★ 즐겨찾기 토글
+// ★ 즐겨찾기 토글
 function setSpRegFav(on) {
   var btn = document.getElementById('m-sp-fav');
   if (!btn) return;
@@ -4536,6 +4572,37 @@ function setSpRegFav(on) {
 function toggleSpRegFav() {
   var btn = document.getElementById('m-sp-fav');
   setSpRegFav(!(btn && btn._fav));
+  saveSpRegDraft();
+}
+
+// ===== 스피치 텍스트 볼드 처리 (선택 영역을 **마커**로 감싸는 방식) =====
+function toggleBoldSelection() {
+  var ta = document.getElementById('m-sp-text');
+  if (!ta) return;
+  var start = ta.selectionStart, end = ta.selectionEnd;
+  if (start === end) { showToast('볼드 처리할 내용을 먼저 선택해주세요'); return; }
+  var val = ta.value;
+  var selected = val.slice(start, end);
+  var before = val.slice(0, start), after = val.slice(end);
+  var newStart, newEnd, newVal;
+
+  if (selected.startsWith('**') && selected.endsWith('**') && selected.length >= 4) {
+    // 선택 영역 안쪽에 마커 → 해제
+    var unwrapped = selected.slice(2, -2);
+    newVal = before + unwrapped + after;
+    newStart = start; newEnd = start + unwrapped.length;
+  } else if (before.slice(-2) === '**' && after.slice(0, 2) === '**') {
+    // 선택 영역 바로 바깥에 마커 → 해제
+    newVal = before.slice(0, -2) + selected + after.slice(2);
+    newStart = start - 2; newEnd = end - 2;
+  } else {
+    // 새로 볼드 처리
+    newVal = before + '**' + selected + '**' + after;
+    newStart = start + 2; newEnd = end + 2;
+  }
+  ta.value = newVal;
+  ta.focus();
+  ta.setSelectionRange(newStart, newEnd);
   saveSpRegDraft();
 }
 
@@ -4559,9 +4626,15 @@ function openSpRegModal() {
   if (titleEl) titleEl.textContent = '스피치 등록';
   okBtn.textContent = '등록'; okBtn._editMode = false; okBtn._editSp = null;
 
-  // 입력할 때마다 임시저장
+  // 입력할 때마다 임시저장 + Ctrl/Cmd+B 볼드 단축키
   var t = document.getElementById('m-sp-text'), k = document.getElementById('m-sp-kw');
   t.oninput = saveSpRegDraft; k.oninput = saveSpRegDraft;
+  t.onkeydown = function(e) {
+    if ((e.ctrlKey || e.metaKey) && (e.key === 'b' || e.key === 'B')) {
+      e.preventDefault();
+      toggleBoldSelection();
+    }
+  };
 
   document.getElementById('m-sp-reg').style.display = 'flex';
   if (d.text) showToast('✍️ 작성 중이던 내용을 불러왔어요');
