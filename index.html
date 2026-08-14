@@ -608,10 +608,11 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
   <!-- 스피치 툴바 -->
   <div id="ch-sp-toolbar" style="display:none;padding:8px 12px 4px;">
     <div style="display:flex;gap:4px;align-items:center;flex-wrap:wrap;margin-bottom:5px;">
-      <button onclick="openSpRegModal()" style="height:28px;border-radius:var(--rs);border:1.5px solid var(--pu);background:var(--pu);padding:0 9px;font-size:11px;font-weight:700;color:#fff;flex-shrink:0;">스피치 등록</button>
-      <button onclick="openSpFolderManager()" style="height:28px;border-radius:var(--rs);border:1.5px solid var(--pu);background:var(--pul);padding:0 9px;font-size:11px;font-weight:600;color:var(--pu);flex-shrink:0;">📁 폴더 관리</button>
-      <button id="ch-fphr-btn" onclick="copyFixedPhrase()" style="height:28px;border-radius:var(--rs);border:1.5px solid var(--g);background:var(--gl);padding:0 8px;font-size:11px;font-weight:600;color:var(--g);flex-shrink:0;">문구 복사</button>
+      <button onclick="openSpRandomModal()" style="height:28px;border-radius:var(--rs);border:1.5px solid var(--te);background:var(--tel);padding:0 10px;font-size:11px;font-weight:700;color:#1f7a70;flex-shrink:0;">랜덤</button>
+      <button id="ch-fphr-btn" onclick="copyFixedPhrase()" style="height:28px;border-radius:var(--rs);border:1.5px solid var(--g);background:var(--gl);padding:0 9px;font-size:11px;font-weight:600;color:var(--g);flex-shrink:0;">📋 문구</button>
       <button onclick="openFixedPhraseEdit()" style="height:28px;width:28px;border-radius:var(--rs);border:1px solid var(--bd);background:var(--sf);font-size:12px;flex-shrink:0;" title="고정 문구 수정">✏️</button>
+      <button onclick="openSpFolderManager()" style="height:28px;width:28px;border-radius:var(--rs);border:1.5px solid var(--pu);background:var(--pul);font-size:12px;flex-shrink:0;" title="폴더 관리">📁</button>
+      <button onclick="openSpRegModal()" style="height:28px;width:28px;border-radius:var(--rs);border:1.5px solid var(--pu);background:var(--pu);font-size:15px;font-weight:700;color:#fff;flex-shrink:0;" title="스피치 등록">＋</button>
     </div>
     <div style="position:relative;margin-bottom:5px;">
       <span style="position:absolute;left:8px;top:50%;transform:translateY(-50%);color:var(--tx3);font-size:13px;">🔍</span>
@@ -780,19 +781,15 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
           <textarea class="minp" id="m-essay-core" rows="3" placeholder="핵심 내용 (줄바꿈 인식)" style="min-height:60px;resize:vertical;white-space:pre-wrap;margin-bottom:0;"></textarea>
         </div>
       </div>
-      <div style="display:flex;align-items:center;gap:4px;margin-bottom:6px;">
-        <span class="mlbl" style="flex:1;margin-bottom:0;display:flex;justify-content:space-between;align-items:center;">
-          <span>📝 메모</span>
-          <button onclick="addEssayMemoField(null, true)" style="font-size:11px;font-weight:700;color:var(--pu);background:var(--pul);border:1px solid var(--pu);border-radius:99px;padding:3px 10px;cursor:pointer;">+ 추가</button>
-        </span>
-        <span style="width:22px;flex-shrink:0;"></span>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+        <span class="mlbl" style="margin-bottom:0;">📝 메모</span>
+        <button onclick="addEssayMemoField(null, true)" style="font-size:11px;font-weight:700;color:var(--pu);background:var(--pul);border:1px solid var(--pu);border-radius:99px;padding:3px 10px;cursor:pointer;">+ 추가</button>
       </div>
       <div id="m-essay-memos" style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px;"></div>
       <label class="mlbl">🔑 키워드 <span style="font-size:10px;font-weight:400;color:var(--tx3);">(쉼표로 구분)</span></label>
-      <input type="text" class="minp" id="m-essay-kw" placeholder="예: 입정안국, 국주간고"/>
-      <div style="font-size:10px;color:var(--tx3);margin-top:4px;margin-bottom:8px;">검색 시 어서명 + 키워드 모두 검색됩니다</div>
+      <input type="text" class="minp" id="m-essay-kw" placeholder="예: 입정안국, 국주간고" style="height:36px;line-height:36px;padding:0 12px;"/>
     </div>
-    <div class="mfoot" style="margin-top:8px;"><button class="mcan" onclick="closeM('m-essay-note')">취소</button><button class="mok" onclick="saveEssayNote()">저장</button></div>
+    <div class="mfoot" style="margin-top:8px;"><button class="mcan" onclick="closeM('m-essay-note')" style="height:32px;padding:0;">취소</button><button class="mok" onclick="saveEssayNote()" style="height:32px;padding:0;">저장</button></div>
   </div>
 </div>
 
@@ -811,6 +808,24 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
   </div>
 </div>
 
+<div id="m-sp-random" class="mo" style="display:none;">
+  <div class="mb" style="max-width:360px;">
+    <div class="mtit"><span>💫 오늘의 스피치</span><button onclick="closeM('m-sp-random')" style="font-size:18px;color:var(--tx3);">×</button></div>
+    <div style="position:relative;margin-bottom:8px;">
+      <span style="position:absolute;left:8px;top:50%;transform:translateY(-50%);color:var(--tx3);font-size:13px;">🔍</span>
+      <input type="text" class="minp" id="sp-random-kw" autocomplete="off" placeholder="키워드로 찾기 (예: 용기, 좌담회)..." style="margin-bottom:0;padding-left:28px;" oninput="pickRandomSpeech(true)"/>
+    </div>
+    <div style="display:flex;justify-content:flex-end;margin-bottom:6px;">
+      <button onclick="pickRandomSpeech(false)" style="height:26px;border-radius:99px;border:1.5px solid var(--te);background:var(--tel);color:#1f7a70;font-size:11px;font-weight:700;padding:0 10px;display:inline-flex;align-items:center;gap:4px;">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="var(--tx3)"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/></svg>
+        다른 스피치
+      </button>
+    </div>
+    <div id="sp-random-body" style="min-height:80px;"></div>
+    <div id="sp-random-footer" style="text-align:center;font-size:11px;color:var(--tx3);margin-top:10px;"></div>
+  </div>
+</div>
+
 <div id="m-sp-reg" class="mo" style="display:none;">
   <div class="mb" style="padding:18px 20px;">
     <div class="mtit" style="margin-bottom:10px;">
@@ -818,7 +833,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
       <div style="display:flex;align-items:center;gap:6px;">
         <button type="button" id="m-sp-fav" onclick="toggleSpRegFav()" title="즐겨찾기"
                 style="flex:none;width:30px;height:30px;border-radius:50%;border:1.5px solid var(--bd);background:var(--sf);font-size:15px;line-height:1;color:var(--tx3);display:flex;align-items:center;justify-content:center;">☆</button>
-        <button class="mok" id="m-sp-ok" onclick="confirmSpReg()" style="flex:none;padding:0 16px;height:30px;font-size:12px;border-radius:15px;">등록</button>
+        <button class="mok" id="m-sp-ok" onclick="confirmSpReg()" style="flex:none;padding:0 16px;height:30px;font-size:12px;border-radius:15px;">저장</button>
         <button onclick="closeM('m-sp-reg')" style="font-size:18px;color:var(--tx3);">×</button>
       </div>
     </div>
@@ -839,9 +854,10 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
     <textarea class="minp" id="m-sp-text" rows="4" placeholder="스피치 내용 입력... (일부 선택 후 B로 볼드 처리)" style="min-height:82px;resize:vertical;white-space:pre-wrap;margin-bottom:9px;"></textarea>
     <label class="mlbl" style="margin-bottom:4px;">키워드 <span style="font-size:10px;font-weight:400;color:var(--tx3);">(쉼표로 구분, 검색에 반영)</span></label>
     <input type="text" class="minp" id="m-sp-kw" placeholder="예: 용기, 화합, 청년" style="margin-bottom:0;"/>
-    <div class="mfoot" style="margin-top:12px;">
-      <button class="mcan" onclick="clearSpRegDraft()" style="height:32px;padding:0;font-size:12px;">지우기</button>
-      <button class="mcan" onclick="closeM('m-sp-reg')" style="height:32px;padding:0;font-size:12px;">닫기</button>
+    <div class="mfoot" style="margin-top:12px;gap:6px;">
+      <button class="mcan" onclick="clearSpRegDraft()" style="height:28px;padding:0;font-size:11px;flex:0 0 56px;">지우기</button>
+      <button class="mcan" onclick="closeM('m-sp-reg')" style="height:32px;padding:0;font-size:12px;flex:1;">닫기</button>
+      <button class="mok" onclick="confirmSpReg()" style="height:32px;padding:0;font-size:12px;flex:1;">저장</button>
     </div>
   </div>
 </div>
@@ -2181,16 +2197,16 @@ function toggleEssayCoreSection() {
 function addEssayMemoField(memo, prepend) {
   var el = document.getElementById('m-essay-memos');
   var row = document.createElement('div');
-  row.style.cssText = 'display:flex;gap:4px;align-items:flex-start;';
+  row.style.cssText = 'display:flex;gap:4px;align-items:flex-start;width:100%;';
   var ta = document.createElement('textarea');
   var text = (memo && typeof memo === 'object') ? (memo.text || '') : (memo || '');
   ta.className = 'minp'; ta.value = text; ta.rows = 2;
   ta.dataset.memoId = (memo && memo.id) || '';
   ta.dataset.addedAt = (memo && memo.addedAt) || '';
   ta.placeholder = '메모 내용...';
-  ta.style.cssText = 'flex:1;margin-bottom:0;height:32px;min-height:32px;resize:vertical;overflow-y:auto;white-space:pre-wrap;font-size:12px;';
+  ta.style.cssText = 'flex:1;min-width:0;margin-bottom:0;height:52px;min-height:52px;resize:vertical;overflow-y:auto;white-space:pre-wrap;font-size:12px;';
   var del = document.createElement('button');
-  del.textContent = '✕'; del.style.cssText = 'width:22px;flex-shrink:0;font-size:12px;color:var(--tx3);margin-top:5px;background:none;border:none;cursor:pointer;';
+  del.textContent = '✕'; del.style.cssText = 'width:18px;flex-shrink:0;font-size:12px;color:var(--tx3);margin-top:5px;background:none;border:none;cursor:pointer;';
   del.onclick = function() { el.removeChild(row); };
   row.appendChild(ta); row.appendChild(del);
   if (prepend && el.firstChild) el.insertBefore(row, el.firstChild);
@@ -2807,6 +2823,35 @@ function renderEssayMemoTab(cont) {
 
   // 폴더 가나다순 정렬
   var sortedFolders = (essayMemoFolders||[]).slice().sort(function(a,b){return a.name.localeCompare(b.name,'ko');});
+
+  // 검색어가 폴더(테마) 이름과 일치하면, 그 폴더 전체를 맨 위에 먼저 보여줌
+  if (qn) {
+    var nameMatchedFolders = sortedFolders.filter(function(f) { return normQ(f.name).includes(qn); });
+    if (nameMatchedFolders.length) {
+      var fHdr2 = document.createElement('div');
+      fHdr2.style.cssText = 'font-size:11px;font-weight:700;color:var(--tx3);padding:4px 0 8px;';
+      fHdr2.textContent = '📁 관련 폴더 ' + nameMatchedFolders.length + '개';
+      cont.appendChild(fHdr2);
+      nameMatchedFolders.forEach(function(f) {
+        // 폴더 검색은 필터링된 allMemos가 아니라 해당 폴더 전체 내용을 보여줌
+        var fAllMemos = [];
+        ESSAYS.forEach(function(e) {
+          var nm = e[0];
+          toArr((essayNotes[nm]||{}).memos).forEach(function(memo) {
+            if (!memo) return;
+            var text = (typeof memo === 'object') ? (memo.text||'') : (memo||'');
+            var mid = (typeof memo === 'object' && memo.id) ? memo.id : (nm + ':' + text.slice(0,20));
+            if (text && (f.memoIds||[]).indexOf(mid) > -1) fAllMemos.push({memoId:mid, essayName:nm, memoText:text, startP:e[1]});
+          });
+        });
+        cont.appendChild(makeWrap(fAllMemos));
+      });
+      var sep0 = document.createElement('div');
+      sep0.style.cssText = 'font-size:11px;font-weight:700;color:var(--tx3);padding:8px 0 4px;';
+      sep0.textContent = '📝 메모 검색 결과 ' + allMemos.length + '개';
+      cont.appendChild(sep0);
+    }
+  }
 
   sortedFolders.forEach(function(f) {
     var fMemos=allMemos.filter(function(m){return inMap[m.memoId] && inMap[m.memoId].id===f.id;});
@@ -3642,10 +3687,11 @@ function renderHakList(list) {
     }
 
     var r2 = document.createElement('div');
-    r2.style.cssText = 'display:flex;align-items:center;gap:5px;padding:2px 0 4px 19px;';
+    r2.style.cssText = 'display:flex;align-items:center;gap:5px;padding:2px 0 4px;';
+    var r2spacer = document.createElement('div'); r2spacer.style.cssText = 'width:14px;flex-shrink:0;'; // 위 줄의 grip 너비와 정확히 맞춤
     var sp1 = document.createElement('span'); sp1.textContent = 'p.'; sp1.style.fontSize = '11px'; sp1.style.color = 'var(--tx3)';
     var sp2 = document.createElement('span'); sp2.textContent = '~'; sp2.style.cssText = 'font-size:12px;color:var(--tx3);';
-    r2.appendChild(sp1); r2.appendChild(sInp); r2.appendChild(sp2); r2.appendChild(eInp); r2.appendChild(pgLbl);
+    r2.appendChild(r2spacer); r2.appendChild(sp1); r2.appendChild(sInp); r2.appendChild(sp2); r2.appendChild(eInp); r2.appendChild(pgLbl);
 
     row.appendChild(r1); row.appendChild(r2); el.appendChild(row);
   });
@@ -5159,13 +5205,70 @@ function renderSpTab(cont, searchId) {
   var visible = filtered.filter(function(s) { return !spDone[s.id] && getSpFolderName(s.id) !== '숨김'; });
   var hidden = filtered.filter(function(s) { return spDone[s.id] || getSpFolderName(s.id) === '숨김'; });
 
-  // 검색어 있으면: 매칭 결과 먼저(하이라이트), 폴더 구조 생략
+  // 폴더 가나다순 정렬
+  var nonHiddenFolders = spFolders.filter(function(f) { return f.name !== '숨김'; })
+    .slice().sort(function(a, b) { return a.name.localeCompare(b.name, 'ko'); });
+
+  function buildSpFolderBox(folder, items) {
+    var wrap = document.createElement('div');
+    wrap.style.cssText = 'border-radius:var(--rs);border:1px solid var(--bd);overflow:hidden;margin-bottom:4px;';
+
+    var isOpen = (folder._open !== false);
+    var hdr = document.createElement('div');
+    hdr.style.cssText = 'display:flex;align-items:center;gap:6px;padding:9px 12px;background:var(--pul);cursor:pointer;';
+
+    var fIcon = document.createElement('span');
+    fIcon.style.cssText = 'font-size:12px;font-weight:700;color:var(--pu);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
+    fIcon.textContent = '📁 ' + folder.name;
+
+    var fCnt = document.createElement('span');
+    fCnt.style.cssText = 'font-size:11px;color:var(--pu);opacity:.7;flex-shrink:0;';
+    fCnt.textContent = items.length + '개';
+
+    var fArrow = document.createElement('span');
+    fArrow.style.cssText = 'font-size:11px;color:var(--pu);flex-shrink:0;';
+    fArrow.textContent = isOpen ? '▲' : '▼';
+
+    hdr.appendChild(fIcon); hdr.appendChild(fCnt); hdr.appendChild(fArrow);
+
+    var body = document.createElement('div');
+    body.style.cssText = 'display:' + (isOpen ? 'block' : 'none') + ';padding:6px;background:var(--sf);';
+    items.forEach(function(s) { body.appendChild(makeSpBox(s, false)); });
+
+    hdr.onclick = (function(f, b, arr) {
+      return function(e) {
+        if (e.target.tagName === 'BUTTON') return;
+        f._open = b.style.display === 'none';
+        b.style.display = f._open ? 'block' : 'none';
+        arr.textContent = f._open ? '▲' : '▼';
+      };
+    })(folder, body, fArrow);
+
+    wrap.appendChild(hdr); wrap.appendChild(body);
+    return wrap;
+  }
+
+  // 검색어 있으면: ① 이름이 일치하는 폴더(테마)를 먼저, ② 그 아래 내용/키워드로 매칭된 메모들
   if (qn) {
+    var matchedFolders = nonHiddenFolders.filter(function(f) { return normQ(f.name).includes(qn); });
+    var shownIds = {};
+    if (matchedFolders.length) {
+      var folderHdr = document.createElement('div');
+      folderHdr.style.cssText = 'font-size:11px;font-weight:700;color:var(--tx3);padding:4px 0 8px;';
+      folderHdr.textContent = '📁 관련 폴더 ' + matchedFolders.length + '개';
+      cont.appendChild(folderHdr);
+      matchedFolders.forEach(function(f) {
+        var items = visible.filter(function(s) { return (f.speechIds || []).includes(s.id); });
+        items.forEach(function(s) { shownIds[s.id] = true; });
+        cont.appendChild(buildSpFolderBox(f, items));
+      });
+    }
+    var textMatches = visible.filter(function(s) { return !shownIds[s.id]; });
     var matchHdr = document.createElement('div');
-    matchHdr.style.cssText = 'font-size:11px;font-weight:700;color:var(--tx3);padding:4px 0 8px;';
-    matchHdr.textContent = '🔍 검색 결과 ' + visible.length + '개';
+    matchHdr.style.cssText = 'font-size:11px;font-weight:700;color:var(--tx3);padding:' + (matchedFolders.length ? '12px 0 8px' : '4px 0 8px') + ';';
+    matchHdr.textContent = '🔍 메모 검색 결과 ' + textMatches.length + '개';
     cont.appendChild(matchHdr);
-    visible.forEach(function(s) {
+    textMatches.forEach(function(s) {
       var box = makeSpBox(s, false);
       var txtEl = box.querySelector('.sp-txt');
       if (txtEl) { txtEl.textContent = ''; txtEl.appendChild(renderSpText(s.text, q)); }
@@ -5173,10 +5276,6 @@ function renderSpTab(cont, searchId) {
     });
     return;
   }
-
-  // 폴더 가나다순 정렬
-  var nonHiddenFolders = spFolders.filter(function(f) { return f.name !== '숨김'; })
-    .slice().sort(function(a, b) { return a.name.localeCompare(b.name, 'ko'); });
 
   // ⭐ 즐겨찾기 — 고정 섹션, 실제 폴더와 무관하게 즐겨찾기된 항목만 모아서 표시
   var favItems = visible.filter(function(s) { return spFav[s.id]; });
@@ -5218,41 +5317,7 @@ function renderSpTab(cont, searchId) {
 
   nonHiddenFolders.forEach(function(folder) {
     var items = visible.filter(function(s) { return (folder.speechIds || []).includes(s.id); });
-    var wrap = document.createElement('div');
-    wrap.style.cssText = 'border-radius:var(--rs);border:1px solid var(--bd);overflow:hidden;margin-bottom:4px;';
-
-    var isOpen = (folder._open !== false);
-    var hdr = document.createElement('div');
-    hdr.style.cssText = 'display:flex;align-items:center;gap:6px;padding:9px 12px;background:var(--pul);cursor:pointer;';
-
-    var fIcon = document.createElement('span');
-    fIcon.style.cssText = 'font-size:12px;font-weight:700;color:var(--pu);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
-    fIcon.textContent = '📁 ' + folder.name;
-
-    var fCnt = document.createElement('span');
-    fCnt.style.cssText = 'font-size:11px;color:var(--pu);opacity:.7;flex-shrink:0;';
-    fCnt.textContent = items.length + '개';
-
-    var fArrow = document.createElement('span');
-    fArrow.style.cssText = 'font-size:11px;color:var(--pu);flex-shrink:0;';
-    fArrow.textContent = isOpen ? '▲' : '▼';
-
-    hdr.appendChild(fIcon); hdr.appendChild(fCnt); hdr.appendChild(fArrow);
-
-    var body = document.createElement('div');
-    body.style.cssText = 'display:' + (isOpen ? 'block' : 'none') + ';padding:6px;background:var(--sf);';
-    items.forEach(function(s) { body.appendChild(makeSpBox(s, false)); });
-
-    hdr.onclick = (function(f, b, arr) {
-      return function(e) {
-        if (e.target.tagName === 'BUTTON') return;
-        f._open = b.style.display === 'none';
-        b.style.display = f._open ? 'block' : 'none';
-        arr.textContent = f._open ? '▲' : '▼';
-      };
-    })(folder, body, fArrow);
-
-    wrap.appendChild(hdr); wrap.appendChild(body); cont.appendChild(wrap);
+    cont.appendChild(buildSpFolderBox(folder, items));
   });
 
   // 분류없음
@@ -5637,6 +5702,47 @@ function toggleBoldSelection() {
   saveSpRegDraft();
 }
 
+// ===== 🎲 랜덤 스피치 추천 =====
+var _spRandomLastId = null;
+
+function openSpRandomModal() {
+  var kw = document.getElementById('sp-random-kw'); if (kw) kw.value = '';
+  document.getElementById('m-sp-random').style.display = 'flex';
+  pickRandomSpeech(false);
+}
+
+function pickRandomSpeech(fromKeyword) {
+  var kwEl = document.getElementById('sp-random-kw');
+  var kwn = normQ(kwEl ? kwEl.value : '');
+  var body = document.getElementById('sp-random-body');
+  var footer = document.getElementById('sp-random-footer');
+
+  var pool = getAllSpeech().filter(function(s) { return !spDone[s.id] && getSpFolderName(s.id) !== '숨김'; });
+  if (kwn) {
+    pool = pool.filter(function(s) {
+      return normQ(s.text).includes(kwn) ||
+        toArr(s.keywords).some(function(k) { return normQ(k).includes(kwn); }) ||
+        normQ(getSpFolderName(s.id) || '').includes(kwn);
+    });
+  }
+
+  if (!pool.length) {
+    body.innerHTML = '<div style="text-align:center;padding:30px 0;color:var(--tx3);font-size:12px;">' + (kwn ? '해당 키워드와 맞는 스피치가 없어요' : '저장된 스피치가 없어요') + '</div>';
+    footer.textContent = '';
+    _spRandomLastId = null;
+    return;
+  }
+
+  // 후보가 여럿이면 직전과 같은 것 다시 뽑지 않기
+  var candidates = pool.length > 1 ? pool.filter(function(s) { return s.id !== _spRandomLastId; }) : pool;
+  var pick = candidates[Math.floor(Math.random() * candidates.length)];
+  _spRandomLastId = pick.id;
+
+  body.innerHTML = '';
+  body.appendChild(makeSpBox(pick, false));
+  footer.textContent = '스피치 ' + pool.length + '개 중 오늘 실천할 스피치를 추천해요';
+}
+
 function openSpRegModal() {
   var inl = document.getElementById('sp-inline-folder'); if (inl) inl.remove();
   syncSpFolderSelect();
@@ -5655,7 +5761,7 @@ function openSpRegModal() {
   var okBtn = document.getElementById('m-sp-ok');
   var titleEl = document.getElementById('m-sp-title');
   if (titleEl) titleEl.textContent = '스피치 등록';
-  okBtn.textContent = '등록'; okBtn._editMode = false; okBtn._editSp = null;
+  okBtn.textContent = '저장'; okBtn._editMode = false; okBtn._editSp = null;
 
   // 입력할 때마다 임시저장 + Ctrl/Cmd+B 볼드 단축키
   var t = document.getElementById('m-sp-text'), k = document.getElementById('m-sp-kw');
@@ -5792,7 +5898,7 @@ function confirmSpReg() {
     spFolders.forEach(function(f) { f.speechIds = (f.speechIds||[]).filter(function(id){return id!==sp.id;}); });
     if (folderId) { var f2=spFolders.find(function(f){return f.id===folderId;}); if(f2){if(!f2.speechIds)f2.speechIds=[];f2.speechIds.push(sp.id);} }
     if (isFav) spFav[sp.id] = true; else delete spFav[sp.id];
-    okBtn.textContent = '등록'; okBtn._editMode = false; okBtn._editSp = null;
+    okBtn.textContent = '저장'; okBtn._editMode = false; okBtn._editSp = null;
     var tEl = document.getElementById('m-sp-title'); if (tEl) tEl.textContent = '스피치 등록';
     spRegDraft = null;
     saveLocal(); saveCloud(); closeM('m-sp-reg'); showToast('✅ 수정 완료!'); renderChallenge(); return;
