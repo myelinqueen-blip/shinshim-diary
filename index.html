@@ -106,6 +106,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
 .chdr{
   display:flex;align-items:center;gap:8px;padding:9px 12px;
   border-bottom:1px solid var(--bd);border-top:3px solid transparent;
+  border-top-left-radius:var(--r);border-top-right-radius:var(--r);
 }
 .chdr.cg{border-top-color:var(--g);}
 .chdr.cp{border-top-color:var(--pk);}
@@ -267,7 +268,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
 /* FOREST */
 .marqwrap{background:var(--g);padding:10px 16px;display:flex;align-items:center;gap:8px;overflow:hidden;}
 .marqinner{flex:1;overflow:hidden;position:relative;display:flex;align-items:center;height:22px;}
-.marqtxt{white-space:nowrap;font-size:13px;font-weight:600;color:#fff;display:inline-block;will-change:transform;line-height:1;}
+.marqtxt{white-space:nowrap;font-size:13px;font-weight:600;color:#fff;display:inline-block;will-change:transform;line-height:22px;}
 .sgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:8px 12px 0;}
 .scell{border-radius:10px;padding:10px 4px;text-align:center;}
 .wchart{border-radius:var(--r);border:1px solid var(--bd);background:var(--sf);padding:12px;margin:12px 12px 0;}
@@ -389,16 +390,18 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
       </div>
     </div>
     <div class="cbdy" style="padding:10px 14px 12px;">
-      <div style="display:flex;align-items:center;gap:8px;">
-        <input type="number" id="sin-min" class="inp" placeholder="0"
-          style="width:76px;height:38px;line-height:38px;font-size:19px;font-weight:900;text-align:center;padding:0;"
-          oninput="onSinChange()"/>
-        <span style="font-size:12px;color:var(--tx);">분</span>
+      <div style="display:flex;align-items:center;gap:6px;">
+        <div style="display:flex;align-items:center;gap:3px;">
+          <input type="number" id="sin-min" class="inp" placeholder="0"
+            style="width:62px;height:36px;line-height:36px;font-size:17px;font-weight:900;text-align:center;padding:0;"
+            oninput="onSinChange()"/>
+          <span style="font-size:12px;color:var(--tx);">분</span>
+        </div>
         <span style="font-size:12px;color:var(--tx2);">→</span>
-        <span id="sin-fmt" style="font-size:20px;font-weight:900;color:var(--g);">0m</span>
-        <div style="display:flex;gap:5px;margin-left:auto;">
-          <button type="button" id="sin-am-btn" onclick="toggleSinAmPm('am')" style="border-radius:99px;padding:4.5px 11px;font-size:11px;font-weight:600;border:1.5px solid var(--pk);background:var(--sf);color:var(--pk);transition:all .15s;white-space:nowrap;">아침</button>
-          <button type="button" id="sin-pm-btn" onclick="toggleSinAmPm('pm')" style="border-radius:99px;padding:4.5px 11px;font-size:11px;font-weight:600;border:1.5px solid var(--bl);background:var(--sf);color:var(--bl);transition:all .15s;white-space:nowrap;">저녁</button>
+        <span id="sin-fmt" style="font-size:15px;font-weight:900;color:var(--g);">0m</span>
+        <div style="display:flex;gap:4px;margin-left:auto;">
+          <button type="button" id="sin-am-btn" onclick="toggleSinAmPm('am')" style="border-radius:99px;padding:4px 8px;font-size:11px;font-weight:600;border:1.5px solid var(--pk);background:var(--sf);color:var(--pk);transition:all .15s;white-space:nowrap;">아침</button>
+          <button type="button" id="sin-pm-btn" onclick="toggleSinAmPm('pm')" style="border-radius:99px;padding:4px 8px;font-size:11px;font-weight:600;border:1.5px solid var(--bl);background:var(--sf);color:var(--bl);transition:all .15s;white-space:nowrap;">저녁</button>
         </div>
       </div>
     </div>
@@ -609,10 +612,12 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
   <div id="ch-sp-toolbar" style="display:none;padding:8px 12px 4px;">
     <div style="display:flex;gap:4px;align-items:center;flex-wrap:wrap;margin-bottom:5px;">
       <button onclick="openSpRandomModal()" style="height:28px;border-radius:var(--rs);border:1.5px solid var(--te);background:var(--tel);padding:0 10px;font-size:11px;font-weight:700;color:#1f7a70;flex-shrink:0;">랜덤</button>
-      <button id="ch-fphr-btn" onclick="copyFixedPhrase()" style="height:28px;border-radius:var(--rs);border:1.5px solid var(--g);background:var(--gl);padding:0 9px;font-size:11px;font-weight:600;color:var(--g);flex-shrink:0;">📋 문구</button>
+      <button id="ch-fphr-btn" onclick="copyFixedPhrase()" style="height:28px;border-radius:var(--rs);border:1.5px solid var(--pu);background:var(--sf);padding:0 9px;font-size:11px;font-weight:600;color:var(--pu);flex-shrink:0;">문구</button>
       <button onclick="openFixedPhraseEdit()" style="height:28px;width:28px;border-radius:var(--rs);border:1px solid var(--bd);background:var(--sf);font-size:12px;flex-shrink:0;" title="고정 문구 수정">✏️</button>
-      <button onclick="openSpFolderManager()" style="height:28px;width:28px;border-radius:var(--rs);border:1.5px solid var(--pu);background:var(--pul);font-size:12px;flex-shrink:0;" title="폴더 관리">📁</button>
-      <button onclick="openSpRegModal()" style="height:28px;width:28px;border-radius:var(--rs);border:1.5px solid var(--pu);background:var(--pu);font-size:15px;font-weight:700;color:#fff;flex-shrink:0;" title="스피치 등록">＋</button>
+      <button onclick="openSpFolderManager()" style="height:28px;width:32px;border-radius:var(--rs);border:1.5px solid var(--pu);background:var(--pul);flex-shrink:0;display:flex;align-items:center;justify-content:center;" title="폴더 관리">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--pu)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"/></svg>
+      </button>
+      <button onclick="openSpRegModal()" style="height:28px;flex:1;min-width:76px;border-radius:var(--rs);border:1.5px solid var(--pu);background:var(--pu);font-size:12px;font-weight:700;color:#fff;flex-shrink:0;">＋ 추가</button>
     </div>
     <div style="position:relative;margin-bottom:5px;">
       <span style="position:absolute;left:8px;top:50%;transform:translateY(-50%);color:var(--tx3);font-size:13px;">🔍</span>
@@ -855,9 +860,9 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
     <label class="mlbl" style="margin-bottom:4px;">키워드 <span style="font-size:10px;font-weight:400;color:var(--tx3);">(쉼표로 구분, 검색에 반영)</span></label>
     <input type="text" class="minp" id="m-sp-kw" placeholder="예: 용기, 화합, 청년" style="margin-bottom:0;"/>
     <div class="mfoot" style="margin-top:12px;gap:6px;">
-      <button class="mcan" onclick="clearSpRegDraft()" style="height:28px;padding:0;font-size:11px;flex:0 0 56px;">지우기</button>
+      <button class="mcan" onclick="clearSpRegDraft()" style="height:32px;padding:0;font-size:11px;flex:0 0 56px;">지우기</button>
       <button class="mcan" onclick="closeM('m-sp-reg')" style="height:32px;padding:0;font-size:12px;flex:1;">닫기</button>
-      <button class="mok" onclick="confirmSpReg()" style="height:32px;padding:0;font-size:12px;flex:1;">저장</button>
+      <button class="mok" onclick="confirmSpReg()" style="height:32px;padding:0;font-size:12px;flex:2;">저장</button>
     </div>
   </div>
 </div>
@@ -4311,7 +4316,7 @@ function hlText(text, q) {
 function renderSpText(text, q) {
   var frag = document.createDocumentFragment();
   if (!text) return frag;
-  var re = /\*\*(.+?)\*\*/g;
+  var re = /\*\*([\s\S]+?)\*\*/g; // [\s\S]는 줄바꿈도 포함해서 매칭 (기존 .는 줄바꿈 미매칭이라 여러 줄에 걸친 볼드가 깨졌음)
   var last = 0, m;
   while ((m = re.exec(text)) !== null) {
     if (m.index > last) frag.appendChild(q ? hlText(text.slice(last, m.index), q) : document.createTextNode(text.slice(last, m.index)));
@@ -4326,7 +4331,7 @@ function renderSpText(text, q) {
 
 // 복사/검색 등에 쓸 때 마커 제거한 순수 텍스트
 function stripBold(text) {
-  return String(text == null ? '' : text).replace(/\*\*(.+?)\*\*/g, '$1');
+  return String(text == null ? '' : text).replace(/\*\*([\s\S]+?)\*\*/g, '$1');
 }
 
 function makeTag(color, label) {
@@ -5350,6 +5355,16 @@ function makeSpBox(s, isHidden) {
   box.dataset.id = s.id;
   var folderName = getSpFolderName(s.id) || '분류없음';
 
+  // 폴더/카테고리명은 좁은 뱃지 안에 우겨넣지 않고, 한 줄 전체를 쓰는 독립된 줄로 표시 (긴 이름·'/' 포함 시 세로로 깨지는 것 방지)
+  var ftagRow = document.createElement('div');
+  ftagRow.style.cssText = 'margin-bottom:5px;';
+  var ftag = document.createElement('button');
+  ftag.className = 'ftag';
+  ftag.style.cssText = 'display:block;width:100%;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;box-sizing:border-box;';
+  ftag.textContent = isHidden ? '숨김' : folderName;
+  ftag.onclick = (function(id) { return function() { openFolderMove([id]); }; })(s.id);
+  ftagRow.appendChild(ftag);
+
   var hdr = document.createElement('div');
   hdr.style.cssText = 'display:flex;align-items:center;gap:5px;margin-bottom:6px;';
 
@@ -5357,11 +5372,6 @@ function makeSpBox(s, isHidden) {
   chk.type = 'checkbox'; chk.style.cssText = 'width:14px;height:14px;border-radius:4px;cursor:pointer;accent-color:var(--pu);flex-shrink:0;';
   chk.checked = !!spChecked[s.id];
   chk.onchange = (function(id) { return function() { if (chk.checked) spChecked[id] = true; else delete spChecked[id]; box.classList.toggle('chk', chk.checked); updateBulkBar(); }; })(s.id);
-
-  var ftag = document.createElement('button');
-  ftag.className = 'ftag';
-  ftag.textContent = isHidden ? '숨김' : folderName;
-  ftag.onclick = (function(id) { return function() { openFolderMove([id]); }; })(s.id);
 
   var favBtn = document.createElement('button');
   favBtn.style.cssText = 'width:22px;height:22px;border-radius:5px;border:none;background:none;display:flex;align-items:center;justify-content:center;font-size:15px;line-height:1;flex-shrink:0;color:' + (spFav[s.id] ? '#FFB020' : 'var(--tx3)') + ';';
@@ -5460,7 +5470,7 @@ function makeSpBox(s, isHidden) {
     btns.appendChild(doneBtn);
   }
   btns.appendChild(cpBtn);
-  hdr.appendChild(chk); hdr.appendChild(favBtn); hdr.appendChild(ftag); hdr.appendChild(btns);
+  hdr.appendChild(chk); hdr.appendChild(favBtn); hdr.appendChild(btns);
 
   var txt = document.createElement('div');
   txt.className = 'sp-txt';
@@ -5468,7 +5478,8 @@ function makeSpBox(s, isHidden) {
   txt.textContent = '';
   txt.appendChild(renderSpText(s.text, ''));
 
-  // 키워드: hdr 아래, 본문 위
+  // 폴더명(한 줄 전체) → 체크박스/즐겨찾기/버튼 줄 → 키워드 → 본문
+  box.appendChild(ftagRow);
   box.appendChild(hdr);
   if (s.keywords && s.keywords.length) {
     var kwDiv = document.createElement('div');
