@@ -766,7 +766,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
 <div id="m-recurring-haeng" class="mo" style="display:none;">
   <div class="mb" style="max-width:340px;max-height:80vh;display:flex;flex-direction:column;">
     <div class="mtit"><span>🔁 반복 활동 관리</span><button onclick="closeRecurringHaengModal()" style="font-size:18px;color:var(--tx3);">×</button></div>
-    <div style="font-size:11px;color:var(--tx3);margin-bottom:8px;line-height:1.6;">선택한 요일 + 기간 안에서만 자동으로 채워져요. 그 날 이미 '행' 항목이 있으면 덮어쓰지 않아요.</div>
+    <div style="font-size:11px;color:var(--tx3);margin-bottom:8px;line-height:1.6;">선택한 요일 + 기간 안에서는 매번 자동으로 추가돼요. 그 날 다른 '행' 항목이 있어도 반복 항목은 항상 들어갑니다.</div>
     <div id="recurring-haeng-list" style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:8px;margin-bottom:10px;"></div>
     <button class="addbtn" onclick="addRecurringHaengRow()" style="width:100%;margin-bottom:8px;">+ 반복 항목 추가</button>
     <div class="mfoot"><button class="mok" onclick="closeRecurringHaengModal()" style="flex:1;">완료</button></div>
@@ -1483,8 +1483,8 @@ function restoreBackup(input) {
 // Firebase 경로: users/{uid}/entries, books, chanjeSettings, shinGoal
 function baseRef() { return db.ref('users/' + curUser.uid); }
 
-function saveCloud() {
-  if (!curUser || !db) { showToast('로그인 후 저장 가능'); return; }
+function saveCloud(silent) {
+  if (!curUser || !db) { if (!silent) showToast('로그인 후 저장 가능'); return; }
   var base = baseRef();
 
   // records: 기록탭 날짜별 전체 데이터 (이전 버전과 동일한 키명 유지)
@@ -1541,7 +1541,7 @@ function saveCloud() {
     recurringHaeng: recurringHaeng || []
   };
   base.child('shinGoal').set(shinGoalData)
-    .then(function() { showToast('☁️ 저장 완료'); })
+    .then(function() { if (!silent) showToast('☁️ 저장 완료'); })
     .catch(function(e) { showToast('저장 오류: ' + e.message); });
 }
 
@@ -1759,35 +1759,30 @@ function getRecurringMatches(k) {
   });
 }
 
-// 아직 아무 것도 입력 안 한(빈 칸뿐인) 행 목록인지 확인 - 사용자가 뭔가 적어둔 날은 절대 덮어쓰지 않기 위함
-function isHaengBlank(list) {
-  return !list || !list.length || list.every(function(it) { return !it.name && !it.type && !it.custom; });
-}
-
-// 해당 날짜에 반복 항목을 채워 넣음 (이미 뭔가 입력돼 있으면 아무것도 하지 않음). 채웠으면 true 반환
+// 해당 날짜에 활성 반복 항목들을 전부 채워 넣음. 이미 그 규칙이 반영돼 있으면 건너뛰고,
+// 다른 '행' 항목이 있어도 상관없이 반드시 추가함(요청사항). 아직 사용자가 손대지 않은
+// 자동 빈 칸(_autoBlank)만 있으면 그 자리를 대신 채움. 뭔가 바뀌었으면 true 반환
 function applyRecurringToDate(k) {
   var r = getRec(k);
-  if (!isHaengBlank(r.haeng)) return false;
   var matches = getRecurringMatches(k);
   if (!matches.length) return false;
-  r.haeng = matches.map(function(t) {
-    return { id: uid(), name: t.name || '', type: t.type || '', custom: t.custom || '', cat: t.cat || '' };
+  var changed = false;
+  matches.forEach(function(t) {
+    var already = r.haeng.some(function(it) { return it._fromRecurring === t.id; });
+    if (already) return;
+    r.haeng = r.haeng.filter(function(it) { return !it._autoBlank; }); // 자동 빈 칸은 반복 항목이 들어오면 제거
+    r.haeng.push({ id: uid(), name: t.name || '', type: t.type || '', custom: t.custom || '', cat: t.cat || '', _fromRecurring: t.id });
+    changed = true;
   });
-  return true;
+  return changed;
 }
 
 function ensureDef(k) {
   var r = getRec(k);
-  if (isHaengBlank(r.haeng)) {
-    var matches = getRecurringMatches(k);
-    if (matches.length) {
-      r.haeng = matches.map(function(t) {
-        return { id: uid(), name: t.name || '', type: t.type || '', custom: t.custom || '', cat: t.cat || '' };
-      });
-    } else if (!r.haeng.length) {
-      r.haeng = [{ id: uid(), name: '', type: '연락', custom: '', cat: '여자부' }];
-    }
+  if (!r.haeng.length) {
+    r.haeng = [{ id: uid(), name: '', type: '연락', custom: '', cat: '여자부', _autoBlank: true }];
   }
+  if (applyRecurringToDate(k)) saveLocal(); // 반복 항목이 새로 채워졌으면 조용히 저장
   if (!r.hak.length) r.hak = [{ id: uid(), bookType: '도서', bookName: '', startPage: '', endPage: '' }];
   if (!r.speech.length) r.speech = [{ id: uid(), text: '' }];
   if (!r.members.length) r.members = [{ id: uid(), name: '', memo: '' }];
@@ -3215,7 +3210,7 @@ function renderRecord() {
   document.getElementById('sin-min').value = r.sinMin || '';
   renderSinAmPmButtons(r);
   document.getElementById('reso-inp').value = r.reso || '';
-  onSinChange();
+  updateSinDisplay();
   renderHaengList(r.haeng);
   renderHakList(r.hak);
   renderSpeechRecList(r.speech);
@@ -3245,21 +3240,28 @@ function toggleSinAmPm(which) {
   scheduleCloudAutoSave();
 }
 
-function onSinChange() {
+// 화면 표시만 갱신 (record에 쓰기/저장 없음) - renderRecord처럼 단순 재표시할 때 사용
+function updateSinDisplay() {
   var sinMinEl = document.getElementById('sin-min');
-  if (!sinMinEl) return; // 기록 탭 미활성화 시 무시
-  var k = dk(curDate), r = getRec(k);
-  r.sinMin = sinMinEl.value;
-  var n = parseInt(r.sinMin) || 0;
+  if (!sinMinEl) return;
+  var n = parseInt(sinMinEl.value) || 0;
   var fmtEl = document.getElementById('sin-fmt'); if (fmtEl) fmtEl.textContent = fmtMin(n);
   var avgEl = document.getElementById('sin-avg');
   if (avgEl) {
-    // '목표설정'에서 정한 총 시간(forestCfg.goalMin)을 전체 일수로 나눈 하루 목표
     var sd = new Date(forestCfg.startDate), ed = new Date(forestCfg.endDate);
     var totalDays = Math.max(1, Math.round((ed - sd) / (1000 * 60 * 60 * 24)) + 1);
     var dailyGoal = Math.round((forestCfg.goalMin || 0) / totalDays);
     avgEl.textContent = '목표 ' + dailyGoal + '분';
   }
+}
+
+// 실제 사용자가 입력했을 때만 호출 (oninput) - record에 쓰고 저장까지 트리거
+function onSinChange() {
+  var sinMinEl = document.getElementById('sin-min');
+  if (!sinMinEl) return; // 기록 탭 미활성화 시 무시
+  var k = dk(curDate), r = getRec(k);
+  r.sinMin = sinMinEl.value;
+  updateSinDisplay();
   autoSave();
 }
 
@@ -3447,7 +3449,7 @@ function saveRecurringHaeng() {
   try { if (curUser && db) saveCloud(); } catch (e) {}
 }
 
-// 반복 설정을 마치고 창을 닫을 때, 오늘 + 지금 보고 있는 날짜가 아직 빈 칸이면 바로 반영
+// 반복 설정을 마치고 창을 닫을 때, 오늘 + 지금 보고 있는 날짜에 바로 반영 (다른 항목이 있어도 추가됨)
 function closeRecurringHaengModal() {
   var today = dk(new Date());
   var viewing = dk(curDate);
@@ -4053,7 +4055,7 @@ function scheduleCloudAutoSave() {
   if (_cloudSaveTimer) clearTimeout(_cloudSaveTimer);
   _cloudSaveTimer = setTimeout(function() {
     if (!curUser || !db) return;
-    saveCloud();
+    saveCloud(true); // 자동저장은 조용히 - 토스트 없이 버튼 체크표시만
     var btn = document.getElementById('savebtn');
     if (btn && !btn._busy) {
       btn._busy = true;
