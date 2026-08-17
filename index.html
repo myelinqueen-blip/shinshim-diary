@@ -1385,7 +1385,7 @@ var spChapterHistory = {}; // 도서명 -> 최근 사용한 챕터명 배열 (�
 var spDone = {};
 var spViewMode = 'folder'; // 'folder' | 'source' (내 폴더 / 출처별 책·권)
 var spFav = {}; // ★ 즐겨찾기한 스피치 id 모음
-var _favSectionOpen = true;
+var _favSectionOpen = false;
 var spChecked = {};
 var memPeriodMonths = 3;
 var prayerFolders = []; // {id, name, deadline:'YYYY-MM-DD'|'', _open}
@@ -5358,9 +5358,9 @@ function parseSpSource(text) {
   // 앞에 붙는 장르 접두어(소설/단편 등) 제거, 끝에 붙은 쉼표 제거 - "소설 신인간혁명"과 "신인간혁명"이 같은 시리즈로 묶이도록
   var s = raw.replace(/^(소설|단편소설|단편|장편|에세이)\s+/, '').replace(/,\s*$/, '').trim();
 
-  // 1) 시리즈명 + [제]N[권] + (선택)<챕터> + (선택)페이지(다양한 표기: p.9 / p9 / p 9 / .9, 범위 143~150, 트레일링 ~ 허용)
-  //    예: '신인간혁명. 14 p.315', '신인간혁명 12 p58', '신인간혁명 13 .287', '신인간혁명 6권 p.342~', '신인간혁명 15권 <소생> p.29', '신인간혁명 24 <어머니의 시>'(페이지 없이 챕터만)
-  var m1 = s.match(/^(.+?)\.?\s+제?(\d+)\s*권?\s*(?:<(.+?)>\s*)?(?:[pP]\.?\s*(\d+)(?:\s*[~\-]\s*\d*)?|\.(\d+))?\s*$/);
+  // 1) 시리즈명 + [제]N[권] + (선택)챕터(<꺾쇠> 또는 [대괄호] 둘 다 인식 - 대괄호가 더 안전해서 새로 저장할 땐 이걸로 통일) + (선택)페이지
+  //    예: '신인간혁명. 14 p.315', '신인간혁명 12 p58', '신인간혁명 13 .287', '신인간혁명 6권 p.342~', '신인간혁명 15권 [소생] p.29', '신인간혁명 24 [어머니의 시]'(페이지 없이 챕터만)
+  var m1 = s.match(/^(.+?)\.?\s+제?(\d+)\s*권?\s*(?:[<\[](.+?)[>\]]\s*)?(?:[pP]\.?\s*(\d+)(?:\s*[~\-]\s*\d*)?|\.(\d+))?\s*$/);
   if (m1 && m1[1].trim() && (m1[3] || m1[4] || m1[5])) {
     // 챕터 또는 페이지 중 최소 하나는 있어야 이 패턴으로 처리 (권수만 있으면 패턴3이 처리)
     var page = m1[4] ? parseInt(m1[4], 10) : (m1[5] ? parseInt(m1[5], 10) : null);
@@ -5486,7 +5486,7 @@ function normalizeSpCitation(text) {
   if (!parsed || parsed.type !== 'volume') return text; // 권 정보를 못 읽은 인용구는 손대지 않음
   var chapter = parsed.chapter || (parsed.page != null ? findChapterName(parsed.series, parsed.volume, parsed.page) : null);
   var normalized = '- ' + parsed.series + ' ' + parsed.volume + '권' +
-    (chapter ? ' <' + chapter + '>' : '') +
+    (chapter ? ' [' + chapter + ']' : '') +
     (parsed.page != null ? ' p.' + parsed.page : '');
 
   var lines = text.split('\n');
@@ -6117,7 +6117,7 @@ function makePrayerRow(p, draggable) {
     row.appendChild(grip);
   }
 
-  if (!p.noCheck) {
+  if (!p.noCheck && !p.image) {
     var chk = document.createElement('input');
     chk.type = 'checkbox'; chk.checked = p.checked;
     chk.style.cssText = 'width:14px;height:14px;border-radius:4px;cursor:pointer;accent-color:#8FC7E8;flex-shrink:0;opacity:.75;';
@@ -6160,7 +6160,8 @@ function makePrayerRow(p, draggable) {
   del.style.cssText = 'width:16px;height:16px;flex-shrink:0;font-size:10px;color:var(--tx3);background:none;border:none;cursor:pointer;opacity:.7;';
   del.onclick = function() { deletePrayer(p.id); };
 
-  row.appendChild(headBtn); row.appendChild(del);
+  if (!p.image) row.appendChild(headBtn);
+  row.appendChild(del);
   return row;
 }
 
@@ -6279,7 +6280,7 @@ function renderPrayerImage(imgWrap, p) {
   if (!p.image) return;
   var thumb = document.createElement('img');
   thumb.src = p.image;
-  thumb.style.cssText = 'width:100%;max-height:420px;object-fit:contain;border-radius:8px;cursor:pointer;display:block;border:1px solid var(--bd);background:var(--bg);';
+  thumb.style.cssText = 'width:100%;max-height:560px;object-fit:contain;border-radius:8px;cursor:pointer;display:block;border:1px solid var(--bd);background:var(--bg);';
   thumb.onclick = function(e) { e.stopPropagation(); openPrayerImageLightbox(p.image); };
   var rmBtn = document.createElement('button');
   rmBtn.textContent = '이미지 삭제'; rmBtn.type = 'button';
@@ -6687,7 +6688,7 @@ function buildSpSourceTree(cont, visible, q) {
     sWrap.style.cssText = 'margin-bottom:10px;';
     var sHdr = document.createElement('div');
     sHdr.style.cssText = 'display:flex;align-items:center;gap:6px;padding:9px 12px;background:var(--bll);border-radius:var(--rs);cursor:pointer;margin-bottom:6px;';
-    sHdr.innerHTML = '<span style="font-size:12px;font-weight:700;color:var(--bl);flex:1;">📘 ' + series + '</span><span style="font-size:11px;color:var(--bl);opacity:.75;">' + totalCnt + '개</span><span class="sArrow" style="font-size:11px;color:var(--bl);">▲</span>';
+    sHdr.innerHTML = '<span style="font-size:12px;font-weight:700;color:#1670C9;flex:1;">📘 ' + series + '</span><span style="font-size:11px;color:var(--bl);opacity:.75;">' + totalCnt + '개</span><span class="sArrow" style="font-size:11px;color:var(--bl);">▲</span>';
     var sBody = document.createElement('div');
     sBody.style.cssText = 'padding:0;';
 
@@ -7620,7 +7621,7 @@ function confirmSpReg() {
   var chapterVal = (document.getElementById('m-sp-chapter').value || '').trim();
   var pageVal = (document.getElementById('m-sp-page').value || '').trim();
   if (bookVal) {
-    text = text.replace(/\s+$/, '') + '\n\n- ' + bookVal + (chapterVal ? ' <' + chapterVal + '>' : '') + (pageVal ? ' p.' + pageVal : '');
+    text = text.replace(/\s+$/, '') + '\n\n- ' + bookVal + (chapterVal ? ' [' + chapterVal + ']' : '') + (pageVal ? ' p.' + pageVal : '');
     spBookHistory = [bookVal].concat(spBookHistory.filter(function(b) { return b !== bookVal; })).slice(0, 30);
     if (chapterVal) {
       if (!spChapterHistory[bookVal]) spChapterHistory[bookVal] = [];
@@ -7711,8 +7712,10 @@ function renderResoTab(cont, recs) {
 
 // ====== CALENDAR ======
 function renderCal() {
+  var mlbl = document.getElementById('cal-mlbl');
+  if (!mlbl) return; // 이 캘린더 뷰에 해당하는 마크업이 현재 없음 - 조용히 건너뜀 (loadCloud 등 이후 로직이 계속 진행되도록)
   var y = calMonth.getFullYear(), mo = calMonth.getMonth();
-  document.getElementById('cal-mlbl').textContent = y + '년 ' + (mo + 1) + '월';
+  mlbl.textContent = y + '년 ' + (mo + 1) + '월';
   var hdrs = document.getElementById('cal-dayhdrs'); hdrs.innerHTML = '';
   DAYS.forEach(function(d, i) {
     var div = document.createElement('div');
