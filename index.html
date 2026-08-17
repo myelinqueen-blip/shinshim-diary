@@ -846,13 +846,16 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
         <input type="date" class="minp" id="pr-add-newfolder-deadline" style="margin-bottom:0;flex:1;"/>
       </div>
     </div>
-    <label class="mlbl">등록 방식</label>
-    <div style="display:flex;gap:6px;margin-bottom:8px;">
-      <button type="button" id="pr-mode-line-btn" onclick="setPrayerAddMode('line')" style="flex:1;height:30px;border-radius:var(--rs);font-size:11.5px;font-weight:700;border:1.5px solid #3B9AE0;">줄바꿈 단위</button>
-      <button type="button" id="pr-mode-block-btn" onclick="setPrayerAddMode('block')" style="flex:1;height:30px;border-radius:var(--rs);font-size:11.5px;font-weight:700;border:1.5px solid var(--tx3);">한 줄 공백 단위</button>
+    <label class="mlbl">기원문 <span style="font-size:10px;font-weight:400;color:var(--tx3);">(한 줄에 하나씩 · 묶으려면 앞에 띄어쓰기 · #소제목 · **볼드**)</span></label>
+    <textarea class="minp" id="pr-add-text" rows="8" placeholder="예)&#10;가족 모두 건강하게 지내기&#10;시험 합격하기&#10;  이어서 적고 싶은 내용은&#10;  앞에 띄어쓰기하면 위 줄과 하나로 묶여요&#10;# 이렇게 적으면 소제목이 돼요" style="min-height:150px;resize:vertical;" onpaste="onPrayerAddTextPaste(event)"></textarea>
+    <div style="display:flex;align-items:center;gap:8px;margin-top:8px;">
+      <button type="button" onclick="toggleBoldSelection('pr-add-text')" style="width:30px;height:30px;font-weight:900;font-size:12px;border-radius:var(--rs);border:1px solid var(--bd);background:var(--sf);color:var(--tx);cursor:pointer;">B</button>
+      <label style="height:30px;padding:0 12px;border-radius:var(--rs);border:1px solid var(--bd);background:var(--sf);font-size:11.5px;color:var(--tx);cursor:pointer;display:inline-flex;align-items:center;">📷 사진 추가<input type="file" accept="image/*" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;" onchange="handlePrayerAddImageFile(this)"></label>
+      <div id="pr-add-img-preview" style="display:none;position:relative;">
+        <img style="width:44px;height:44px;object-fit:cover;border-radius:8px;border:1px solid var(--bd);"/>
+        <button type="button" onclick="clearPrayerAddImage()" style="position:absolute;top:-6px;right:-6px;width:18px;height:18px;border-radius:50%;background:var(--tx3);color:#fff;font-size:10px;border:none;line-height:1;cursor:pointer;">✕</button>
+      </div>
     </div>
-    <label class="mlbl">기원문 <span id="pr-mode-hint" style="font-size:10px;font-weight:400;color:var(--tx3);">(한 줄에 하나씩 적어주세요)</span></label>
-    <textarea class="minp" id="pr-add-text" rows="8" placeholder="예)&#10;가족 모두 건강하게 지내기&#10;시험 합격하기&#10;..." style="min-height:150px;resize:vertical;"></textarea>
     <div class="mfoot" style="margin-top:10px;">
       <button class="mcan" onclick="closeM('m-prayer-add')">닫기</button>
       <button class="mok" onclick="confirmPrayerAdd()">등록</button>
@@ -927,6 +930,26 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
     <div class="mfoot" style="margin-top:10px;">
       <button class="mcan" onclick="closeM('m-prayer-recovery-enter')">취소</button>
       <button class="mok" onclick="submitPrayerRecoveryUnlock()">확인</button>
+    </div>
+  </div>
+</div>
+
+<div id="pr-img-lightbox" onclick="closePrayerImageLightbox()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:600;align-items:center;justify-content:center;flex-direction:column;padding:20px;">
+  <img id="pr-img-lightbox-img" src="" style="max-width:100%;max-height:78vh;border-radius:8px;object-fit:contain;"/>
+  <div style="display:flex;gap:10px;margin-top:16px;" onclick="event.stopPropagation();">
+    <a id="pr-img-lightbox-dl" href="" download="기원문_이미지.jpg" style="height:36px;padding:0 18px;border-radius:99px;background:#3B9AE0;color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;text-decoration:none;">⬇ 다운로드</a>
+    <button onclick="closePrayerImageLightbox()" style="height:36px;padding:0 18px;border-radius:99px;background:rgba(255,255,255,.15);color:#fff;font-size:12px;font-weight:700;border:none;">닫기</button>
+  </div>
+</div>
+
+<div id="m-prayer-bulk-edit" class="mo" style="display:none;">
+  <div class="mb">
+    <div class="mtit"><span>✏️ 일괄 수정</span><button onclick="closeM('m-prayer-bulk-edit')" style="font-size:18px;color:var(--tx3);">×</button></div>
+    <div style="font-size:11px;color:var(--tx3);margin-bottom:8px;">체크 가능한 항목만 한 줄씩 수정할 수 있어요. 소제목·이미지 항목은 각각 탭해서 따로 수정해주세요.</div>
+    <textarea class="minp" id="pr-bulk-edit-text" rows="10" style="min-height:180px;resize:vertical;"></textarea>
+    <div class="mfoot" style="margin-top:10px;">
+      <button class="mcan" onclick="closeM('m-prayer-bulk-edit')">취소</button>
+      <button class="mok" onclick="confirmPrayerBulkEdit()">저장</button>
     </div>
   </div>
 </div>
@@ -5332,21 +5355,53 @@ function parseSpSource(text) {
   if (!m) return null;
   var raw = m[1].trim();
 
-  // 1) 시리즈명 + 권수(+'권') + (선택)<챕터> + 페이지
-  //    예: '신인간혁명. 14 p.315', '신인간혁명 13 p.9', '신인간혁명 15권 <소생> p.29'
-  var m1 = raw.match(/^(.+?)\.?\s+(\d+)\s*권?\s*(?:<(.+?)>\s*)?[pP]\.\s*(\d+)$/);
-  if (m1) return { raw: raw, type: 'volume', series: m1[1].trim(), volume: parseInt(m1[2], 10), chapter: m1[3] ? m1[3].trim() : null, page: parseInt(m1[4], 10) };
+  // 앞에 붙는 장르 접두어(소설/단편 등) 제거, 끝에 붙은 쉼표 제거 - "소설 신인간혁명"과 "신인간혁명"이 같은 시리즈로 묶이도록
+  var s = raw.replace(/^(소설|단편소설|단편|장편|에세이)\s+/, '').replace(/,\s*$/, '').trim();
 
-  // 2) 시리즈명 + 호수 (예: '법련 2026년 7월호', '화광신문 128호')
-  var m2 = raw.match(/^(.+?)\s+((?:\d{4}년\s*\d{1,2}월호)|(?:\d+호))$/);
-  if (m2) return { raw: raw, type: 'issue', series: m2[1].trim(), issue: m2[2].trim() };
+  // 1) 시리즈명 + [제]N[권] + (선택)<챕터> + 페이지(다양한 표기: p.9 / p9 / p 9 / .9, 범위 143~150, 트레일링 ~ 허용)
+  //    예: '신인간혁명. 14 p.315', '신인간혁명 12 p58', '신인간혁명 13 .287', '신인간혁명 6권 p.342~', '신인간혁명 15권 <소생> p.29'
+  var m1 = s.match(/^(.+?)\.?\s+제?(\d+)\s*권?\s*(?:<(.+?)>\s*)?(?:[pP]\.?\s*(\d+)(?:\s*[~\-]\s*\d*)?|\.(\d+))\s*$/);
+  if (m1 && m1[1].trim()) {
+    var page = m1[4] ? parseInt(m1[4], 10) : parseInt(m1[5], 10);
+    return { raw: raw, type: 'volume', series: m1[1].trim(), volume: parseInt(m1[2], 10), chapter: m1[3] ? m1[3].trim() : null, page: page };
+  }
 
-  // 3) 권수 없이 시리즈명 + 페이지만 (단행본, 예: '구도의 길 p.50')
-  var m3 = raw.match(/^(.+?)\s+[pP]\.\s*(\d+)$/);
-  if (m3) return { raw: raw, type: 'page', series: m3[1].trim(), page: parseInt(m3[2], 10) };
+  // 2) 시리즈명 + [제]N권 + 챕터명 (페이지 없이 권 뒤에 챕터명이 바로 오는 경우, '권' 명시로 경계 확정)
+  //    예: '신인간혁명 제28권 광선보'
+  var m2 = s.match(/^(.+?)\.?\s+제?(\d+)\s*권\s+(\S.*)$/);
+  if (m2 && m2[1].trim()) {
+    return { raw: raw, type: 'volume', series: m2[1].trim(), volume: parseInt(m2[2], 10), chapter: m2[3].trim(), page: null };
+  }
 
-  // 4) 그 외 단행본류는 전체 문자열을 시리즈명으로 취급
-  return { raw: raw, type: 'other', series: raw };
+  // 3) 시리즈명 + N[권] (페이지도 챕터도 없이 권수만) - 예: '신인간혁명 10', '신인간혁명. 11'
+  var m3 = s.match(/^(.+?)\.?\s+(\d+)\s*권?\s*$/);
+  if (m3 && m3[1].trim()) {
+    return { raw: raw, type: 'volume', series: m3[1].trim(), volume: parseInt(m3[2], 10), chapter: null, page: null };
+  }
+
+  // 4) 시리즈명 + 페이지만 (권수 없는 단행본, 예: '구도의 길 p.50')
+  var m4b = s.match(/^(.+?)\s+(?:[pP]\.?\s*(\d+)(?:\s*[~\-]\s*\d*)?|\.(\d+))\s*$/);
+  if (m4b && m4b[1].trim()) {
+    var page4b = m4b[2] ? parseInt(m4b[2], 10) : parseInt(m4b[3], 10);
+    return { raw: raw, type: 'page', series: m4b[1].trim(), page: page4b };
+  }
+
+  // 5) 시리즈명 + 호수 (예: '법련 2026년 7월호', '화광신문 128호')
+  var m5 = s.match(/^(.+?)\s+((?:\d{4}년\s*\d{1,2}월호)|(?:\d+호))$/);
+  if (m5) return { raw: raw, type: 'issue', series: m5[1].trim(), issue: m5[2].trim() };
+
+  // 6) 페이지 번호를 안 채운 채 'p.' 또는 'p'만 덩그러니 남은 경우(오타/미완성 입력) -
+  //    그 부분만 제거하고 권수만이라도 살려서 묶어줌. 예: '신인간혁명. 9 p.' -> 9권으로 묶임
+  var sNoDanglingPage = s.replace(/\s*[pP]\.?\s*$/, '').trim();
+  if (sNoDanglingPage !== s) {
+    var m6 = sNoDanglingPage.match(/^(.+?)\.?\s+제?(\d+)\s*권?\s*$/);
+    if (m6 && m6[1].trim()) {
+      return { raw: raw, type: 'volume', series: m6[1].trim(), volume: parseInt(m6[2], 10), chapter: null, page: null };
+    }
+  }
+
+  // 7) 그 외 단행본류는 전체 문자열을 시리즈명으로 취급 (소설/단편 접두어는 이미 제거된 상태)
+  return { raw: raw, type: 'other', series: s };
 }
 
 // "신인간혁명 14권" / "신인간혁명 14" 처럼 '도서명' 필드 하나만으로 시리즈+권을 추출 (구조화 입력용)
@@ -5756,21 +5811,53 @@ function getPrayerDeadlineInfo(deadline) {
   return { label: deadline, color: 'var(--tx3)', bg: 'var(--bg)' };
 }
 
-var _prayerAddMode = 'line'; // 'line' | 'block'
+// 들여쓰기 기반 통합 파싱: 기본은 줄바꿈마다 항목 하나, 앞에 공백/탭으로 들여쓴 줄은 바로 위 항목에 합쳐짐
+// (수백 개를 한 줄씩 붙여넣는 경우엔 그대로 한 줄=한 항목, 묶고 싶은 줄만 들여쓰기로 표시)
+function parsePrayerBlocks(text) {
+  var rawLines = text.split('\n');
+  var blocks = []; // [{text, heading}]
+  rawLines.forEach(function(line) {
+    var isIndented = /^[ \t]/.test(line) && line.trim().length > 0;
+    var trimmed = line.trim();
+    if (!trimmed) return;
+    var isHeading = /^#\s*/.test(trimmed);
+    if (isHeading) trimmed = trimmed.replace(/^#\s*/, '');
+    if (isIndented && blocks.length) {
+      blocks[blocks.length - 1].text += '\n' + trimmed;
+    } else {
+      blocks.push({ text: trimmed, heading: isHeading });
+    }
+  });
+  return blocks;
+}
 
-function setPrayerAddMode(mode) {
-  _prayerAddMode = mode;
-  var lineBtn = document.getElementById('pr-mode-line-btn'), blockBtn = document.getElementById('pr-mode-block-btn');
-  var hint = document.getElementById('pr-mode-hint');
-  if (mode === 'line') {
-    lineBtn.style.background = '#3B9AE0'; lineBtn.style.color = '#fff';
-    blockBtn.style.background = 'var(--sf)'; blockBtn.style.color = 'var(--tx3)'; blockBtn.style.borderColor = 'var(--tx3)';
-    hint.textContent = '(한 줄에 하나씩 적어주세요 · 체크로 달성 표시)';
-  } else {
-    blockBtn.style.background = '#3B9AE0'; blockBtn.style.color = '#fff'; blockBtn.style.borderColor = '#3B9AE0';
-    lineBtn.style.background = 'var(--sf)'; lineBtn.style.color = '#3B9AE0';
-    hint.textContent = '(빈 줄로 항목을 구분해주세요 · 메모처럼 정리, 체크 없음)';
-  }
+var _prayerAddImageData = null;
+
+function handlePrayerAddImageFile(input) {
+  var file = input.files && input.files[0];
+  if (!file) return;
+  readImageFileToBase64(file, function(dataUrl) {
+    _prayerAddImageData = dataUrl;
+    var prev = document.getElementById('pr-add-img-preview');
+    prev.querySelector('img').src = dataUrl;
+    prev.style.display = 'inline-block';
+  });
+  input.value = ''; // 같은 파일 다시 선택해도 change가 재발동되도록
+}
+function onPrayerAddTextPaste(e) {
+  var file = extractPastedImage(e);
+  if (!file) return; // 이미지가 아니면 평소처럼 텍스트 붙여넣기
+  e.preventDefault();
+  readImageFileToBase64(file, function(dataUrl) {
+    _prayerAddImageData = dataUrl;
+    var prev = document.getElementById('pr-add-img-preview');
+    prev.querySelector('img').src = dataUrl;
+    prev.style.display = 'inline-block';
+  });
+}
+function clearPrayerAddImage() {
+  _prayerAddImageData = null;
+  document.getElementById('pr-add-img-preview').style.display = 'none';
 }
 
 function openPrayerAddModal() {
@@ -5790,8 +5877,8 @@ function openPrayerAddModal() {
   document.getElementById('pr-add-text').value = '';
   document.getElementById('pr-add-newfolder-name').value = '';
   document.getElementById('pr-add-newfolder-deadline').value = '';
+  clearPrayerAddImage();
   onPrayerAddFolderChange();
-  setPrayerAddMode('line');
   document.getElementById('m-prayer-add').style.display = 'flex';
 }
 function openPrayerBulkModal() { openPrayerAddModal(); }
@@ -5806,14 +5893,9 @@ function onPrayerAddFolderChange() {
 function confirmPrayerAdd() {
   var sel = document.getElementById('pr-add-folder');
   var text = document.getElementById('pr-add-text').value;
-  var blocks;
-  if (_prayerAddMode === 'block') {
-    // 빈 줄(한 줄 공백) 기준으로 항목 구분, 각 항목 내부 줄바꿈은 그대로 유지
-    blocks = text.split(/\n\s*\n/).map(function(b) { return b.trim(); }).filter(Boolean);
-  } else {
-    blocks = text.split('\n').map(function(l) { return l.trim(); }).filter(Boolean);
-  }
-  if (!blocks.length) { showToast('기원문을 입력해주세요'); return; }
+  var blocks = parsePrayerBlocks(text);
+  if (!blocks.length && !_prayerAddImageData) { showToast('기원문을 입력해주세요'); return; }
+  if (!blocks.length && _prayerAddImageData) blocks = [{ text: '', heading: false }]; // 텍스트 없이 사진만 등록하는 경우
 
   var folderId;
   if (sel.value === '__new__' || !sel.value) {
@@ -5828,9 +5910,10 @@ function confirmPrayerAdd() {
   }
 
   var now = Date.now();
-  var noCheck = (_prayerAddMode === 'block');
   blocks.forEach(function(b, idx) {
-    prayers.push({ id: uid(), folderId: folderId, text: b, checked: false, checkedAt: null, createdAt: now + idx, order: now + idx, noCheck: noCheck });
+    var item = { id: uid(), folderId: folderId, text: b.text, checked: false, checkedAt: null, createdAt: now + idx, order: now + idx, noCheck: b.heading, heading: b.heading };
+    if (idx === blocks.length - 1 && _prayerAddImageData) item.image = _prayerAddImageData; // 사진은 마지막 항목에 첨부
+    prayers.push(item);
   });
 
   savePrayerData();
@@ -5874,6 +5957,10 @@ function renderPrayerFolderMgrList() {
     var dlLbl = document.createElement('span'); dlLbl.style.cssText = 'font-size:11px;color:var(--tx3);flex-shrink:0;'; dlLbl.textContent = '마감';
     var dlInp = document.createElement('input'); dlInp.type = 'date'; dlInp.className = 'minp'; dlInp.style.cssText = 'margin-bottom:0;flex:1;'; dlInp.value = f.deadline || '';
     dlInp.onchange = function() { f.deadline = dlInp.value; savePrayerData(); renderChallenge(); };
+    var dlClearBtn = document.createElement('button');
+    dlClearBtn.type = 'button'; dlClearBtn.textContent = '무기한'; dlClearBtn.title = '마감기한 없이 무기한으로';
+    dlClearBtn.style.cssText = 'font-size:10.5px;color:var(--tx3);background:none;border:1px solid var(--bd);border-radius:var(--rs);flex-shrink:0;padding:5px 8px;cursor:pointer;';
+    dlClearBtn.onclick = function() { f.deadline = ''; dlInp.value = ''; savePrayerData(); renderChallenge(); };
     var delBtn = document.createElement('button');
     delBtn.textContent = '삭제'; delBtn.type = 'button';
     delBtn.style.cssText = 'font-size:11px;color:#e05252;background:none;border:none;flex-shrink:0;padding:0 4px;cursor:pointer;';
@@ -5887,7 +5974,7 @@ function renderPrayerFolderMgrList() {
         });
       };
     })(f.id, f.name, cnt);
-    dlRow.appendChild(dlLbl); dlRow.appendChild(dlInp); dlRow.appendChild(delBtn);
+    dlRow.appendChild(dlLbl); dlRow.appendChild(dlInp); dlRow.appendChild(dlClearBtn); dlRow.appendChild(delBtn);
 
     var cntDiv = document.createElement('div');
     cntDiv.style.cssText = 'font-size:10px;color:var(--tx3);margin-top:4px;';
@@ -5950,16 +6037,59 @@ function togglePrayerCheck(id, evt) {
   renderChallenge();
 }
 
+// ── 폴더 단위 일괄 수정 / 일괄 복사 ──
+var _prayerBulkEditFolderId = null;
+function openPrayerBulkEditModal(folderId) {
+  if (prayerLock && !_prayerUnlocked) { showToast('🔒 먼저 잠금을 해제해주세요'); return; }
+  _prayerBulkEditFolderId = folderId;
+  var items = prayers.filter(function(p) { return p.folderId === folderId && !p.checked; })
+    .sort(function(a, b) { return (a.order != null ? a.order : a.createdAt) - (b.order != null ? b.order : b.createdAt); });
+  var text = items.map(function(p) {
+    var lines = p.text.split('\n');
+    var first = (p.heading ? '# ' : '') + lines[0];
+    return first + lines.slice(1).map(function(l) { return '\n  ' + l; }).join('');
+  }).join('\n');
+  document.getElementById('pr-bulk-edit-text').value = text;
+  document.getElementById('m-prayer-bulk-edit').style.display = 'flex';
+}
+
+function confirmPrayerBulkEdit() {
+  var folderId = _prayerBulkEditFolderId;
+  var text = document.getElementById('pr-bulk-edit-text').value;
+  var blocks = parsePrayerBlocks(text);
+  var removeIds = prayers.filter(function(p) { return p.folderId === folderId && !p.checked; }).map(function(p) { return p.id; });
+  prayers = prayers.filter(function(p) { return removeIds.indexOf(p.id) === -1; });
+  var now = Date.now();
+  blocks.forEach(function(b, idx) {
+    prayers.push({ id: uid(), folderId: folderId, text: b.text, checked: false, checkedAt: null, createdAt: now + idx, order: now + idx, noCheck: b.heading, heading: b.heading });
+  });
+  savePrayerData();
+  showToast('✅ 수정했어요');
+  closeM('m-prayer-bulk-edit');
+  renderChallenge();
+}
+
+function copyPrayerFolderText(folderId) {
+  if (prayerLock && !_prayerUnlocked) { showToast('🔒 먼저 잠금을 해제해주세요'); return; }
+  var items = prayers.filter(function(p) { return p.folderId === folderId; })
+    .sort(function(a, b) { return (a.order != null ? a.order : a.createdAt) - (b.order != null ? b.order : b.createdAt); });
+  var text = items.map(function(p) { return stripBold(p.text); }).join('\n');
+  copyToClipboard(text, function() { showToast('📋 복사했어요'); });
+}
+
 function makePrayerRow(p, draggable) {
+  var isMultiline = p.text.indexOf('\n') > -1;
   var row = document.createElement('div');
   row.dataset.id = p.id;
-  row.style.cssText = 'display:flex;align-items:flex-start;gap:6px;padding:7px 2px;border-bottom:1px solid var(--bd);';
+  row.style.cssText = 'display:flex;align-items:center;gap:5px;padding:6px 2px;' +
+    (isMultiline && !p.heading ? '' : 'border-bottom:1px solid var(--bd);') +
+    (p.heading ? 'margin-top:10px;' : '');
 
   if (draggable) {
     var grip = document.createElement('div');
     grip.className = 'grip';
-    grip.style.cssText = 'width:14px;flex-shrink:0;cursor:grab;touch-action:none;display:flex;align-items:center;justify-content:center;color:var(--bd);margin-top:2px;';
-    grip.innerHTML = '<svg width="10" height="16" viewBox="0 0 10 16" fill="currentColor"><circle cx="2" cy="2" r="1.5"/><circle cx="8" cy="2" r="1.5"/><circle cx="2" cy="8" r="1.5"/><circle cx="8" cy="8" r="1.5"/><circle cx="2" cy="14" r="1.5"/><circle cx="8" cy="14" r="1.5"/></svg>';
+    grip.style.cssText = 'width:11px;flex-shrink:0;cursor:grab;touch-action:none;display:flex;align-items:center;justify-content:center;color:var(--bd);opacity:.55;';
+    grip.innerHTML = '<svg width="8" height="13" viewBox="0 0 10 16" fill="currentColor"><circle cx="2" cy="2" r="1.5"/><circle cx="8" cy="2" r="1.5"/><circle cx="2" cy="8" r="1.5"/><circle cx="8" cy="8" r="1.5"/><circle cx="2" cy="14" r="1.5"/><circle cx="8" cy="14" r="1.5"/></svg>';
     grip.onpointerdown = function(e) { e.preventDefault(); startPrayerDrag(row, e); };
     row.appendChild(grip);
   }
@@ -5967,25 +6097,182 @@ function makePrayerRow(p, draggable) {
   if (!p.noCheck) {
     var chk = document.createElement('input');
     chk.type = 'checkbox'; chk.checked = p.checked;
-    chk.style.cssText = 'width:17px;height:17px;border-radius:5px;cursor:pointer;accent-color:#3B9AE0;flex-shrink:0;margin-top:1px;';
+    chk.style.cssText = 'width:14px;height:14px;border-radius:4px;cursor:pointer;accent-color:#8FC7E8;flex-shrink:0;opacity:.75;';
     chk.onchange = function(e) { togglePrayerCheck(p.id, e); };
     row.appendChild(chk);
   }
 
-  var txt = document.createElement('div');
+  var mainCol = document.createElement('div');
+  mainCol.style.cssText = 'flex:1;min-width:0;';
+
   var achieved = p.checked && !p.noCheck;
-  txt.style.cssText = 'flex:1;font-size:13px;line-height:1.5;white-space:pre-wrap;word-break:break-word;' +
-    (achieved ? 'color:#3B9AE0;font-weight:700;' : 'color:var(--tx);') +
-    (p.noCheck ? 'background:var(--bg);border-radius:8px;padding:8px 10px;' : '');
-  txt.textContent = p.text;
-  row.appendChild(txt);
+  var txt = document.createElement('div');
+  txt.style.cssText = 'font-size:' + (p.heading ? '13.5px' : '13px') + ';line-height:1.5;white-space:pre-wrap;word-break:break-word;cursor:text;' +
+    (achieved ? 'color:#3B9AE0;font-weight:700;' : p.heading ? 'color:var(--tx);font-weight:800;' : 'color:var(--tx);') +
+    (isMultiline && !p.heading ? 'background:var(--bg);border-radius:8px;padding:8px 10px;' : '');
+  if (p.heading) txt.textContent = stripBold(p.text);
+  else { txt.textContent = ''; txt.appendChild(renderSpText(p.text, '')); }
+  txt.onclick = function(e) { e.stopPropagation(); startPrayerTextEdit(p, row, mainCol, txt, imgWrap); };
+  mainCol.appendChild(txt);
+
+  var imgWrap = document.createElement('div');
+  imgWrap.style.cssText = 'margin-top:6px;';
+  if (p.image) renderPrayerImage(imgWrap, p);
+  mainCol.appendChild(imgWrap);
+
+  row.appendChild(mainCol);
+
+  var headBtn = document.createElement('button');
+  headBtn.textContent = p.heading ? '📌' : '📄'; headBtn.type = 'button'; headBtn.title = p.heading ? '소제목 해제' : '소제목으로 표시';
+  headBtn.style.cssText = 'width:16px;height:16px;flex-shrink:0;font-size:9px;color:var(--tx3);background:none;border:none;cursor:pointer;opacity:.6;line-height:1;';
+  headBtn.onclick = function() {
+    p.heading = !p.heading;
+    p.noCheck = p.heading ? true : false;
+    if (p.heading) { p.checked = false; p.checkedAt = null; }
+    savePrayerData(); renderChallenge();
+  };
 
   var del = document.createElement('button');
   del.textContent = '✕'; del.type = 'button';
-  del.style.cssText = 'width:18px;height:18px;flex-shrink:0;font-size:11px;color:var(--tx3);background:none;border:none;cursor:pointer;margin-top:1px;';
+  del.style.cssText = 'width:16px;height:16px;flex-shrink:0;font-size:10px;color:var(--tx3);background:none;border:none;cursor:pointer;opacity:.7;';
   del.onclick = function() { deletePrayer(p.id); };
-  row.appendChild(del);
+
+  row.appendChild(headBtn); row.appendChild(del);
   return row;
+}
+
+// 텍스트 탭하면 그 자리에서 바로 수정 (볼드 버튼 포함)
+var _prayerEditBlurGuard = false; // 사진 선택창이 떠있는 동안 blur로 인한 재렌더가 편집 중인 DOM을 지워버리는 것을 방지
+
+function startPrayerTextEdit(p, row, mainCol, txt, imgWrap) {
+  if (mainCol.querySelector('textarea')) return; // 이미 편집중
+  var editWrap = document.createElement('div');
+  var taId = 'pr-edit-' + p.id;
+
+  var ta = document.createElement('textarea');
+  ta.id = taId; ta.value = p.text;
+  // 박스처럼 안 보이게 - 테두리/배경 없이 원래 텍스트와 최대한 똑같은 모양으로, 편집중임을 점선 밑줄로만 살짝 표시
+  ta.style.cssText = 'width:100%;border:0;outline:none;background-color:transparent;resize:none;font-size:13px;line-height:1.5;padding:0;margin:0;font-family:inherit;color:var(--tx);overflow:hidden;';
+  ta.rows = 1;
+  function autoGrow() { ta.style.height = 'auto'; ta.style.height = ta.scrollHeight + 'px'; }
+  ta.oninput = autoGrow;
+  ta.onclick = function(e) { e.stopPropagation(); };
+  ta.onpaste = function(e) {
+    var file = extractPastedImage(e);
+    if (!file) return; // 이미지가 아니면 평소처럼 텍스트 붙여넣기
+    e.preventDefault();
+    readImageFileToBase64(file, function(dataUrl) {
+      p.image = dataUrl;
+      var v = ta.value.trim();
+      if (v) p.text = v;
+      savePrayerData();
+      renderChallenge();
+    });
+  };
+
+  function finishEdit() {
+    var v = ta.value.trim();
+    if (v) p.text = v;
+    savePrayerData();
+    renderChallenge();
+  }
+
+  ta.onblur = function() {
+    setTimeout(function() {
+      if (_prayerEditBlurGuard) return; // 사진 선택 중이면 그대로 두기
+      if (document.activeElement === boldBtn || document.activeElement === doneBtn) return;
+      finishEdit();
+    }, 120);
+  };
+
+  var toolbar = document.createElement('div');
+  toolbar.style.cssText = 'display:flex;align-items:center;gap:5px;margin-top:6px;';
+  var boldBtn = document.createElement('button');
+  boldBtn.type = 'button'; boldBtn.textContent = 'B'; boldBtn.style.cssText = 'width:26px;height:24px;font-weight:900;font-size:11px;border-radius:5px;border:1px solid var(--bd);background:var(--sf);color:var(--tx);cursor:pointer;';
+  boldBtn.onclick = function(e) { e.stopPropagation(); toggleBoldSelection(taId); };
+
+  // 사진 버튼: label이 hidden file input을 직접 감싸는 방식 (JS로 새 input을 만들어 click()시키는 방식은
+  // 이 앱이 표시되는 웹뷰에서 신뢰성이 낮아서, 백업복원 버튼과 동일하게 검증된 방식으로 통일)
+  var imgLabel = document.createElement('label');
+  imgLabel.style.cssText = 'width:26px;height:24px;font-size:12px;border-radius:5px;border:1px solid var(--bd);background:var(--sf);cursor:pointer;display:flex;align-items:center;justify-content:center;';
+  imgLabel.textContent = '📷';
+  imgLabel.addEventListener('pointerdown', function() {
+    _prayerEditBlurGuard = true; // 선택창 뜨기 전에 미리 걸어둠
+    var v = ta.value.trim();
+    if (v) p.text = v; // 사진 선택창 열기 전에 지금까지 입력한 텍스트도 먼저 저장
+  });
+  var imgInput = document.createElement('input');
+  imgInput.type = 'file'; imgInput.accept = 'image/*';
+  imgInput.style.cssText = 'position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;';
+  imgInput.onchange = function() {
+    var file = imgInput.files && imgInput.files[0];
+    _prayerEditBlurGuard = false;
+    if (!file) { renderChallenge(); return; }
+    if (file.size > 4 * 1024 * 1024) { showToast('이미지가 너무 커요 (4MB 이하로)'); renderChallenge(); return; }
+    var reader = new FileReader();
+    reader.onload = function() {
+      p.image = reader.result;
+      savePrayerData();
+      renderChallenge();
+    };
+    reader.readAsDataURL(file);
+  };
+  imgLabel.appendChild(imgInput);
+
+  var doneBtn = document.createElement('button');
+  doneBtn.type = 'button'; doneBtn.textContent = '✔️ 완료'; doneBtn.style.cssText = 'height:24px;padding:0 10px;font-size:11px;font-weight:700;border-radius:5px;border:1px solid #3B9AE0;background:#3B9AE0;color:#fff;cursor:pointer;margin-left:auto;';
+  doneBtn.onclick = function(e) { e.stopPropagation(); finishEdit(); };
+
+  toolbar.appendChild(boldBtn); toolbar.appendChild(imgLabel); toolbar.appendChild(doneBtn);
+
+  editWrap.appendChild(ta); editWrap.appendChild(toolbar);
+  txt.replaceWith(editWrap);
+  autoGrow();
+  ta.focus();
+}
+
+// ── 기원문 이미지: 썸네일 · 확대보기 · 다운로드 ──
+// 클립보드 이미지 데이터를 base64로 읽어서 콜백에 전달 (파일선택창 없이 붙여넣기로 사진 첨부하는 경로)
+function readImageFileToBase64(file, cb) {
+  if (!file) return;
+  if (file.size > 4 * 1024 * 1024) { showToast('이미지가 너무 커요 (4MB 이하로)'); return; }
+  var reader = new FileReader();
+  reader.onload = function() { cb(reader.result); };
+  reader.readAsDataURL(file);
+}
+
+// textarea에 붙여넣기(클립보드)한 이미지가 있으면 첨부. 붙여넣은 게 이미지가 아니면 평소처럼 텍스트로 그대로 붙여짐
+function extractPastedImage(clipboardEvent) {
+  var cd = clipboardEvent.clipboardData || (clipboardEvent.originalEvent && clipboardEvent.originalEvent.clipboardData);
+  if (!cd || !cd.items) return null;
+  for (var i = 0; i < cd.items.length; i++) {
+    if (cd.items[i].type && cd.items[i].type.indexOf('image') !== -1) return cd.items[i].getAsFile();
+  }
+  return null;
+}
+
+function renderPrayerImage(imgWrap, p) {
+  imgWrap.innerHTML = '';
+  if (!p.image) return;
+  var thumb = document.createElement('img');
+  thumb.src = p.image;
+  thumb.style.cssText = 'max-width:120px;max-height:120px;border-radius:8px;cursor:pointer;display:block;border:1px solid var(--bd);';
+  thumb.onclick = function(e) { e.stopPropagation(); openPrayerImageLightbox(p.image); };
+  var rmBtn = document.createElement('button');
+  rmBtn.textContent = '이미지 삭제'; rmBtn.type = 'button';
+  rmBtn.style.cssText = 'display:block;margin-top:3px;font-size:10px;color:var(--tx3);background:none;border:none;cursor:pointer;text-decoration:underline;';
+  rmBtn.onclick = function(e) { e.stopPropagation(); p.image = null; savePrayerData(); renderChallenge(); };
+  imgWrap.appendChild(thumb); imgWrap.appendChild(rmBtn);
+}
+
+function openPrayerImageLightbox(src) {
+  var ov = document.getElementById('pr-img-lightbox');
+  document.getElementById('pr-img-lightbox-img').src = src;
+  document.getElementById('pr-img-lightbox-dl').href = src;
+  ov.style.display = 'flex';
+}
+function closePrayerImageLightbox() {
+  document.getElementById('pr-img-lightbox').style.display = 'none';
 }
 
 // ── 기원문 순서 변경 (같은 폴더의 active 리스트 안에서만, 손잡이로만 드래그되어 스크롤 방해 없음) ──
@@ -6078,39 +6365,21 @@ function renderPrayerTab(cont) {
     wrap.style.cssText = 'border-radius:var(--rs);border:1px solid var(--bd);overflow:hidden;margin-bottom:8px;';
 
     var hdr = document.createElement('div');
-    hdr.style.cssText = 'padding:10px 12px;background:#E3F4FF;cursor:pointer;';
+    hdr.style.cssText = 'padding:8px 12px;background:#E3F4FF;cursor:pointer;';
     var hdrTop = document.createElement('div');
-    hdrTop.style.cssText = 'display:flex;align-items:center;gap:6px;margin-bottom:6px;';
+    hdrTop.style.cssText = 'display:flex;align-items:center;gap:6px;margin-bottom:5px;';
 
     var nameSpan = document.createElement('span');
-    nameSpan.style.cssText = 'font-size:12.5px;font-weight:700;color:#2C7FBF;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
+    nameSpan.style.cssText = 'font-size:11px;font-weight:700;color:#2C7FBF;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:16px;';
     nameSpan.textContent = f.name;
-    nameSpan.title = '탭하면 이름 수정';
-    nameSpan.onclick = (function(folder, span) {
-      return function(e) {
-        e.stopPropagation();
-        var inp = document.createElement('input');
-        inp.type = 'text'; inp.value = folder.name; inp.className = 'minp';
-        inp.style.cssText = 'flex:1;min-width:0;margin-bottom:0;font-size:12.5px;font-weight:700;color:#2C7FBF;height:26px;padding:2px 8px;';
-        inp.onclick = function(ev) { ev.stopPropagation(); };
-        inp.onblur = function() {
-          var v = inp.value.trim();
-          if (v) { folder.name = v; savePrayerData(); }
-          renderChallenge();
-        };
-        inp.onkeydown = function(ev) { if (ev.key === 'Enter') inp.blur(); };
-        span.replaceWith(inp);
-        inp.focus(); inp.select();
-      };
-    })(f, nameSpan);
 
     var dlBadge = document.createElement('span');
     if (dl) {
-      dlBadge.style.cssText = 'font-size:10px;font-weight:700;color:' + dl.color + ';background:' + dl.bg + ';border-radius:99px;padding:2px 8px;flex-shrink:0;cursor:pointer;';
+      dlBadge.style.cssText = 'font-size:10px;font-weight:700;color:' + dl.color + ';background:' + dl.bg + ';border-radius:99px;padding:2px 8px;flex-shrink:0;cursor:pointer;line-height:16px;';
       dlBadge.textContent = dl.label;
       dlBadge.title = '탭하면 마감일 수정';
     } else {
-      dlBadge.style.cssText = 'font-size:10px;font-weight:600;color:var(--tx3);background:var(--sf);border:1px dashed var(--bd);border-radius:99px;padding:2px 8px;flex-shrink:0;cursor:pointer;';
+      dlBadge.style.cssText = 'font-size:10px;font-weight:600;color:var(--tx3);background:var(--sf);border:1px dashed var(--bd);border-radius:99px;padding:2px 8px;flex-shrink:0;cursor:pointer;line-height:16px;';
       dlBadge.textContent = '+ 마감일';
     }
     dlBadge.onclick = (function(folder) {
@@ -6126,11 +6395,13 @@ function renderPrayerTab(cont) {
       };
     })(f);
 
-    var collapseArrow = document.createElement('span');
-    collapseArrow.style.cssText = 'font-size:11px;color:#2C7FBF;flex-shrink:0;';
-    collapseArrow.textContent = isOpen ? '▲' : '▼';
+    var bulkEditBtn = document.createElement('button');
+    bulkEditBtn.type = 'button'; bulkEditBtn.title = '일괄 수정';
+    bulkEditBtn.style.cssText = 'width:18px;height:18px;flex-shrink:0;background:none;border:none;cursor:pointer;opacity:.5;display:flex;align-items:center;justify-content:center;';
+    bulkEditBtn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--tx3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>';
+    bulkEditBtn.onclick = (function(fid) { return function(e) { e.stopPropagation(); openPrayerBulkEditModal(fid); }; })(f.id);
 
-    hdrTop.appendChild(nameSpan); hdrTop.appendChild(dlBadge); hdrTop.appendChild(collapseArrow);
+    hdrTop.appendChild(nameSpan); hdrTop.appendChild(dlBadge); hdrTop.appendChild(bulkEditBtn);
     hdr.appendChild(hdrTop);
 
     var barWrap = document.createElement('div');
@@ -6143,6 +6414,7 @@ function renderPrayerTab(cont) {
     barLbl.textContent = done.length + '/' + total + ' (' + pct + '%)';
     barWrap.appendChild(bar); barWrap.appendChild(barLbl);
     hdr.appendChild(barWrap);
+
     wrap.appendChild(hdr);
 
     var body = document.createElement('div');
@@ -6170,7 +6442,11 @@ function renderPrayerTab(cont) {
     }
 
     if (active.length) {
-      active.forEach(function(p) { body.appendChild(makePrayerRow(p, true)); });
+      active.forEach(function(p, idx) {
+        var rowEl = makePrayerRow(p, true);
+        if (idx === active.length - 1) rowEl.style.borderBottom = 'none';
+        body.appendChild(rowEl);
+      });
     } else if (!qn) {
       var emptyMsg = document.createElement('div');
       emptyMsg.style.cssText = 'text-align:center;padding:14px 0;color:var(--tx3);font-size:11px;';
@@ -6183,7 +6459,6 @@ function renderPrayerTab(cont) {
     hdr.onclick = function() {
       f._open = body.style.display === 'none';
       body.style.display = f._open ? 'block' : 'none';
-      collapseArrow.textContent = f._open ? '▲' : '▼';
     };
 
     cont.appendChild(wrap);
@@ -6978,8 +7253,8 @@ function toggleSpRegFav() {
 }
 
 // ===== 스피치 텍스트 볼드 처리 (선택 영역을 **마커**로 감싸는 방식) =====
-function toggleBoldSelection() {
-  var ta = document.getElementById('m-sp-text');
+function toggleBoldSelection(taId) {
+  var ta = document.getElementById(taId || 'm-sp-text');
   if (!ta) return;
   var start = ta.selectionStart, end = ta.selectionEnd;
   if (start === end) { showToast('볼드 처리할 내용을 먼저 선택해주세요'); return; }
@@ -7005,7 +7280,7 @@ function toggleBoldSelection() {
   ta.value = newVal;
   ta.focus();
   ta.setSelectionRange(newStart, newEnd);
-  saveSpRegDraft();
+  if (taId === 'm-sp-text' || !taId) saveSpRegDraft();
 }
 
 // ===== 🎲 랜덤 스피치 추천 =====
