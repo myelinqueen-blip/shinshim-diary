@@ -5358,13 +5358,14 @@ function parseSpSource(text) {
   // 앞에 붙는 장르 접두어(소설/단편 등) 제거, 끝에 붙은 쉼표 제거 - "소설 신인간혁명"과 "신인간혁명"이 같은 시리즈로 묶이도록
   var s = raw.replace(/^(소설|단편소설|단편|장편|에세이)\s+/, '').replace(/,\s*$/, '').trim();
 
-  // 1) 시리즈명 + [제]N[권] + (선택)챕터(<꺾쇠> 또는 [대괄호] 둘 다 인식 - 대괄호가 더 안전해서 새로 저장할 땐 이걸로 통일) + (선택)페이지
-  //    예: '신인간혁명. 14 p.315', '신인간혁명 12 p58', '신인간혁명 13 .287', '신인간혁명 6권 p.342~', '신인간혁명 15권 [소생] p.29', '신인간혁명 24 [어머니의 시]'(페이지 없이 챕터만)
-  var m1 = s.match(/^(.+?)\.?\s+제?(\d+)\s*권?\s*(?:[<\[](.+?)[>\]]\s*)?(?:[pP]\.?\s*(\d+)(?:\s*[~\-]\s*\d*)?|\.(\d+))?\s*$/);
-  if (m1 && m1[1].trim() && (m1[3] || m1[4] || m1[5])) {
+  // 1) 시리즈명 + [제]N[권] + (선택)챕터('작은따옴표' 새 표준, <꺾쇠>/[대괄호]는 예전 저장분 하위호환) + (선택)페이지
+  //    예: '신인간혁명. 14 p.315', '신인간혁명 12 p58', '신인간혁명 13 .287', '신인간혁명 6권 p.342~', "신인간혁명 15권 '소생' p.29", '신인간혁명 24 <어머니의 시>'(페이지 없이 챕터만)
+  var m1 = s.match(/^(.+?)\.?\s+제?(\d+)\s*권?\s*(?:['‘](.+?)['’]\s*|[<\[](.+?)[>\]]\s*)?(?:[pP]\.?\s*(\d+)(?:\s*[~\-]\s*\d*)?|\.(\d+))?\s*$/);
+  if (m1 && m1[1].trim() && (m1[3] || m1[4] || m1[5] || m1[6])) {
     // 챕터 또는 페이지 중 최소 하나는 있어야 이 패턴으로 처리 (권수만 있으면 패턴3이 처리)
-    var page = m1[4] ? parseInt(m1[4], 10) : (m1[5] ? parseInt(m1[5], 10) : null);
-    return { raw: raw, type: 'volume', series: m1[1].trim(), volume: parseInt(m1[2], 10), chapter: m1[3] ? m1[3].trim() : null, page: page };
+    var chapterRaw = m1[3] || m1[4];
+    var page = m1[5] ? parseInt(m1[5], 10) : (m1[6] ? parseInt(m1[6], 10) : null);
+    return { raw: raw, type: 'volume', series: m1[1].trim(), volume: parseInt(m1[2], 10), chapter: chapterRaw ? chapterRaw.trim() : null, page: page };
   }
 
   // 2) 시리즈명 + [제]N권 + 챕터명 (페이지 없이 권 뒤에 챕터명이 바로 오는 경우, '권' 명시로 경계 확정)
@@ -5486,7 +5487,7 @@ function normalizeSpCitation(text) {
   if (!parsed || parsed.type !== 'volume') return text; // 권 정보를 못 읽은 인용구는 손대지 않음
   var chapter = parsed.chapter || (parsed.page != null ? findChapterName(parsed.series, parsed.volume, parsed.page) : null);
   var normalized = '- ' + parsed.series + ' ' + parsed.volume + '권' +
-    (chapter ? ' [' + chapter + ']' : '') +
+    (chapter ? " '" + chapter + "'" : '') +
     (parsed.page != null ? ' p.' + parsed.page : '');
 
   var lines = text.split('\n');
@@ -6531,7 +6532,7 @@ function makeRecentSpeechBanner() {
   label.textContent = '🕘 최근 등록';
   var preview = document.createElement('span');
   preview.style.cssText = 'font-size:11px;color:var(--tx2);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
-  preview.textContent = stripBold(recent.text);
+  preview.textContent = stripBold(normalizeSpCitation(recent.text));
   var arrow = document.createElement('span');
   arrow.style.cssText = 'font-size:10px;color:var(--pu);flex-shrink:0;';
   arrow.textContent = '▼';
@@ -6539,7 +6540,7 @@ function makeRecentSpeechBanner() {
 
   var full = document.createElement('div');
   full.style.cssText = 'display:none;padding:8px 10px 9px;font-size:12px;color:var(--tx);line-height:1.6;white-space:pre-wrap;border-top:1px solid var(--pu);';
-  full.appendChild(renderSpText(recent.text, ''));
+  full.appendChild(renderSpText(normalizeSpCitation(recent.text), ''));
 
   var isOpen = false;
   row.onclick = function() {
@@ -6589,6 +6590,7 @@ function makeSpCollapsibleGroup(titleHtml, items, defaultOpen) {
 
 function buildSpSourceTree(cont, visible, q) {
   var qn = normQ(q);
+  _spSearchQ = q || '';
   var seriesMap = {}; // series -> { volumes: {volNum: [items]}, issues: {issueStr: [items]}, others: [items] }
   var uncited = [];
 
@@ -6608,9 +6610,9 @@ function buildSpSourceTree(cont, visible, q) {
     }
   });
 
-  // 본문/키워드 자체에 검색어가 포함되는지 (챕터명이 페이지 구간표로만 추정되고 실제 글자로는 없는 옛 인용구도 놓치지 않기 위한 보조 매칭)
+  // 본문/키워드 자체에 검색어가 포함되는지 (정규화된 텍스트 기준 - 화면에 자동으로 채워지는 챕터명도 검색되도록)
   function textMatches(s) {
-    if (normQ(s.text).includes(qn)) return true;
+    if (normQ(normalizeSpCitation(s.text)).includes(qn)) return true;
     if (toArr(s.keywords).some(function(k) { return normQ(k).includes(qn); })) return true;
     return false;
   }
@@ -6669,7 +6671,28 @@ function buildSpSourceTree(cont, visible, q) {
     return;
   }
 
-  seriesNames.forEach(function(series) {
+  // 검색 중이면 도서명 자체가 일치하는 시리즈를 먼저, 내용/키워드로만 걸린 시리즈는 뒤로 (검색 결과 우선순위 구분)
+  var nameMatchCount = 0;
+  if (qn) {
+    var nameMatched = seriesNames.filter(function(s) { return seriesNameMatch[s]; });
+    var contentOnly = seriesNames.filter(function(s) { return !seriesNameMatch[s]; });
+    seriesNames = nameMatched.concat(contentOnly);
+    nameMatchCount = nameMatched.length;
+  }
+
+  seriesNames.forEach(function(series, seriesIdx) {
+    if (qn && nameMatchCount > 0 && seriesIdx === 0) {
+      var tierHdr1 = document.createElement('div');
+      tierHdr1.style.cssText = 'font-size:11px;font-weight:700;color:var(--tx3);padding:4px 0 6px;';
+      tierHdr1.textContent = '📘 도서명 일치';
+      cont.appendChild(tierHdr1);
+    }
+    if (qn && nameMatchCount > 0 && nameMatchCount < seriesNames.length && seriesIdx === nameMatchCount) {
+      var tierHdr2 = document.createElement('div');
+      tierHdr2.style.cssText = 'font-size:11px;font-weight:700;color:var(--tx3);padding:12px 0 6px;';
+      tierHdr2.textContent = '🔍 내용·키워드 일치';
+      cont.appendChild(tierHdr2);
+    }
     var bucket = seriesMap[series];
     var showAll = !qn || seriesNameMatch[series]; // 시리즈명이 직접 일치하면 그 안은 전부 보여줌
     function filterItems(items) {
@@ -6688,9 +6711,9 @@ function buildSpSourceTree(cont, visible, q) {
     sWrap.style.cssText = 'margin-bottom:10px;';
     var sHdr = document.createElement('div');
     sHdr.style.cssText = 'display:flex;align-items:center;gap:6px;padding:9px 12px;background:var(--bll);border-radius:var(--rs);cursor:pointer;margin-bottom:6px;';
-    sHdr.innerHTML = '<span style="font-size:12px;font-weight:700;color:#1670C9;flex:1;">📘 ' + series + '</span><span style="font-size:11px;color:var(--bl);opacity:.75;">' + totalCnt + '개</span><span class="sArrow" style="font-size:11px;color:var(--bl);">▲</span>';
+    sHdr.innerHTML = '<span style="font-size:12px;font-weight:700;color:#1670C9;flex:1;">📘 ' + series + '</span><span style="font-size:11px;color:var(--bl);opacity:.75;">' + totalCnt + '개</span><span class="sArrow" style="font-size:11px;color:var(--bl);">' + (qn ? '▲' : '▼') + '</span>';
     var sBody = document.createElement('div');
-    sBody.style.cssText = 'padding:0;';
+    sBody.style.cssText = 'padding:0;display:' + (qn ? 'block' : 'none') + ';';
 
     volNums.forEach(function(vn) {
       var items = filterItems(bucket.volumes[vn]).sort(function(a, b) { return a._page - b._page; });
@@ -6771,8 +6794,9 @@ function renderSpTab(cont, searchId) {
   var searchEl = document.getElementById(searchId);
   var q = searchEl ? searchEl.value.toLowerCase() : '';
   var qn = normQ(q);
+  _spSearchQ = q || '';
   var filtered = qn ? all.filter(function(s) {
-    if (normQ(s.text).includes(qn)) return true;
+    if (normQ(normalizeSpCitation(s.text)).includes(qn)) return true;
     if (toArr(s.keywords).some(function(k){ return normQ(k).includes(qn); })) return true;
     if (normQ(getSpFolderName(s.id) || '').includes(qn)) return true;
     return false;
@@ -6855,7 +6879,7 @@ function renderSpTab(cont, searchId) {
     textMatches.forEach(function(s) {
       var box = makeSpBox(s, false);
       var txtEl = box.querySelector('.sp-txt');
-      if (txtEl) { txtEl.textContent = ''; txtEl.appendChild(renderSpText(s.text, q)); }
+      if (txtEl) { txtEl.textContent = ''; txtEl.appendChild(renderSpText(normalizeSpCitation(s.text), q)); }
       cont.appendChild(box);
     });
     return;
@@ -6927,6 +6951,8 @@ function renderSpTab(cont, searchId) {
   }
   if (!filtered.length) cont.innerHTML = '<div style="padding:36px;text-align:center;color:var(--tx3);">스피치 기록이 없습니다</div>';
 }
+
+var _spSearchQ = ''; // 검색 중일 때 본문 노란 하이라이트용 (렌더링 시점에 설정됨)
 
 function makeSpBox(s, isHidden, fullWidthTag) {
   var box = document.createElement('div');
@@ -7005,7 +7031,8 @@ function makeSpBox(s, isHidden, fullWidthTag) {
       setSpRegFav(!!spFav[sp.id]);
       if (parsedSrc && parsedSrc.type === 'volume') {
         document.getElementById('m-sp-book').value = parsedSrc.series + ' ' + parsedSrc.volume + '권';
-        document.getElementById('m-sp-chapter').value = parsedSrc.chapter || '';
+        var prefillChapter = parsedSrc.chapter || (parsedSrc.page != null ? findChapterName(parsedSrc.series, parsedSrc.volume, parsedSrc.page) : null);
+        document.getElementById('m-sp-chapter').value = prefillChapter || '';
         document.getElementById('m-sp-page').value = (parsedSrc.page != null) ? parsedSrc.page : '';
       } else {
         // 권/챕터 형식으로 못 읽어낸 경우(단행본, 호수 등)는 기존처럼 비워두고 본문의 인용구도 그대로 둠
@@ -7058,7 +7085,7 @@ function makeSpBox(s, isHidden, fullWidthTag) {
     return function() {
       var tags = toArr(sp.keywords).slice();
       if (fname && fname !== '분류없음' && fname !== '숨김') tags.unshift(fname);
-      copyToClipboard(buildTagHeader(tags) + stripBold(sp.text), function(){ showToast('📋 복사'); });
+      copyToClipboard(buildTagHeader(tags) + stripBold(normalizeSpCitation(sp.text)), function(){ showToast('📋 복사'); });
     };
   })(s, folderName);
 
@@ -7084,7 +7111,7 @@ function makeSpBox(s, isHidden, fullWidthTag) {
   txt.className = 'sp-txt';
   txt.style.cssText = 'font-size:13px;color:var(--tx);line-height:1.55;white-space:pre-wrap;';
   txt.textContent = '';
-  txt.appendChild(renderSpText(s.text, ''));
+  txt.appendChild(renderSpText(normalizeSpCitation(s.text), _spSearchQ));
 
   // 랜덤 팝업(fullWidthTag): 폴더명 한 줄 전체 → 체크박스/즐겨찾기/버튼 줄 → 키워드 → 본문
   // 평소: 체크박스/즐겨찾기/폴더태그/버튼 한 줄 → 키워드 → 본문
@@ -7118,7 +7145,7 @@ function bulkCopy() {
     var tags = toArr(s.keywords).slice();
     var fn = getSpFolderName(s.id);
     if (fn && fn !== '분류없음' && fn !== '숨김') tags.unshift(fn);
-    return buildTagHeader(tags) + stripBold(s.text);
+    return buildTagHeader(tags) + stripBold(normalizeSpCitation(s.text));
   }).join('\n\n──────────\n\n');
   copyToClipboard(txt, function() { showToast('📋 일괄 복사'); });
 }
@@ -7621,7 +7648,7 @@ function confirmSpReg() {
   var chapterVal = (document.getElementById('m-sp-chapter').value || '').trim();
   var pageVal = (document.getElementById('m-sp-page').value || '').trim();
   if (bookVal) {
-    text = text.replace(/\s+$/, '') + '\n\n- ' + bookVal + (chapterVal ? ' [' + chapterVal + ']' : '') + (pageVal ? ' p.' + pageVal : '');
+    text = text.replace(/\s+$/, '') + '\n\n- ' + bookVal + (chapterVal ? " '" + chapterVal + "'" : '') + (pageVal ? ' p.' + pageVal : '');
     spBookHistory = [bookVal].concat(spBookHistory.filter(function(b) { return b !== bookVal; })).slice(0, 30);
     if (chapterVal) {
       if (!spChapterHistory[bookVal]) spChapterHistory[bookVal] = [];
