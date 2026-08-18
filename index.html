@@ -1573,7 +1573,8 @@ function restoreBackup(input) {
           hak: Array.isArray(r.hak) ? r.hak : [],
           speech: Array.isArray(r.speech) ? r.speech : [],
           members: Array.isArray(r.members) ? r.members : [],
-          activity: Array.isArray(r.activity) ? r.activity : []
+          activity: Array.isArray(r.activity) ? r.activity : [],
+          _recurringDismissed: Array.isArray(r._recurringDismissed) ? r._recurringDismissed : []
         };
       });
 
@@ -1969,12 +1970,14 @@ function getRecurringMatches(k) {
 // 자동 빈 칸(_autoBlank)만 있으면 그 자리를 대신 채움. 뭔가 바뀌었으면 true 반환
 function applyRecurringToDate(k) {
   var r = getRec(k);
+  if (!r._recurringDismissed) r._recurringDismissed = []; // 사용자가 그 날짜에서 직접 지운 반복 항목 id 목록
   var matches = getRecurringMatches(k);
   if (!matches.length) return false;
   var changed = false;
   matches.forEach(function(t) {
     var already = r.haeng.some(function(it) { return it._fromRecurring === t.id; });
     if (already) return;
+    if (r._recurringDismissed.indexOf(t.id) >= 0) return; // 사용자가 삭제한 항목은 다시 채우지 않음
     r.haeng = r.haeng.filter(function(it) { return !it._autoBlank; }); // 자동 빈 칸은 반복 항목이 들어오면 제거
     r.haeng.push({ id: uid(), name: t.name || '', type: t.type || '', custom: t.custom || '', cat: t.cat || '', _fromRecurring: t.id });
     changed = true;
@@ -3634,7 +3637,14 @@ function renderHaengList(list) {
     del.className = 'delbtn'; del.textContent = '✕';
     del.onclick = (function(idx) {
       return function() {
-        var k = dk(curDate), a = getRec(k).haeng;
+        var k = dk(curDate), r = getRec(k), a = r.haeng;
+        var removed = a[idx];
+        if (removed && removed._fromRecurring) {
+          if (!r._recurringDismissed) r._recurringDismissed = [];
+          if (r._recurringDismissed.indexOf(removed._fromRecurring) < 0) {
+            r._recurringDismissed.push(removed._fromRecurring); // 이 날짜에서는 다시 자동 생성되지 않도록 기록
+          }
+        }
         a.splice(idx, 1); renderHaengList(a); autoSave();
       };
     })(i);
