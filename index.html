@@ -7422,7 +7422,7 @@ function renderSpTab(cont, searchId) {
   // 🕐 최근 저장 — 등록 시각(createdAt) 최신순, 즐겨찾기보다 위, 고정 섹션
   var recentSorted = visible.slice().filter(function(s) { return s.createdAt; })
     .sort(function(a, b) { return (b.createdAt || 0) - (a.createdAt || 0); })
-    .slice(0, 20);
+    .slice(0, 100);
   if (recentSorted.length) {
     var recWrap = document.createElement('div');
     recWrap.style.cssText = 'border-radius:var(--rs);border:1.5px solid var(--pu);overflow:hidden;margin-bottom:8px;';
