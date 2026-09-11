@@ -23,6 +23,12 @@
   --r:14px;--rs:9px;
 }
 body{background:var(--bg);color:var(--tx);min-height:100vh;font-size:13px;}
+/* 스크롤이 긴 영역에서 오른쪽에 얇은 스크롤바 표시 (드래그로 이동 가능) */
+*{scrollbar-width:thin;scrollbar-color:var(--bd) transparent;}
+*::-webkit-scrollbar{width:6px;height:6px;}
+*::-webkit-scrollbar-track{background:transparent;}
+*::-webkit-scrollbar-thumb{background:var(--bd);border-radius:4px;}
+*::-webkit-scrollbar-thumb:hover{background:var(--tx3);}
 button{cursor:pointer;background:none;font-family:inherit;border:none;}
 input,select,textarea{font-family:inherit;}
 input:focus,select:focus,textarea:focus{outline:none;}
@@ -284,6 +290,9 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
 #m-essay-scroll::-webkit-scrollbar{width:6px;}
 #m-essay-scroll::-webkit-scrollbar-track{background:transparent;}
 #m-essay-scroll::-webkit-scrollbar-thumb{background:var(--bd);border-radius:3px;}
+/* 스피치 등록 팝업: 키보드가 올라와도 페이지 입력칸까지 보이도록 위쪽 정렬 + 여백 축소 */
+#m-sp-reg{align-items:flex-start;padding-top:10px;}
+#m-sp-reg .mb{padding:14px 16px;}
 /* 앱 컬럼(390px) 안에 고정 + 화면 밖으로 벗어나지 않도록 스크롤 허용 */
 .mo{position:fixed;top:0;bottom:0;left:50%;transform:translateX(-50%);
     width:100%;max-width:390px;z-index:300;
@@ -558,13 +567,13 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
   <!-- 3탭 pill 스타일 -->
   <div style="display:flex;gap:5px;background:var(--sf);position:sticky;top:52px;z-index:40;padding:10px 12px;border-bottom:1px solid var(--bd);">
     <button id="ch-tab-pr"    class="ch-stab"    onclick="switchChTab('prayer',this)">기원문</button>
-    <button id="ch-tab-chart" class="ch-stab on" onclick="switchChTab('chart',this)">어서 연찬표</button>
+    <button id="ch-tab-chart" class="ch-stab"    onclick="switchChTab('chart',this)">어서 연찬표</button>
     <button id="ch-tab-essay" class="ch-stab"    onclick="switchChTab('essay',this)">어서</button>
-    <button id="ch-tab-sp"    class="ch-stab"    onclick="switchChTab('speech',this)">스피치</button>
+    <button id="ch-tab-sp"    class="ch-stab on" onclick="switchChTab('speech',this)">스피치</button>
   </div>
 
   <!-- 어서 연찬표 툴바 -->
-  <div id="ch-chart-toolbar" style="padding:8px 12px 4px;">
+  <div id="ch-chart-toolbar" style="display:none;padding:8px 12px 4px;">
     <div style="position:relative;margin-bottom:6px;">
       <select class="sel" id="essay-filter" style="width:100%;appearance:none;-webkit-appearance:none;padding-right:24px;" onchange="renderChallenge()">
         <option value="abc">가나다순</option>
@@ -589,10 +598,8 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
   <!-- 어서 탭 툴바 -->
   <div id="ch-essay-toolbar" style="display:none;padding:8px 12px 4px;">
     <div style="display:flex;gap:5px;align-items:center;margin-bottom:6px;">
-      <button onclick="openEssayFolderManager()" style="height:28px;border-radius:var(--rs);border:1.5px solid var(--te);background:var(--tel);padding:0 10px;font-size:11px;font-weight:600;color:var(--te);flex-shrink:0;">📁 폴더 관리</button>
       <div style="position:relative;flex:1;">
         <select id="essay-memo-sort" class="sel" style="width:100%;height:28px;font-size:11px;appearance:none;-webkit-appearance:none;padding-right:24px;" onchange="renderChallenge()">
-          <option value="folder">폴더 가나다순</option>
           <option value="abc">어서 가나다순</option>
           <option value="page">어서 페이지순</option>
         </select>
@@ -601,17 +608,26 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
     </div>
     <div style="position:relative;margin-bottom:4px;">
       <span style="position:absolute;left:9px;top:50%;transform:translateY(-50%);font-size:12px;color:var(--tx3);">🔍</span>
-      <input type="text" class="inp" id="essay-memo-search" autocomplete="off" name="essay-memo-field" placeholder="메모·어서명 검색..." style="width:100%;padding-left:28px;padding-right:28px;" oninput="renderChallenge();updateSearchClear('essay-memo-search','essay-memo-clear')"/>
+      <input type="text" class="inp" id="essay-memo-search" autocomplete="off" name="essay-memo-field" placeholder="메모·어서명·키워드 검색..." style="width:100%;padding-left:28px;padding-right:28px;" oninput="renderChallenge();updateSearchClear('essay-memo-search','essay-memo-clear')"/>
       <button id="essay-memo-clear" onclick="clearSearch('essay-memo-search','essay-memo-clear');renderChallenge();" style="display:none;position:absolute;right:9px;top:50%;transform:translateY(-50%);background:none;border:none;font-size:15px;color:var(--tx3);cursor:pointer;line-height:1;">✕</button>
+    </div>
+    <div id="essay-memo-scope-wrap" style="display:none;position:relative;margin-bottom:4px;">
+      <select id="essay-memo-scope" class="sel" style="width:100%;height:26px;font-size:11px;appearance:none;-webkit-appearance:none;padding-right:24px;" onchange="renderChallenge()">
+        <option value="all">전체 결과 (키워드 → 본문 → 어서명·페이지순)</option>
+        <option value="folder">🏷️ 키워드(폴더)에 포함된 것만</option>
+        <option value="body">📝 메모 본문에 포함된 것만</option>
+        <option value="source">📖 어서명·페이지에 포함된 것만</option>
+      </select>
+      <span style="position:absolute;right:8px;top:50%;transform:translateY(-50%);font-size:9px;color:var(--tx3);pointer-events:none;">▼</span>
     </div>
     <div id="essay-memo-bulk" style="display:none;gap:5px;align-items:center;flex-wrap:wrap;">
       <span id="essay-memo-chk-cnt" style="font-size:11px;color:var(--tx3);"></span>
-      <button onclick="essayMemoBulkMove()" style="height:24px;border-radius:var(--rs);border:1.5px solid var(--te);background:var(--tel);padding:0 9px;font-size:11px;color:var(--te);">폴더 이동</button>
+      <button onclick="essayMemoBulkCopy()" style="height:24px;border-radius:var(--rs);border:1.5px solid var(--te);background:var(--tel);padding:0 9px;font-size:11px;color:var(--te);">📋 일괄 복사</button>
     </div>
   </div>
 
   <!-- 스피치 툴바 -->
-  <div id="ch-sp-toolbar" style="display:none;padding:8px 12px 4px;">
+  <div id="ch-sp-toolbar" style="padding:8px 12px 4px;">
     <div style="display:flex;gap:4px;align-items:center;flex-wrap:wrap;margin-bottom:5px;">
       <button onclick="openSpRandomModal()" style="height:28px;border-radius:var(--rs);border:1.5px solid var(--te);background:var(--tel);padding:0 10px;font-size:11px;font-weight:700;color:#1f7a70;flex-shrink:0;">랜덤</button>
       <button id="ch-fphr-btn" onclick="copyFixedPhrase()" style="height:28px;border-radius:var(--rs);border:1.5px solid var(--pu);background:var(--sf);padding:0 9px;font-size:11px;font-weight:600;color:var(--pu);flex-shrink:0;">문구</button>
@@ -625,6 +641,16 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
       <span style="position:absolute;left:8px;top:50%;transform:translateY(-50%);color:var(--tx3);font-size:13px;">🔍</span>
       <input type="text" class="inp" id="ch-search" autocomplete="off" name="ch-search-field" placeholder="스피치 검색..." style="width:100%;padding-left:28px;padding-right:28px;" oninput="renderChallenge();updateSearchClear('ch-search','ch-search-clear')"/>
       <button id="ch-search-clear" onclick="clearSearch('ch-search','ch-search-clear');renderChallenge();" style="display:none;position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;font-size:15px;color:var(--tx3);cursor:pointer;line-height:1;">✕</button>
+    </div>
+    <div id="ch-search-scope-wrap" style="display:none;position:relative;margin-bottom:5px;">
+      <select id="ch-search-scope" class="sel" style="width:100%;height:26px;font-size:11px;appearance:none;-webkit-appearance:none;padding-right:24px;" onchange="renderChallenge()">
+        <option value="all">전체 결과 (폴더 → 본문 → 출처 → 해시태그순)</option>
+        <option value="folder">📁 폴더명에 포함된 것만</option>
+        <option value="body">📝 본문에 포함된 것만</option>
+        <option value="source">📖 도서명·페이지에 포함된 것만</option>
+        <option value="hashtag">#️⃣ 해시태그에만 포함된 것만</option>
+      </select>
+      <span style="position:absolute;right:8px;top:50%;transform:translateY(-50%);font-size:9px;color:var(--tx3);pointer-events:none;">▼</span>
     </div>
     <div style="display:flex;gap:4px;margin-bottom:5px;">
       <button id="sp-view-folder-btn" onclick="setSpViewMode('folder')" style="flex:1;height:26px;border-radius:var(--rs);font-size:11px;font-weight:700;border:1.5px solid var(--pu);">폴더별</button>
@@ -796,7 +822,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
 
 <div id="m-essay-note" class="mo" style="display:none;">
   <div class="mb" style="max-height:85vh;display:flex;flex-direction:column;">
-    <div class="mtit"><span id="m-essay-title" style="font-size:14px;font-weight:800;color:var(--pu);"></span><button onclick="closeM('m-essay-note')" style="font-size:18px;color:var(--tx3);">×</button></div>
+    <div class="mtit"><span id="m-essay-title" style="font-size:14px;font-weight:800;color:var(--pu);"></span><div style="display:flex;align-items:center;gap:8px;"><button onclick="revertEssayNote()" title="되돌리기" style="width:26px;height:26px;border-radius:50%;border:1px solid var(--bd);background:var(--sf);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--tx3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg></button><button onclick="saveEssayNote()" style="height:26px;border-radius:99px;border:1.5px solid var(--pu);background:var(--pu);padding:0 12px;font-size:11px;font-weight:700;color:#fff;">저장</button><button onclick="closeEssayNote()" style="font-size:18px;color:var(--tx3);">×</button></div></div>
     <div id="m-essay-scroll" style="flex:1;overflow-y:auto;padding-right:6px;">
       <div style="border:1px solid var(--bd);border-radius:var(--rs);margin-bottom:12px;overflow:hidden;">
         <button type="button" id="m-essay-core-hdr" onclick="toggleEssayCoreSection()" style="width:100%;display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:var(--bg);">
@@ -815,7 +841,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
       <label class="mlbl">🔑 키워드 <span style="font-size:10px;font-weight:400;color:var(--tx3);">(쉼표로 구분)</span></label>
       <input type="text" class="minp" id="m-essay-kw" placeholder="예: 입정안국, 국주간고" style="height:36px;line-height:36px;padding:0 12px;"/>
     </div>
-    <div class="mfoot" style="margin-top:8px;"><button class="mcan" onclick="closeM('m-essay-note')" style="height:32px;padding:0;">취소</button><button class="mok" onclick="saveEssayNote()" style="height:32px;padding:0;">저장</button></div>
+    <div class="mfoot" style="margin-top:8px;"><button class="mcan" onclick="closeEssayNote()" style="height:32px;padding:0;">취소</button><button class="mok" onclick="saveEssayNote()" style="height:32px;padding:0;">저장</button></div>
   </div>
 </div>
 
@@ -837,14 +863,17 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
 <div id="m-prayer-add" class="mo" style="display:none;">
   <div class="mb">
     <div class="mtit"><span>🙏 기원문 등록</span><button onclick="closeM('m-prayer-add')" style="font-size:18px;color:var(--tx3);">×</button></div>
-    <label class="mlbl">폴더</label>
-    <select id="pr-add-folder" class="sel" style="width:100%;margin-bottom:8px;" onchange="onPrayerAddFolderChange()"></select>
-    <div id="pr-add-newfolder-wrap" style="display:none;gap:6px;margin-bottom:8px;">
-      <input type="text" class="minp" id="pr-add-newfolder-name" placeholder="새 폴더 이름" style="margin-bottom:6px;"/>
-      <div style="display:flex;align-items:center;gap:6px;">
-        <span style="font-size:11px;color:var(--tx3);flex-shrink:0;">마감기한</span>
-        <input type="date" class="minp" id="pr-add-newfolder-deadline" style="margin-bottom:0;flex:1;"/>
-      </div>
+    <label class="mlbl">폴더 <span style="font-size:10px;font-weight:400;color:var(--tx3);">(입력해서 검색 · 새 폴더도 바로 추가)</span></label>
+    <div id="pr-add-folder-box" style="position:relative;margin-bottom:6px;">
+      <input type="text" class="minp" id="pr-add-folder-q" autocomplete="off" placeholder="폴더 검색 또는 선택..."
+             style="margin-bottom:0;padding-right:32px;" oninput="renderPrayerAddFolderOpts(true)" onfocus="renderPrayerAddFolderOpts(true)"/>
+      <button type="button" onclick="togglePrayerAddFolderList(event)" aria-label="폴더 목록"
+              style="position:absolute;right:6px;top:50%;transform:translateY(-50%);width:24px;height:24px;font-size:10px;color:var(--tx3);">▼</button>
+      <div id="pr-add-folder-list" style="display:none;position:absolute;left:0;right:0;top:calc(100% + 4px);max-height:190px;overflow-y:auto;background:var(--sf);border:1.5px solid var(--bd);border-radius:var(--rs);z-index:20;box-shadow:0 8px 22px rgba(0,0,0,.14);"></div>
+    </div>
+    <div id="pr-add-newfolder-wrap" style="display:none;align-items:center;gap:6px;margin-bottom:8px;">
+      <span style="font-size:11px;color:var(--tx3);flex-shrink:0;">마감기한(새 폴더)</span>
+      <input type="date" class="minp" id="pr-add-newfolder-deadline" style="margin-bottom:0;flex:1;"/>
     </div>
     <label class="mlbl">기원문 <span style="font-size:10px;font-weight:400;color:var(--tx3);">(한 줄에 하나씩 · 묶으려면 앞에 띄어쓰기 · #소제목 · **볼드**)</span></label>
     <textarea class="minp" id="pr-add-text" rows="8" placeholder="예)&#10;가족 모두 건강하게 지내기&#10;시험 합격하기&#10;  이어서 적고 싶은 내용은&#10;  앞에 띄어쓰기하면 위 줄과 하나로 묶여요&#10;# 이렇게 적으면 소제목이 돼요" style="min-height:150px;resize:vertical;" onpaste="onPrayerAddTextPaste(event)"></textarea>
@@ -974,17 +1003,21 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
 
 <div id="m-sp-reg" class="mo" style="display:none;">
   <div class="mb" style="padding:18px 20px;">
-    <div class="mtit" style="margin-bottom:10px;">
+    <div class="mtit" style="margin-bottom:6px;">
       <span id="m-sp-title">스피치 등록</span>
       <div style="display:flex;align-items:center;gap:6px;">
+        <button type="button" onclick="revertSpReg()" title="되돌리기"
+                style="flex:none;width:28px;height:28px;border-radius:50%;border:1px solid var(--bd);background:var(--sf);display:flex;align-items:center;justify-content:center;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--tx3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg>
+        </button>
         <button type="button" id="m-sp-fav" onclick="toggleSpRegFav()" title="즐겨찾기"
                 style="flex:none;width:30px;height:30px;border-radius:50%;border:1.5px solid var(--bd);background:var(--sf);font-size:15px;line-height:1;color:var(--tx3);display:flex;align-items:center;justify-content:center;">☆</button>
         <button class="mok" id="m-sp-ok" onclick="confirmSpReg()" style="flex:none;padding:0 16px;height:30px;font-size:12px;border-radius:15px;">저장</button>
         <button onclick="closeM('m-sp-reg')" style="font-size:18px;color:var(--tx3);">×</button>
       </div>
     </div>
-    <label class="mlbl" style="margin-bottom:4px;">폴더 <span style="font-size:10px;font-weight:400;color:var(--tx3);">(입력해서 검색 · 새 폴더도 바로 추가)</span></label>
-    <div id="sp-folder-box" style="position:relative;margin-bottom:9px;">
+    <label class="mlbl" style="margin-bottom:3px;">폴더 <span style="font-size:10px;font-weight:400;color:var(--tx3);">(입력해서 검색 · 새 폴더도 바로 추가)</span></label>
+    <div id="sp-folder-box" style="position:relative;margin-bottom:6px;">
       <input type="text" class="minp" id="m-sp-folder-q" autocomplete="off" placeholder="폴더 검색 또는 선택..."
              style="margin-bottom:0;padding-right:32px;" oninput="renderSpFolderOpts(true)" onfocus="renderSpFolderOpts(true)"/>
       <button type="button" onclick="toggleSpFolderList(event)" aria-label="폴더 목록"
@@ -992,15 +1025,15 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
       <div id="m-sp-folder-list" style="display:none;position:absolute;left:0;right:0;top:calc(100% + 4px);max-height:190px;overflow-y:auto;background:var(--sf);border:1.5px solid var(--bd);border-radius:var(--rs);z-index:20;box-shadow:0 8px 22px rgba(0,0,0,.14);"></div>
       <select id="m-sp-folder" style="display:none;"></select>
     </div>
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px;">
       <label class="mlbl" style="margin-bottom:0;">내용</label>
       <button type="button" id="m-sp-bold-btn" onclick="toggleBoldSelection()" title="선택한 글자 볼드 처리 (Ctrl/Cmd+B)"
               style="width:26px;height:22px;border-radius:5px;border:1px solid var(--bd);background:var(--sf);font-size:12px;font-weight:800;color:var(--tx2);flex-shrink:0;">B</button>
     </div>
-    <textarea class="minp" id="m-sp-text" rows="4" placeholder="스피치 내용 입력... (일부 선택 후 B로 볼드 처리)" style="min-height:82px;resize:vertical;white-space:pre-wrap;margin-bottom:9px;"></textarea>
+    <textarea class="minp" id="m-sp-text" rows="3" placeholder="스피치 내용 입력... (일부 선택 후 B로 볼드 처리)" style="min-height:60px;resize:vertical;white-space:pre-wrap;margin-bottom:6px;"></textarea>
 
-    <label class="mlbl" style="margin-bottom:4px;">출처 <span style="font-size:10px;font-weight:400;color:var(--tx3);">(적으면 말미에 자동으로 붙어요)</span></label>
-    <div style="display:flex;gap:6px;margin-bottom:9px;">
+    <label class="mlbl" style="margin-bottom:3px;">출처 <span style="font-size:10px;font-weight:400;color:var(--tx3);">(적으면 말미에 자동으로 붙어요)</span></label>
+    <div style="display:flex;gap:6px;margin-bottom:6px;">
       <div style="flex:1.3;position:relative;">
         <input type="text" class="minp" id="m-sp-book" autocomplete="off" placeholder="도서명 (예: 신인간혁명 14권)"
                style="margin-bottom:0;font-size:12px;" oninput="onSpBookInput()" onfocus="renderSpBookOpts(true)"/>
@@ -1014,9 +1047,9 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
       <input type="number" class="minp" id="m-sp-page" placeholder="p." style="width:56px;flex-shrink:0;margin-bottom:0;font-size:12px;text-align:center;" oninput="onSpPageInput()"/>
     </div>
 
-    <label class="mlbl" style="margin-bottom:4px;">키워드 <span style="font-size:10px;font-weight:400;color:var(--tx3);">(쉼표로 구분, 검색에 반영)</span></label>
+    <label class="mlbl" style="margin-bottom:3px;">키워드 <span style="font-size:10px;font-weight:400;color:var(--tx3);">(쉼표로 구분, 검색에 반영)</span></label>
     <input type="text" class="minp" id="m-sp-kw" placeholder="예: 용기, 화합, 청년" style="margin-bottom:0;"/>
-    <div class="mfoot" style="margin-top:12px;gap:6px;">
+    <div class="mfoot" style="margin-top:8px;gap:6px;">
       <button class="mcan" onclick="clearSpRegDraft()" style="height:32px;padding:0;font-size:11px;flex:0 0 56px;">지우기</button>
       <button class="mcan" onclick="closeM('m-sp-reg')" style="height:32px;padding:0;font-size:12px;flex:1;">닫기</button>
       <button class="mok" onclick="confirmSpReg()" style="height:32px;padding:0;font-size:12px;flex:2;">저장</button>
@@ -1386,10 +1419,13 @@ var spDone = {};
 var spViewMode = 'folder'; // 'folder' | 'source' (내 폴더 / 출처별 책·권)
 var spFav = {}; // ★ 즐겨찾기한 스피치 id 모음
 var _favSectionOpen = false;
+var _recentSpSectionOpen = false; // 🕐 최근 저장 섹션 펼침 상태
 var spChecked = {};
 var memPeriodMonths = 3;
 var prayerFolders = []; // {id, name, deadline:'YYYY-MM-DD'|'', _open}
 var prayers = []; // {id, folderId, text, checked, checkedAt, createdAt, order, noCheck}
+var _prayerHiddenOpen = false; // 🙈 숨김 섹션 펼침 상태
+var _prayerHiddenFolderOpen = false; // 📁 숨긴 기원문(폴더 단위) 섹션 펼침 상태
 var prayerChecked = {};
 var prayerLock = null; // 잠금 설정된 경우 {pwSalt, pwIv, pwData, recSalt, recIv, recData} (암호화된 blob, 평문 아님)
 var _prayerUnlocked = false; // 이번 세션에 비밀번호로 잠금 해제했는지
@@ -1573,8 +1609,7 @@ function restoreBackup(input) {
           hak: Array.isArray(r.hak) ? r.hak : [],
           speech: Array.isArray(r.speech) ? r.speech : [],
           members: Array.isArray(r.members) ? r.members : [],
-          activity: Array.isArray(r.activity) ? r.activity : [],
-          _recurringDismissed: Array.isArray(r._recurringDismissed) ? r._recurringDismissed : []
+          activity: Array.isArray(r.activity) ? r.activity : []
         };
       });
 
@@ -1927,6 +1962,27 @@ function normQ(s) {
   return String(s == null ? '' : s).toLowerCase().replace(/[\s·・.,~"'`\-*]/g, '');
 }
 
+// ===== 한글 초성 검색 (자음만 입력해도 폴더를 찾을 수 있게) =====
+var CHOSUNG_LIST = ['ㄱ','ㄲ','ㄴ','ㄷ','ㄸ','ㄹ','ㅁ','ㅂ','ㅃ','ㅅ','ㅆ','ㅇ','ㅈ','ㅉ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
+function getChosung(str) {
+  var result = '';
+  str = String(str == null ? '' : str);
+  for (var i = 0; i < str.length; i++) {
+    var code = str.charCodeAt(i) - 0xAC00;
+    if (code >= 0 && code <= 11171) result += CHOSUNG_LIST[Math.floor(code / 588)];
+    else result += str[i];
+  }
+  return normQ(result);
+}
+function isChosungOnly(q) { return q.length > 0 && /^[ㄱ-ㅎ]+$/.test(q); }
+// 이름이 검색어와 매칭되는지: 일반 텍스트 검색 + (검색어가 초성으로만 이뤄졌으면) 초성 검색 모두 지원
+function matchNameQuery(name, qn) {
+  if (!qn) return true;
+  if (normQ(name).includes(qn)) return true;
+  if (isChosungOnly(qn)) return getChosung(name).includes(qn);
+  return false;
+}
+
 // 해시태그 만들기 (#앞붙임, 내부 공백 제거)
 function toHashTag(s) {
   var t = String(s == null ? '' : s).trim().replace(/^#+/, '').replace(/\s+/g, '');
@@ -1970,14 +2026,12 @@ function getRecurringMatches(k) {
 // 자동 빈 칸(_autoBlank)만 있으면 그 자리를 대신 채움. 뭔가 바뀌었으면 true 반환
 function applyRecurringToDate(k) {
   var r = getRec(k);
-  if (!r._recurringDismissed) r._recurringDismissed = []; // 사용자가 그 날짜에서 직접 지운 반복 항목 id 목록
   var matches = getRecurringMatches(k);
   if (!matches.length) return false;
   var changed = false;
   matches.forEach(function(t) {
     var already = r.haeng.some(function(it) { return it._fromRecurring === t.id; });
     if (already) return;
-    if (r._recurringDismissed.indexOf(t.id) >= 0) return; // 사용자가 삭제한 항목은 다시 채우지 않음
     r.haeng = r.haeng.filter(function(it) { return !it._autoBlank; }); // 자동 빈 칸은 반복 항목이 들어오면 제거
     r.haeng.push({ id: uid(), name: t.name || '', type: t.type || '', custom: t.custom || '', cat: t.cat || '', _fromRecurring: t.id });
     changed = true;
@@ -2038,7 +2092,9 @@ document.addEventListener('click', function(e) {
   var mo = e.target.closest('.mo') === e.target ? e.target : null; if (!mo) return; var e2 = e;
   // .mo 직접 클릭 (backdrop)
   var id = e.target.id;
-  if (id && id !== 'm-confirm') e.target.style.display = 'none';
+  if (!id || id === 'm-confirm') return;
+  if (id === 'm-essay-note') { closeEssayNote(); return; }
+  e.target.style.display = 'none';
 });
 
 function saveLocal() {
@@ -2092,7 +2148,7 @@ function switchTab(id, btn) {
   else if (id === 'challenge') renderChallenge();
 }
 
-var curChTab = 'chart';
+var curChTab = 'speech';
 function switchChTab(tab, btn) {
   curChTab = tab;
   document.querySelectorAll('.ch-stab').forEach(function(e) { e.classList.remove('on'); });
@@ -2383,19 +2439,65 @@ function showEssayMigrationReport(report) {
   modal.style.display = 'flex';
 }
 
+var essayDrafts = {}; // { 어서명: {core, keywords, memos:[{id,text,addedAt}]} } — 저장 안 하고 팝업만 닫았을 때 임시 보관
+
 function openEssayNote(name) {
   _openEssayNote = name;
   document.getElementById('m-essay-title').textContent = name;
   var note = essayNotes[name] || {};
+  var draft = essayDrafts[name];
   document.getElementById('m-essay-note').style.display = 'flex';
+  var coreVal = draft ? draft.core : (note.core || '');
+  document.getElementById('m-essay-core').value = coreVal;
+  setEssayCoreOpen(!!coreVal); // 이미 작성된 핵심(또는 임시저장분)이 있으면 펼쳐서 보여주고, 없으면 접어둠
+  document.getElementById('m-essay-kw').value = (draft ? draft.keywords : (note.keywords || [])).join(', ');
+  var memosEl = document.getElementById('m-essay-memos');
+  memosEl.innerHTML = '';
+  var memos = draft ? (draft.memos.length ? draft.memos : [null]) : ((note.memos && note.memos.length) ? note.memos : [null]);
+  memos.forEach(function(m) { addEssayMemoField(m, false); }); // 기존 메모(또는 임시저장분)는 저장된 순서 그대로 (오래된 것부터)
+  addEbookPasteHandler(document.getElementById('m-essay-core'));
+}
+
+// 저장하지 않고 팝업을 닫을 때, 작성 중이던 내용을 임시로 남겨둠 (다시 열면 그대로 복원)
+function captureEssayDraft() {
+  var name = _openEssayNote;
+  if (!name) return;
+  var core = document.getElementById('m-essay-core').value;
+  var kwRaw = document.getElementById('m-essay-kw').value;
+  var keywords = kwRaw.split(',').map(function(k){return k.trim();}).filter(Boolean);
+  var memoTas = document.getElementById('m-essay-memos').querySelectorAll('textarea');
+  var memos = Array.from(memoTas).map(function(ta) {
+    return { id: ta.dataset.memoId || '', text: ta.value, addedAt: ta.dataset.addedAt ? parseInt(ta.dataset.addedAt, 10) : null };
+  });
+  var saved = essayNotes[name] || {};
+  var savedMemoTexts = toArr(saved.memos).map(function(m) { return (m && typeof m === 'object') ? (m.text || '') : (m || ''); });
+  var draftMemoTexts = memos.map(function(m) { return m.text; });
+  var sameCore = (saved.core || '') === core;
+  var sameKw = JSON.stringify(toArr(saved.keywords)) === JSON.stringify(keywords);
+  var sameMemos = JSON.stringify(savedMemoTexts) === JSON.stringify(draftMemoTexts);
+  if (sameCore && sameKw && sameMemos) delete essayDrafts[name]; // 저장된 내용과 똑같으면 임시저장 불필요
+  else essayDrafts[name] = { core: core, keywords: keywords, memos: memos };
+}
+
+function closeEssayNote() {
+  captureEssayDraft();
+  closeM('m-essay-note');
+}
+
+// 되돌리기: 현재 입력 중이던 내용(임시저장분 포함)을 버리고 마지막으로 저장된 값으로 복원
+function revertEssayNote() {
+  var name = _openEssayNote;
+  if (!name) return;
+  delete essayDrafts[name];
+  var note = essayNotes[name] || {};
   document.getElementById('m-essay-core').value = note.core || '';
-  setEssayCoreOpen(!!note.core); // 이미 작성된 핵심이 있으면 펼쳐서 보여주고, 없으면 접어둠
+  setEssayCoreOpen(!!note.core);
   document.getElementById('m-essay-kw').value = (note.keywords || []).join(', ');
   var memosEl = document.getElementById('m-essay-memos');
   memosEl.innerHTML = '';
   var memos = (note.memos && note.memos.length) ? note.memos : [null];
-  memos.forEach(function(m) { addEssayMemoField(m, false); }); // 기존 메모는 저장된 순서 그대로 (오래된 것부터)
-  addEbookPasteHandler(document.getElementById('m-essay-core'));
+  memos.forEach(function(m) { addEssayMemoField(m, false); });
+  showToast('↺ 되돌리기');
 }
 
 function setEssayCoreOpen(open) {
@@ -2447,6 +2549,7 @@ function saveEssayNote() {
       addedAt: ta.dataset.addedAt ? parseInt(ta.dataset.addedAt, 10) : Date.now()
     };
   }).filter(Boolean).sort(function(a, b) { return a.addedAt - b.addedAt; }); // 저장 시각 순으로 재정렬 (새로 추가한 건 맨 아래로)
+  delete essayDrafts[name]; // 정식 저장했으니 임시저장분은 정리
   saveLocal();
   try { if (curUser && db) saveCloud(); } catch (e) {}
   closeM('m-essay-note');
@@ -2516,7 +2619,7 @@ function renderEssayTab(cont) {
     var isReading = readPages > 0 && !isDone;
     var isUnread = readPages === 0;
     var note = essayNotes[name] || {};
-    var kws = toArr(note.keywords).join(' ');
+    var kws = getCombinedEssayKeywords(name).join(' ');
     var memoTxt = toArr(note.memos).map(function(m){ return (m && typeof m === 'object') ? (m.text||'') : (m||''); }).join(' ');
     var body = (note.core || '') + ' ' + memoTxt;
     var lastMemoAt = 0;
@@ -2617,7 +2720,7 @@ function makeEssayCard(x, prog, q) {
   }
   var plusBtn = document.createElement('button');
   plusBtn.textContent = '+';
-  plusBtn.style.cssText = 'font-size:16px;font-weight:700;color:var(--pu);background:none;border:none;cursor:pointer;padding:0 2px;line-height:1;';
+  plusBtn.style.cssText = 'font-size:16px;font-weight:700;color:var(--pu);background:none;border:none;cursor:pointer;padding:0 2px;line-height:1;flex-shrink:0;';
   plusBtn.onclick = (function(n) { return function(e) { e.stopPropagation(); openEssayNote(n); }; })(x.name);
   rightDiv.appendChild(plusBtn);
   topRow.appendChild(leftDiv); topRow.appendChild(rightDiv);
@@ -2641,18 +2744,20 @@ function makeEssayCard(x, prog, q) {
 
   hdr.appendChild(topRow); hdr.appendChild(bar); hdr.appendChild(botRow);
 
-  // 요문 100선 테마 참고 뱃지 (있는 경우만, 참고용 표시)
-  var themes = getEssayThemes(x.name);
-  if (themes && themes.length) {
-    var themeRow = document.createElement('div');
-    themeRow.style.cssText = 'display:flex;flex-wrap:wrap;gap:3px;margin-top:5px;';
-    themes.forEach(function(t) {
-      var chip = document.createElement('span');
-      chip.style.cssText = 'font-size:9px;color:var(--pu);background:var(--pul);border-radius:99px;padding:2px 7px;display:inline-flex;align-items:center;justify-content:center;line-height:1;';
-      chip.textContent = t;
-      themeRow.appendChild(chip);
+  // 요문 100선 참고 뱃지 + 내가 등록한 키워드 — 둘 다 동일하게 클릭 가능한 태그(폴더)로 동작
+  var allKws = getCombinedEssayKeywords(x.name);
+  if (allKws.length) {
+    var kwRow = document.createElement('div');
+    kwRow.style.cssText = 'display:flex;flex-wrap:wrap;gap:4px;margin-top:5px;';
+    allKws.forEach(function(kw) {
+      var chip = document.createElement('button');
+      chip.type = 'button';
+      chip.style.cssText = 'font-size:10px;color:#6C63FF;background:#EEECFF;border:none;border-radius:99px;padding:2px 8px;font-weight:600;cursor:pointer;';
+      chip.textContent = '#' + kw;
+      chip.onclick = (function(k) { return function(e) { e.stopPropagation(); goToEssayTabByKeyword(k); }; })(kw);
+      kwRow.appendChild(chip);
     });
-    hdr.appendChild(themeRow);
+    hdr.appendChild(kwRow);
   }
 
   var body = document.createElement('div');
@@ -2850,6 +2955,23 @@ function getEssayThemes(name) {
   return ESSAY_THEME_REF[base] || null;
 }
 
+// 요문 100선 참고 뱃지 + 내가 등록한 키워드를 하나로 합친 태그 목록 (둘 다 동일하게 '폴더'로 동작)
+// 어서 하나가 여러 태그에 동시에 속할 수 있음(다중 폴더 중복)
+function getCombinedEssayKeywords(name) {
+  var mine = toArr((essayNotes[name]||{}).keywords);
+  var ref = getEssayThemes(name) || [];
+  var out = mine.slice();
+  ref.forEach(function(t) { if (out.indexOf(t) < 0) out.push(t); });
+  return out;
+}
+// '어서' 탭 검색 정확도 분류: 키워드(폴더) 매칭 > 본문 매칭 > 어서명·페이지 매칭 순 우선순위
+function classifyEssayMemoTier(m, qn) {
+  if (m.keywords.some(function(k) { return normQ(k).includes(qn); })) return 'folder';
+  if (normQ(m.memoText).includes(qn)) return 'body';
+  if (normQ(m.essayName).includes(qn) || String(m.startP).includes(qn)) return 'source';
+  return null;
+}
+
 // 최초 1회: 17개 테마 폴더 미리 생성 (없는 것만 추가, 중복 생성 안 함)
 var ESSAY_THEME_SEED_FLAG = 'essayThemeSeedV1';
 function applyEssayThemeSeedV1() {
@@ -2967,6 +3089,26 @@ function essayMemoBulkMove() {
   if (!ids.length) return;
   openFolderMove(ids, 'essay');
 }
+function essayMemoBulkCopy() {
+  var ids = Object.keys(essayMemoChecked);
+  if (!ids.length) return;
+  var picked = [];
+  ESSAYS.forEach(function(e) {
+    var name = e[0];
+    var note = essayNotes[name] || {};
+    toArr(note.memos).forEach(function(memo) {
+      if (!memo) return;
+      var text = (typeof memo === 'object') ? (memo.text || '') : (memo || '');
+      var mid = (typeof memo === 'object' && memo.id) ? memo.id : (name + ':' + text.slice(0, 20));
+      if (text && ids.indexOf(mid) > -1) picked.push({ essayName: name, memoText: text, keywords: getCombinedEssayKeywords(name) });
+    });
+  });
+  var txt = picked.map(function(m) {
+    var tags = m.keywords.slice(); tags.unshift(m.essayName);
+    return buildTagHeader(tags) + m.memoText;
+  }).join('\n\n──────────\n\n');
+  copyToClipboard(txt, function() { showToast('📋 일괄 복사'); });
+}
 function renameEssayFolder(fid) {
   var f = (essayMemoFolders||[]).find(function(ff){return ff.id===fid;});
   if (!f) return;
@@ -2979,38 +3121,42 @@ function deleteEssayFolder(fid) {
     saveLocal(); renderChallenge();
   });
 }
+// 어서 카드의 #키워드를 눌렀을 때: '어서' 탭으로 이동해서 그 키워드로 검색된 상태를 바로 보여줌
+function goToEssayTabByKeyword(kw) {
+  var btn = document.getElementById('ch-tab-essay');
+  if (btn) switchChTab('essay', btn);
+  var inp = document.getElementById('essay-memo-search');
+  if (inp) { inp.value = kw; updateSearchClear('essay-memo-search', 'essay-memo-clear'); }
+  renderChallenge();
+}
+
+var _essayKwOpen = {}; // 키워드(해시태그)별 펼침 상태 기억
+
 function renderEssayMemoTab(cont) {
-  if (!essayMemoFolders) essayMemoFolders = [];
   essayMemoChecked = {}; updateEssayBulkBar();
-  var sort = (document.getElementById('essay-memo-sort')||{}).value || 'folder';
+  var sort = (document.getElementById('essay-memo-sort')||{}).value || 'abc';
   var q = ((document.getElementById('essay-memo-search')||{}).value || '').toLowerCase();
-  if (!essayMemoFolders) essayMemoFolders = [];
-  // 폴더 가나다순 정렬
-  if (sort === 'folder') {
-    essayMemoFolders.sort(function(a,b){return a.name.localeCompare(b.name,'ko');});
-  }
+  var qn = normQ(q);
+
   var allMemos = [];
   ESSAYS.forEach(function(e) {
     var name=e[0],startP=e[1];
     var note = essayNotes[name]||{};
+    var kws = getCombinedEssayKeywords(name);
     toArr(note.memos).forEach(function(memo) {
       if (!memo) return;
       var text = (typeof memo === 'object') ? (memo.text||'') : (memo||'');
       var mid = (typeof memo === 'object' && memo.id) ? memo.id : (name + ':' + text.slice(0,20));
       if (!text) return;
-      allMemos.push({memoId:mid, essayName:name, memoText:text, startP:startP});
+      allMemos.push({memoId:mid, essayName:name, memoText:text, startP:startP, keywords:kws});
     });
   });
-  var qn = normQ(q);
-  if (qn) allMemos=allMemos.filter(function(m){return normQ(m.memoText).includes(qn)||normQ(m.essayName).includes(qn);});
   allMemos.sort(function(a,b){return sort==='page'?a.startP-b.startP:a.essayName.localeCompare(b.essayName,'ko');});
   if (!allMemos.length) {
     cont.innerHTML='<div style="text-align:center;padding:48px 0;color:var(--tx3);font-size:13px;">'+(q?'검색 결과가 없습니다':'저장된 메모가 없습니다<br><span style="font-size:11px;">어서 연찬표 + 버튼으로 추가해보세요</span>')+'</div>';
     return;
   }
-  var inMap={};
-  (essayMemoFolders||[]).forEach(function(f){(f.memoIds||[]).forEach(function(id){inMap[id]=f;});});
-  var noFolder=allMemos.filter(function(m){return !inMap[m.memoId];});
+
   function makeMemoBox(m) {
     var box=document.createElement('div');
     box.style.cssText='border-radius:var(--rs);border:1.5px solid '+(essayMemoChecked[m.memoId]?'var(--te)':'var(--bd)')+';background:var(--sf);padding:10px 12px;';
@@ -3019,18 +3165,45 @@ function renderEssayMemoTab(cont) {
     chk.style.cssText='width:14px;height:14px;flex-shrink:0;margin-top:2px;accent-color:var(--te);cursor:pointer;';
     chk.onchange=function(){if(chk.checked)essayMemoChecked[m.memoId]=true;else delete essayMemoChecked[m.memoId];box.style.borderColor=chk.checked?'var(--te)':'var(--bd)';updateEssayBulkBar();};
     var txt=document.createElement('div'); txt.style.cssText='flex:1;font-size:12px;color:var(--tx);line-height:1.6;white-space:pre-wrap;min-width:0;'; txt.textContent=m.memoText;
-    // 복사 형식: #어서명 (엔터)(엔터) 내용
-    var cpBtn=makeCpBtn(buildTagHeader([m.essayName])+m.memoText);
-    topRow.appendChild(chk); topRow.appendChild(txt); topRow.appendChild(cpBtn); box.appendChild(topRow);
-    var botRow=document.createElement('div'); botRow.style.cssText='display:flex;align-items:center;justify-content:space-between;gap:6px;margin-top:5px;';
+    var editBtn=document.createElement('button'); editBtn.type='button'; editBtn.title='수정';
+    editBtn.style.cssText='width:22px;height:22px;border-radius:5px;border:1px solid var(--bd);background:var(--sf);color:var(--tx3);font-size:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;';
+    editBtn.textContent='✏️';
+    editBtn.onclick=(function(essayName){return function(e){ e.stopPropagation(); openEssayNote(essayName); };})(m.essayName);
+    var delBtn=document.createElement('button'); delBtn.type='button'; delBtn.title='삭제';
+    delBtn.style.cssText='width:22px;height:22px;border-radius:5px;border:1px solid var(--bd);background:var(--sf);color:var(--tx3);font-size:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0;';
+    delBtn.textContent='✕';
+    delBtn.onclick=(function(memo){return function(e){
+      e.stopPropagation();
+      safeConfirm('이 메모를 삭제할까요?', function() {
+        var note = essayNotes[memo.essayName];
+        if (note && Array.isArray(note.memos)) {
+          note.memos = note.memos.filter(function(mm) {
+            var mid = (mm && typeof mm === 'object' && mm.id) ? mm.id : (memo.essayName + ':' + ((mm && typeof mm === 'object') ? (mm.text||'') : (mm||'')).slice(0,20));
+            return mid !== memo.memoId;
+          });
+          saveLocal(); try { if (curUser && db) saveCloud(); } catch (err) {}
+          renderChallenge();
+        }
+      });
+    };})(m);
+    // 복사 형식: #어서명 #키워드 (엔터)(엔터) 내용
+    var cpTags = m.keywords.slice(); cpTags.unshift(m.essayName);
+    var cpBtn=makeCpBtn(buildTagHeader(cpTags)+m.memoText);
+    topRow.appendChild(chk); topRow.appendChild(txt); topRow.appendChild(editBtn); topRow.appendChild(delBtn); topRow.appendChild(cpBtn); box.appendChild(topRow);
+    var botRow=document.createElement('div'); botRow.style.cssText='display:flex;align-items:center;justify-content:space-between;gap:6px;margin-top:5px;flex-wrap:wrap;';
     var nameTag=document.createElement('span'); nameTag.style.cssText='font-size:10px;color:var(--tx3);'; nameTag.textContent='- '+m.essayName;
-    var curFolder = inMap[m.memoId];
-    var themeTag=document.createElement('button');
-    themeTag.type='button';
-    themeTag.style.cssText='font-size:10px;font-weight:600;padding:2px 8px;border-radius:99px;flex-shrink:0;'+(curFolder?'background:var(--tel);color:var(--te);border:1px solid var(--te);':'background:var(--bg);color:var(--tx3);border:1px solid var(--bd);');
-    themeTag.textContent = curFolder ? ('🏷️ '+curFolder.name) : '🏷️ 테마 지정';
-    themeTag.onclick=function(e){ e.stopPropagation(); openFolderMove([m.memoId], 'essay'); };
-    botRow.appendChild(nameTag); botRow.appendChild(themeTag);
+    botRow.appendChild(nameTag);
+    if (m.keywords.length) {
+      var kwWrap=document.createElement('div'); kwWrap.style.cssText='display:flex;flex-wrap:wrap;gap:4px;';
+      m.keywords.forEach(function(kw) {
+        var chip=document.createElement('button'); chip.type='button';
+        chip.style.cssText='font-size:9px;color:#6C63FF;background:#EEECFF;border:none;border-radius:99px;padding:2px 7px;font-weight:600;cursor:pointer;';
+        chip.textContent='#'+kw;
+        chip.onclick=(function(k){return function(e){ e.stopPropagation(); goToEssayTabByKeyword(k); };})(kw);
+        kwWrap.appendChild(chip);
+      });
+      botRow.appendChild(kwWrap);
+    }
     box.appendChild(botRow); return box;
   }
   function makeWrap(memos) {
@@ -3038,41 +3211,101 @@ function renderEssayMemoTab(cont) {
     memos.forEach(function(m){w.appendChild(makeMemoBox(m));}); return w;
   }
 
-  // 폴더 가나다순 정렬
-  var sortedFolders = (essayMemoFolders||[]).slice().sort(function(a,b){return a.name.localeCompare(b.name,'ko');});
+  var scopeWrap = document.getElementById('essay-memo-scope-wrap');
 
-  // 검색어가 폴더(테마) 이름과 일치하면, 그 폴더 전체를 맨 위에 먼저 보여줌
+  // 검색어 있으면: 정확도 우선순위(키워드(폴더) → 본문 → 어서명·페이지)로 그룹핑
+  // 스코프 드롭다운으로 특정 기준 하나만 골라서 볼 수도 있음
   if (qn) {
-    var nameMatchedFolders = sortedFolders.filter(function(f) { return normQ(f.name).includes(qn); });
-    if (nameMatchedFolders.length) {
-      var fHdr2 = document.createElement('div');
-      fHdr2.style.cssText = 'font-size:11px;font-weight:700;color:var(--tx3);padding:4px 0 8px;';
-      fHdr2.textContent = '📁 관련 폴더 ' + nameMatchedFolders.length + '개';
-      cont.appendChild(fHdr2);
-      nameMatchedFolders.forEach(function(f) {
-        // 폴더 검색은 필터링된 allMemos가 아니라 해당 폴더 전체 내용을 보여줌
-        var fAllMemos = [];
-        ESSAYS.forEach(function(e) {
-          var nm = e[0];
-          toArr((essayNotes[nm]||{}).memos).forEach(function(memo) {
-            if (!memo) return;
-            var text = (typeof memo === 'object') ? (memo.text||'') : (memo||'');
-            var mid = (typeof memo === 'object' && memo.id) ? memo.id : (nm + ':' + text.slice(0,20));
-            if (text && (f.memoIds||[]).indexOf(mid) > -1) fAllMemos.push({memoId:mid, essayName:nm, memoText:text, startP:e[1]});
-          });
-        });
-        cont.appendChild(makeWrap(fAllMemos));
-      });
-      var sep0 = document.createElement('div');
-      sep0.style.cssText = 'font-size:11px;font-weight:700;color:var(--tx3);padding:8px 0 4px;';
-      sep0.textContent = '📝 메모 검색 결과 ' + allMemos.length + '개';
-      cont.appendChild(sep0);
+    if (scopeWrap) scopeWrap.style.display = 'block';
+    var scope = (document.getElementById('essay-memo-scope') || {}).value || 'all';
+
+    var tierBuckets = { folder: [], body: [], source: [] };
+    allMemos.forEach(function(m) {
+      var tier = classifyEssayMemoTier(m, qn);
+      if (tier) tierBuckets[tier].push(m);
+    });
+
+    function renderFlatTier(items, title) {
+      if (!items.length) return;
+      var hdr = document.createElement('div');
+      hdr.style.cssText = 'font-size:11px;font-weight:700;color:var(--tx3);padding:8px 0 6px;';
+      hdr.textContent = title + ' ' + items.length + '개';
+      cont.appendChild(hdr);
+      cont.appendChild(makeWrap(items));
     }
+
+    function renderFolderTier() {
+      if (!tierBuckets.folder.length) return;
+      var kwMapLocal = {};
+      tierBuckets.folder.forEach(function(m) {
+        m.keywords.forEach(function(k) {
+          if (normQ(k).includes(qn)) { if (!kwMapLocal[k]) kwMapLocal[k] = []; kwMapLocal[k].push(m); }
+        });
+      });
+      var names = Object.keys(kwMapLocal).sort(function(a,b){return a.localeCompare(b,'ko');});
+      var hdr = document.createElement('div');
+      hdr.style.cssText = 'font-size:11px;font-weight:700;color:var(--tx3);padding:4px 0 6px;';
+      hdr.textContent = '🏷️ 키워드(폴더) 매칭 ' + names.length + '개';
+      cont.appendChild(hdr);
+      names.forEach(function(k) {
+        var kMemos = kwMapLocal[k];
+        var wrap = document.createElement('div');
+        wrap.style.cssText = 'border-radius:var(--rs);border:1px solid var(--bd);overflow:hidden;margin-bottom:6px;';
+        var fHdr = document.createElement('div');
+        fHdr.style.cssText = 'display:flex;align-items:center;gap:6px;padding:9px 12px;background:var(--tel);cursor:pointer;';
+        var fn = document.createElement('span'); fn.style.cssText = 'font-size:12px;font-weight:700;color:var(--te);flex:1;'; fn.textContent = '#' + k;
+        var fc = document.createElement('span'); fc.style.cssText = 'font-size:11px;color:var(--te);opacity:.7;flex-shrink:0;'; fc.textContent = kMemos.length + '개';
+        var arr = document.createElement('span'); arr.style.cssText = 'font-size:11px;color:var(--te);flex-shrink:0;'; arr.textContent = '▲';
+        fHdr.appendChild(fn); fHdr.appendChild(fc); fHdr.appendChild(arr);
+        var fBody = document.createElement('div');
+        fBody.style.cssText = 'display:flex;flex-direction:column;gap:6px;padding:6px;background:var(--sf);';
+        kMemos.forEach(function(m) { fBody.appendChild(makeMemoBox(m)); });
+        fHdr.onclick = function() { var open = fBody.style.display !== 'none'; fBody.style.display = open ? 'none' : 'flex'; arr.textContent = open ? '▼' : '▲'; };
+        wrap.appendChild(fHdr); wrap.appendChild(fBody);
+        cont.appendChild(wrap);
+      });
+    }
+
+    if (scope === 'all') {
+      renderFolderTier();
+      renderFlatTier(tierBuckets.body, '📝 본문 매칭');
+      renderFlatTier(tierBuckets.source, '📖 어서명·페이지 매칭');
+      if (!tierBuckets.folder.length && !tierBuckets.body.length && !tierBuckets.source.length) {
+        cont.innerHTML = '<div style="text-align:center;padding:36px 0;color:var(--tx3);font-size:13px;">검색 결과가 없습니다</div>';
+      }
+    } else if (scope === 'folder') {
+      renderFolderTier();
+      if (!tierBuckets.folder.length) cont.innerHTML = '<div style="text-align:center;padding:36px 0;color:var(--tx3);font-size:13px;">키워드(폴더)에 일치하는 결과가 없어요</div>';
+    } else if (scope === 'body') {
+      renderFlatTier(tierBuckets.body, '📝 본문 매칭');
+      if (!tierBuckets.body.length) cont.innerHTML = '<div style="text-align:center;padding:36px 0;color:var(--tx3);font-size:13px;">본문에 일치하는 결과가 없어요</div>';
+    } else if (scope === 'source') {
+      renderFlatTier(tierBuckets.source, '📖 어서명·페이지 매칭');
+      if (!tierBuckets.source.length) cont.innerHTML = '<div style="text-align:center;padding:36px 0;color:var(--tx3);font-size:13px;">어서명·페이지에 일치하는 결과가 없어요</div>';
+    }
+    return;
+  } else if (scopeWrap) {
+    scopeWrap.style.display = 'none';
   }
 
-  sortedFolders.forEach(function(f) {
-    var fMemos=allMemos.filter(function(m){return inMap[m.memoId] && inMap[m.memoId].id===f.id;});
-    var isOpen=f.open!==false;
+  // 키워드(해시태그)별로 그룹핑 — 어서 팝업에서 등록한 키워드가 곧 '폴더' 역할 (검색 없는 기본 보기)
+  var kwMap = {};
+  var noKw = [];
+  allMemos.forEach(function(m) {
+    if (m.keywords.length) {
+      m.keywords.forEach(function(k) {
+        if (!kwMap[k]) kwMap[k] = [];
+        kwMap[k].push(m);
+      });
+    } else {
+      noKw.push(m);
+    }
+  });
+  var kwNames = Object.keys(kwMap).sort(function(a,b){return a.localeCompare(b,'ko');});
+
+  kwNames.forEach(function(k) {
+    var kMemos = kwMap[k];
+    var isOpen = _essayKwOpen[k] !== false;
 
     var wrap=document.createElement('div');
     wrap.style.cssText='border-radius:var(--rs);border:1px solid var(--bd);overflow:hidden;';
@@ -3082,11 +3315,11 @@ function renderEssayMemoTab(cont) {
 
     var fn=document.createElement('span');
     fn.style.cssText='font-size:12px;font-weight:700;color:var(--te);flex:1;';
-    fn.textContent='📁 '+f.name;
+    fn.textContent='#'+k;
 
     var fc=document.createElement('span');
     fc.style.cssText='font-size:11px;color:var(--te);opacity:.7;flex-shrink:0;';
-    fc.textContent=fMemos.length+'개';
+    fc.textContent=kMemos.length+'개';
 
     var arr=document.createElement('span');
     arr.style.cssText='font-size:11px;color:var(--te);flex-shrink:0;';
@@ -3096,26 +3329,26 @@ function renderEssayMemoTab(cont) {
 
     var fBody=document.createElement('div');
     fBody.style.cssText='display:'+(isOpen?'flex':'none')+';flex-direction:column;gap:6px;padding:6px;background:var(--sf);';
-    fMemos.forEach(function(m){fBody.appendChild(makeMemoBox(m));});
+    kMemos.forEach(function(m){fBody.appendChild(makeMemoBox(m));});
 
     fHdr.onclick=function(){
-      f.open=!f.open;
-      arr.textContent=f.open?'▲':'▼';
-      fBody.style.display=f.open?'flex':'none';
+      _essayKwOpen[k] = fBody.style.display === 'none';
+      arr.textContent=_essayKwOpen[k]?'▲':'▼';
+      fBody.style.display=_essayKwOpen[k]?'flex':'none';
     };
 
     wrap.appendChild(fHdr); wrap.appendChild(fBody);
     cont.appendChild(wrap);
   });
 
-  if (noFolder.length) {
-    if (sortedFolders.length) {
+  if (noKw.length) {
+    if (kwNames.length) {
       var sep=document.createElement('div');
       sep.style.cssText='font-size:11px;font-weight:700;color:var(--tx3);padding:7px 4px;';
-      sep.textContent='📂 미분류 ('+noFolder.length+'개)';
+      sep.textContent='📂 키워드 없음 ('+noKw.length+'개)';
       cont.appendChild(sep);
     }
-    cont.appendChild(makeWrap(noFolder));
+    cont.appendChild(makeWrap(noKw));
   }
 }
 
@@ -3637,14 +3870,7 @@ function renderHaengList(list) {
     del.className = 'delbtn'; del.textContent = '✕';
     del.onclick = (function(idx) {
       return function() {
-        var k = dk(curDate), r = getRec(k), a = r.haeng;
-        var removed = a[idx];
-        if (removed && removed._fromRecurring) {
-          if (!r._recurringDismissed) r._recurringDismissed = [];
-          if (r._recurringDismissed.indexOf(removed._fromRecurring) < 0) {
-            r._recurringDismissed.push(removed._fromRecurring); // 이 날짜에서는 다시 자동 생성되지 않도록 기록
-          }
-        }
+        var k = dk(curDate), a = getRec(k).haeng;
         a.splice(idx, 1); renderHaengList(a); autoSave();
       };
     })(i);
@@ -3700,6 +3926,44 @@ function addRecurringHaengRow() {
   renderRecurringHaengList();
 }
 
+// 반복 항목 배열 안에서의 순서를 하나씩 위/아래로 이동하고, 이미 각 날짜 기록에 채워져 있는 인스턴스도 같은 순서로 재정렬
+function moveRecurringHaeng(id, dir) {
+  var idx = recurringHaeng.findIndex(function(x) { return x.id === id; });
+  if (idx < 0) return;
+  var newIdx = idx + dir;
+  if (newIdx < 0 || newIdx >= recurringHaeng.length) return;
+  var tmp = recurringHaeng[idx];
+  recurringHaeng[idx] = recurringHaeng[newIdx];
+  recurringHaeng[newIdx] = tmp;
+  reorderHaengInstancesToMatchRecurring();
+  saveRecurringHaeng();
+  renderRecurringHaengList();
+  var k = dk(curDate);
+  if (document.getElementById('haeng-list')) renderHaengList(getRec(k).haeng);
+}
+
+// 모든 날짜 기록에서, 반복 항목으로 생성된 행(_fromRecurring)들의 상대적 순서를
+// recurringHaeng 배열의 최신 순서에 맞춰 일괄 재정렬 (수동으로 추가한 다른 행의 위치는 그대로 유지)
+function reorderHaengInstancesToMatchRecurring() {
+  var orderMap = {};
+  recurringHaeng.forEach(function(t, idx) { orderMap[t.id] = idx; });
+  Object.keys(records).forEach(function(k) {
+    var r = records[k];
+    if (!r || !Array.isArray(r.haeng)) return;
+    var positions = [];
+    var recurItems = [];
+    r.haeng.forEach(function(it, idx) {
+      if (it && it._fromRecurring && orderMap.hasOwnProperty(it._fromRecurring)) {
+        positions.push(idx);
+        recurItems.push(it);
+      }
+    });
+    if (positions.length < 2) return; // 재정렬할 대상이 2개 미만이면 그대로 둠
+    recurItems.sort(function(a, b) { return orderMap[a._fromRecurring] - orderMap[b._fromRecurring]; });
+    positions.forEach(function(pos, i) { r.haeng[pos] = recurItems[i]; });
+  });
+}
+
 function renderRecurringHaengList() {
   var el = document.getElementById('recurring-haeng-list');
   el.innerHTML = '';
@@ -3707,12 +3971,25 @@ function renderRecurringHaengList() {
     el.innerHTML = '<div style="text-align:center;padding:18px 8px;font-size:12px;color:var(--tx3);">등록된 반복 활동이 없습니다<br><span style="font-size:10px;">예: 평일마다 하는 대화·근행 등을 등록해두세요</span></div>';
     return;
   }
-  recurringHaeng.forEach(function(t) {
+  recurringHaeng.forEach(function(t, tIdx) {
     var box = document.createElement('div');
     box.style.cssText = 'border:1px solid var(--bd);border-radius:var(--rs);padding:9px;background:var(--bg);';
 
     var topRow = document.createElement('div');
-    topRow.style.cssText = 'display:flex;gap:6px;margin-bottom:6px;';
+    topRow.style.cssText = 'display:flex;gap:6px;margin-bottom:6px;align-items:center;';
+    var orderBtns = document.createElement('div');
+    orderBtns.style.cssText = 'display:flex;flex-direction:column;gap:2px;flex-shrink:0;';
+    var upBtn = document.createElement('button');
+    upBtn.type = 'button'; upBtn.textContent = '▲';
+    upBtn.disabled = (tIdx === 0);
+    upBtn.style.cssText = 'width:22px;height:15px;line-height:1;font-size:9px;border:1px solid var(--bd);border-radius:4px 4px 0 0;background:var(--sf);color:' + (tIdx === 0 ? 'var(--bd)' : 'var(--pu)') + ';padding:0;';
+    upBtn.onclick = function() { moveRecurringHaeng(t.id, -1); };
+    var downBtn = document.createElement('button');
+    downBtn.type = 'button'; downBtn.textContent = '▼';
+    downBtn.disabled = (tIdx === recurringHaeng.length - 1);
+    downBtn.style.cssText = 'width:22px;height:15px;line-height:1;font-size:9px;border:1px solid var(--bd);border-top:none;border-radius:0 0 4px 4px;background:var(--sf);color:' + (tIdx === recurringHaeng.length - 1 ? 'var(--bd)' : 'var(--pu)') + ';padding:0;';
+    downBtn.onclick = function() { moveRecurringHaeng(t.id, 1); };
+    orderBtns.appendChild(upBtn); orderBtns.appendChild(downBtn);
     var nameInp = document.createElement('input');
     nameInp.className = 'minp'; nameInp.value = t.name || ''; nameInp.placeholder = '이름 (예: OOO님)';
     nameInp.style.cssText = 'flex:1;margin-bottom:0;';
@@ -3723,7 +4000,7 @@ function renderRecurringHaengList() {
       recurringHaeng = recurringHaeng.filter(function(x) { return x.id !== t.id; });
       saveRecurringHaeng(); renderRecurringHaengList();
     };
-    topRow.appendChild(nameInp); topRow.appendChild(delBtn);
+    topRow.appendChild(orderBtns); topRow.appendChild(nameInp); topRow.appendChild(delBtn);
 
     var midRow = document.createElement('div');
     midRow.style.cssText = 'display:flex;gap:6px;margin-bottom:6px;';
@@ -5896,51 +6173,93 @@ function clearPrayerAddImage() {
 
 function openPrayerAddModal() {
   if (prayerLock && !_prayerUnlocked) { showToast('🔒 먼저 잠금을 해제해주세요'); return; }
-  var sel = document.getElementById('pr-add-folder');
-  sel.innerHTML = '';
-  var sorted = sortedPrayerFolders();
-  sorted.forEach(function(f) {
-    var opt = document.createElement('option');
-    opt.value = f.id; opt.textContent = f.name + (f.deadline ? ' (~' + f.deadline + ')' : '');
-    sel.appendChild(opt);
-  });
-  var newOpt = document.createElement('option');
-  newOpt.value = '__new__'; newOpt.textContent = '+ 새 폴더 만들기';
-  sel.appendChild(newOpt);
-  if (!sorted.length) sel.value = '__new__';
-  document.getElementById('pr-add-text').value = '';
-  document.getElementById('pr-add-newfolder-name').value = '';
+  _prAddFolderId = '';
+  document.getElementById('pr-add-folder-q').value = '';
+  document.getElementById('pr-add-newfolder-wrap').style.display = 'none';
   document.getElementById('pr-add-newfolder-deadline').value = '';
+  document.getElementById('pr-add-text').value = '';
   clearPrayerAddImage();
-  onPrayerAddFolderChange();
   document.getElementById('m-prayer-add').style.display = 'flex';
 }
 function openPrayerBulkModal() { openPrayerAddModal(); }
 
-function onPrayerAddFolderChange() {
-  var sel = document.getElementById('pr-add-folder');
-  var wrap = document.getElementById('pr-add-newfolder-wrap');
-  wrap.style.display = (sel.value === '__new__' || !sel.value) ? 'flex' : 'none';
-  wrap.style.flexDirection = 'column';
+var _prAddFolderId = ''; // 검색창에서 선택된 기존 폴더 id. 비어있으면 검색창의 텍스트로 새 폴더를 만듦
+function closePrayerAddFolderList() { var l = document.getElementById('pr-add-folder-list'); if (l) l.style.display = 'none'; }
+function togglePrayerAddFolderList(e) {
+  if (e) e.stopPropagation();
+  var l = document.getElementById('pr-add-folder-list');
+  if (l && l.style.display === 'block') closePrayerAddFolderList();
+  else renderPrayerAddFolderOpts(true);
 }
+function setPrayerAddFolder(id, name) {
+  _prAddFolderId = id;
+  document.getElementById('pr-add-folder-q').value = name || '';
+  closePrayerAddFolderList();
+  document.getElementById('pr-add-newfolder-wrap').style.display = id ? 'none' : 'flex';
+}
+function renderPrayerAddFolderOpts(open) {
+  var qEl = document.getElementById('pr-add-folder-q');
+  var list = document.getElementById('pr-add-folder-list');
+  if (!qEl || !list) return;
+  var raw = qEl.value.trim();
+  var qn = normQ(raw);
+  list.innerHTML = '';
+  _prAddFolderId = ''; // 텍스트가 바뀌면 일단 미확정 상태로 (새 폴더 후보)
+
+  function row(label, sub, onClick, color) {
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.style.cssText = 'display:block;width:100%;text-align:left;padding:9px 12px;font-size:13px;color:' + (color || 'var(--tx)') + ';border-bottom:1px solid var(--bd);background:none;';
+    b.textContent = label + (sub ? '  ' + sub : '');
+    b.onmousedown = function(ev) { ev.preventDefault(); };
+    b.onclick = function(ev) { ev.stopPropagation(); onClick(); };
+    list.appendChild(b);
+  }
+
+  var opts = sortedPrayerFolders();
+  var matched = qn ? opts.filter(function(f) { return matchNameQuery(f.name, qn); }) : opts;
+  matched.forEach(function(f) {
+    var cnt = prayers.filter(function(p) { return p.folderId === f.id; }).length;
+    row('📁 ' + f.name, cnt ? '(' + cnt + ')' : '', function() { setPrayerAddFolder(f.id, f.name); });
+  });
+
+  var exact = opts.some(function(f) { return f.name === raw; });
+  if (raw && !exact) {
+    row('＋ "' + raw + '" 새 폴더로 추가', '', function() { setPrayerAddFolder('', raw); }, 'var(--pu)');
+  }
+
+  if (!list.children.length) {
+    list.innerHTML = '<div style="padding:12px;text-align:center;font-size:12px;color:var(--tx3);">검색 결과가 없습니다</div>';
+  }
+  document.getElementById('pr-add-newfolder-wrap').style.display = (raw && !exact) ? 'flex' : 'none';
+  list.style.display = open === false ? 'none' : 'block';
+}
+document.addEventListener('click', function(e) {
+  var box = document.getElementById('pr-add-folder-box');
+  if (box && !box.contains(e.target)) closePrayerAddFolderList();
+});
 
 function confirmPrayerAdd() {
-  var sel = document.getElementById('pr-add-folder');
   var text = document.getElementById('pr-add-text').value;
   var blocks = parsePrayerBlocks(text);
   if (!blocks.length && !_prayerAddImageData) { showToast('기원문을 입력해주세요'); return; }
   if (!blocks.length && _prayerAddImageData) blocks = [{ text: '', heading: false }]; // 텍스트 없이 사진만 등록하는 경우
 
   var folderId;
-  if (sel.value === '__new__' || !sel.value) {
-    var name = document.getElementById('pr-add-newfolder-name').value.trim();
-    if (!name) { showToast('새 폴더 이름을 입력해주세요'); return; }
-    var deadline = document.getElementById('pr-add-newfolder-deadline').value || '';
-    var newFolder = { id: uid(), name: name, deadline: deadline, startDate: deadline ? dk(new Date()) : '', _open: true };
-    prayerFolders.push(newFolder);
-    folderId = newFolder.id;
+  if (_prAddFolderId) {
+    folderId = _prAddFolderId;
   } else {
-    folderId = sel.value;
+    var name = document.getElementById('pr-add-folder-q').value.trim();
+    if (!name) { showToast('폴더를 입력해주세요'); return; }
+    var existing = prayerFolders.find(function(f) { return f.name === name; });
+    if (existing) {
+      folderId = existing.id;
+    } else {
+      var deadline = document.getElementById('pr-add-newfolder-deadline').value || '';
+      var newFolder = { id: uid(), name: name, deadline: deadline, startDate: deadline ? dk(new Date()) : '', _open: true };
+      prayerFolders.push(newFolder);
+      folderId = newFolder.id;
+    }
   }
 
   var now = Date.now();
@@ -6166,12 +6485,21 @@ function makePrayerRow(p, draggable) {
     savePrayerData(); renderChallenge();
   };
 
+  var hideBtn = document.createElement('button');
+  hideBtn.type = 'button'; hideBtn.title = p.hidden ? '숨김 해제' : '숨기기';
+  hideBtn.style.cssText = 'width:16px;height:16px;flex-shrink:0;background:none;border:none;cursor:pointer;opacity:.6;display:flex;align-items:center;justify-content:center;';
+  hideBtn.innerHTML = p.hidden
+    ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--tx3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a20.3 20.3 0 0 1 5.06-5.94M9.9 4.24A10.6 10.6 0 0 1 12 4c7 0 11 8 11 8a20.3 20.3 0 0 1-2.16 3.19M14.12 14.12a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>'
+    : '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--tx3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
+  hideBtn.onclick = function() { p.hidden = !p.hidden; savePrayerData(); renderChallenge(); };
+
   var del = document.createElement('button');
   del.textContent = '✕'; del.type = 'button';
   del.style.cssText = 'width:16px;height:16px;flex-shrink:0;font-size:10px;color:var(--tx3);background:none;border:none;cursor:pointer;opacity:.7;';
   del.onclick = function() { deletePrayer(p.id); };
 
   if (!p.image) row.appendChild(headBtn);
+  row.appendChild(hideBtn);
   row.appendChild(del);
   return row;
 }
@@ -6370,6 +6698,172 @@ function startPrayerDrag(row, startEvt) {
   document.addEventListener('pointercancel', onUp);
 }
 
+// 폴더 헤더를 꾹 누르면(롱프레스) '숨김' 버튼을 잠깐 활성화 — 폴더째로 숨길 때 사용
+var _prayerFolderActionId = null;
+function attachPrayerFolderLongPress(el, folderId, onFire) {
+  var timer = null, startX = 0, startY = 0, moved = false;
+  function start(x, y) {
+    moved = false; startX = x; startY = y;
+    timer = setTimeout(function() { if (!moved) onFire(); }, 550);
+  }
+  function move(x, y) {
+    if (Math.abs(x - startX) > 10 || Math.abs(y - startY) > 10) { moved = true; clearTimeout(timer); }
+  }
+  function cancel() { clearTimeout(timer); }
+  el.addEventListener('touchstart', function(e) { var t = e.touches[0]; start(t.clientX, t.clientY); }, { passive: true });
+  el.addEventListener('touchmove', function(e) { var t = e.touches[0]; move(t.clientX, t.clientY); }, { passive: true });
+  el.addEventListener('touchend', cancel);
+  el.addEventListener('touchcancel', cancel);
+  el.addEventListener('mousedown', function(e) { start(e.clientX, e.clientY); });
+  el.addEventListener('mousemove', function(e) { if (timer) move(e.clientX, e.clientY); });
+  el.addEventListener('mouseup', cancel);
+  el.addEventListener('mouseleave', cancel);
+}
+
+// 폴더 하나를 통째로 렌더링 — 일반 목록과 '숨긴 기원문' 섹션 둘 다 이 함수를 재사용
+function buildPrayerFolderWrap(f, visiblePrayers, qn, opts) {
+  opts = opts || {};
+  var items = visiblePrayers.filter(function(p) { return p.folderId === f.id; });
+  var active = items.filter(function(p) { return !p.checked; }).sort(function(a, b) { return (a.order != null ? a.order : a.createdAt) - (b.order != null ? b.order : b.createdAt); });
+  var done = items.filter(function(p) { return p.checked; }).sort(function(a, b) { return b.checkedAt - a.checkedAt; });
+  var total = items.length;
+  var pct = total ? Math.round(done.length / total * 100) : 0;
+  var dl = getPrayerDeadlineInfo(f.deadline);
+  var isOpen = f._open !== false;
+
+  var wrap = document.createElement('div');
+  wrap.style.cssText = 'border-radius:var(--rs);border:1px solid var(--bd);overflow:hidden;margin-bottom:8px;';
+
+  var hdr = document.createElement('div');
+  hdr.style.cssText = 'padding:8px 12px;background:#E3F4FF;cursor:pointer;';
+  var hdrTop = document.createElement('div');
+  hdrTop.style.cssText = 'display:flex;align-items:center;gap:6px;margin-bottom:5px;';
+
+  var nameSpan = document.createElement('span');
+  nameSpan.style.cssText = 'font-size:11px;font-weight:700;color:#2C7FBF;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:16px;';
+  nameSpan.textContent = f.name;
+
+  var dlBadge = document.createElement('span');
+  if (dl) {
+    dlBadge.style.cssText = 'font-size:10px;font-weight:700;color:' + dl.color + ';background:' + dl.bg + ';border-radius:99px;padding:2px 8px;flex-shrink:0;cursor:pointer;line-height:16px;';
+    dlBadge.textContent = dl.label;
+    dlBadge.title = '탭하면 마감일 수정';
+  } else {
+    dlBadge.style.cssText = 'font-size:10px;font-weight:600;color:var(--tx3);background:var(--sf);border:1px dashed var(--bd);border-radius:99px;padding:2px 8px;flex-shrink:0;cursor:pointer;line-height:16px;';
+    dlBadge.textContent = '+ 마감일';
+  }
+  dlBadge.onclick = (function(folder) {
+    return function(e) {
+      e.stopPropagation();
+      var rect = e.target.getBoundingClientRect();
+      openCalPop(folder.deadline || '', function(v) {
+        if (!folder.startDate) folder.startDate = dk(new Date());
+        folder.deadline = v;
+        savePrayerData();
+        renderChallenge();
+      }, rect);
+    };
+  })(f);
+
+  hdrTop.appendChild(nameSpan); hdrTop.appendChild(dlBadge);
+
+  if (opts.showUnhide) {
+    var unhideBtn = document.createElement('button');
+    unhideBtn.type = 'button'; unhideBtn.title = '숨김 해제';
+    unhideBtn.style.cssText = 'height:20px;border-radius:99px;border:1px solid #2C7FBF;background:#fff;padding:0 8px;font-size:10px;font-weight:700;color:#2C7FBF;flex-shrink:0;';
+    unhideBtn.textContent = '숨김 해제';
+    unhideBtn.onclick = (function(folder) { return function(e) { e.stopPropagation(); folder.hidden = false; savePrayerData(); renderChallenge(); }; })(f);
+    hdrTop.appendChild(unhideBtn);
+  } else {
+    var hideFolderBtn = document.createElement('button');
+    hideFolderBtn.type = 'button'; hideFolderBtn.title = '이 폴더 숨기기';
+    hideFolderBtn.style.cssText = 'height:20px;border-radius:99px;border:1px solid #e05252;background:#FDECEC;padding:0 8px;font-size:10px;font-weight:700;color:#e05252;flex-shrink:0;display:' + (_prayerFolderActionId === f.id ? 'inline-block' : 'none') + ';';
+    hideFolderBtn.textContent = '🙈 숨김';
+    hideFolderBtn.onclick = (function(folder) {
+      return function(e) {
+        e.stopPropagation();
+        folder.hidden = true;
+        _prayerFolderActionId = null;
+        savePrayerData(); renderChallenge();
+      };
+    })(f);
+    hdrTop.appendChild(hideFolderBtn);
+
+    var bulkEditBtn = document.createElement('button');
+    bulkEditBtn.type = 'button'; bulkEditBtn.title = '일괄 수정';
+    bulkEditBtn.style.cssText = 'width:18px;height:18px;flex-shrink:0;background:none;border:none;cursor:pointer;opacity:.5;display:flex;align-items:center;justify-content:center;';
+    bulkEditBtn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--tx3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>';
+    bulkEditBtn.onclick = (function(fid) { return function(e) { e.stopPropagation(); openPrayerBulkEditModal(fid); }; })(f.id);
+    hdrTop.appendChild(bulkEditBtn);
+
+    attachPrayerFolderLongPress(hdr, f.id, function() {
+      _prayerFolderActionId = f.id;
+      renderChallenge();
+    });
+  }
+
+  hdr.appendChild(hdrTop);
+
+  var barWrap = document.createElement('div');
+  barWrap.style.cssText = 'display:flex;align-items:center;gap:6px;';
+  var bar = document.createElement('div');
+  bar.style.cssText = 'flex:1;height:6px;background:rgba(255,255,255,.7);border-radius:4px;overflow:hidden;';
+  bar.innerHTML = '<div style="height:100%;width:' + pct + '%;background:#3B9AE0;border-radius:4px;transition:width .4s;"></div>';
+  var barLbl = document.createElement('span');
+  barLbl.style.cssText = 'font-size:10.5px;color:#2C7FBF;flex-shrink:0;font-weight:600;';
+  barLbl.textContent = done.length + '/' + total + ' (' + pct + '%)';
+  barWrap.appendChild(bar); barWrap.appendChild(barLbl);
+  hdr.appendChild(barWrap);
+
+  wrap.appendChild(hdr);
+
+  var body = document.createElement('div');
+  body.style.cssText = 'padding:4px 10px;background:var(--sf);display:' + (isOpen ? 'block' : 'none') + ';';
+
+  // 달성된 기원 ✨ - 폴더 헤더 바로 아래, 활성 항목 위에 배치. 달성된 게 있을 때만 나타남
+  if (done.length) {
+    var doneWrap = document.createElement('div');
+    doneWrap.style.cssText = 'margin:4px 0 6px;';
+    var doneHdr = document.createElement('div');
+    var doneOpen = false;
+    doneHdr.style.cssText = 'display:flex;align-items:center;gap:6px;padding:7px 2px;cursor:pointer;';
+    doneHdr.innerHTML = '<span style="font-size:11px;font-weight:700;color:#3B9AE0;flex:1;">이뤄진 기원 ✨ (' + done.length + ')</span><span class="dArrow" style="font-size:10px;color:var(--tx3);">▼</span>';
+    var doneBody = document.createElement('div');
+    doneBody.style.cssText = 'display:none;';
+    done.forEach(function(p) { doneBody.appendChild(makePrayerRow(p, false)); });
+    doneHdr.onclick = function(e) {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON') return;
+      doneOpen = doneBody.style.display !== 'none';
+      doneBody.style.display = doneOpen ? 'none' : 'block';
+      doneHdr.querySelector('.dArrow').textContent = doneOpen ? '▼' : '▲';
+    };
+    doneWrap.appendChild(doneHdr); doneWrap.appendChild(doneBody);
+    body.appendChild(doneWrap);
+  }
+
+  if (active.length) {
+    active.forEach(function(p, idx) {
+      var rowEl = makePrayerRow(p, true);
+      if (idx === active.length - 1) rowEl.style.borderBottom = 'none';
+      body.appendChild(rowEl);
+    });
+  } else if (!qn) {
+    var emptyMsg = document.createElement('div');
+    emptyMsg.style.cssText = 'text-align:center;padding:14px 0;color:var(--tx3);font-size:11px;';
+    emptyMsg.textContent = total ? '🎉 이 폴더 기원문을 모두 이뤘어요!' : '항목이 없어요';
+    body.appendChild(emptyMsg);
+  }
+
+  wrap.appendChild(body);
+
+  hdr.onclick = function() {
+    f._open = body.style.display === 'none';
+    body.style.display = f._open ? 'block' : 'none';
+  };
+
+  return wrap;
+}
+
 function renderPrayerTab(cont) {
   if (prayerLock && !_prayerUnlocked) { renderPrayerLockScreen(cont); return; }
   var qEl = document.getElementById('pr-search');
@@ -6377,127 +6871,106 @@ function renderPrayerTab(cont) {
   var qn = normQ(q);
 
   var filteredPrayers = qn ? prayers.filter(function(p) { return normQ(p.text).includes(qn); }) : prayers;
+  var visiblePrayers = filteredPrayers.filter(function(p) { return !p.hidden; });
+  var hiddenPrayers = filteredPrayers.filter(function(p) { return p.hidden; });
 
-  var folders = sortedPrayerFolders();
-  if (qn) folders = folders.filter(function(f) { return filteredPrayers.some(function(p) { return p.folderId === f.id; }); });
+  var allFolders = sortedPrayerFolders();
+  var hiddenFolders = allFolders.filter(function(f) { return f.hidden; });
+  var folders = allFolders.filter(function(f) { return !f.hidden; });
+  if (qn) folders = folders.filter(function(f) { return visiblePrayers.some(function(p) { return p.folderId === f.id; }); });
 
-  if (!folders.length) {
+  if (!folders.length && !hiddenPrayers.length && !hiddenFolders.length) {
     cont.innerHTML = '<div style="text-align:center;padding:48px 12px;color:var(--tx3);font-size:13px;line-height:1.7;">' +
       (qn ? '검색 결과가 없어요' : '아직 등록된 기원문이 없어요<br><span style="font-size:11px;">위 ＋ 버튼으로 시작해보세요</span>') + '</div>';
     return;
   }
 
   folders.forEach(function(f) {
-    var items = filteredPrayers.filter(function(p) { return p.folderId === f.id; });
-    var active = items.filter(function(p) { return !p.checked; }).sort(function(a, b) { return (a.order != null ? a.order : a.createdAt) - (b.order != null ? b.order : b.createdAt); });
-    var done = items.filter(function(p) { return p.checked; }).sort(function(a, b) { return b.checkedAt - a.checkedAt; });
-    var total = items.length;
-    var pct = total ? Math.round(done.length / total * 100) : 0;
-    var dl = getPrayerDeadlineInfo(f.deadline);
-    var isOpen = f._open !== false;
+    cont.appendChild(buildPrayerFolderWrap(f, visiblePrayers, qn, {}));
+  });
 
-    var wrap = document.createElement('div');
-    wrap.style.cssText = 'border-radius:var(--rs);border:1px solid var(--bd);overflow:hidden;margin-bottom:8px;';
+  // 🙈 숨김 — 모든 폴더의 숨긴 항목을 한 곳에 모아서 접이식으로 표시 (항목 단위 숨김)
+  if (hiddenPrayers.length) {
+    var hWrap = document.createElement('div');
+    hWrap.style.cssText = 'border-radius:var(--rs);border:1.5px solid var(--bd);overflow:hidden;margin-top:4px;margin-bottom:8px;';
+    var hOpen = _prayerHiddenOpen === true;
+    var hHdr = document.createElement('div');
+    hHdr.style.cssText = 'display:flex;align-items:center;gap:6px;padding:9px 12px;background:var(--sf);cursor:pointer;';
+    var hName = document.createElement('span');
+    hName.style.cssText = 'font-size:11px;font-weight:700;color:var(--tx3);flex:1;';
+    hName.textContent = '🙈 숨김 (항목)';
+    var hCnt = document.createElement('span');
+    hCnt.style.cssText = 'font-size:11px;color:var(--tx3);opacity:.8;flex-shrink:0;';
+    hCnt.textContent = hiddenPrayers.length + '개';
+    var hArrow = document.createElement('span');
+    hArrow.style.cssText = 'font-size:11px;color:var(--tx3);flex-shrink:0;';
+    hArrow.textContent = hOpen ? '▲' : '▼';
+    hHdr.appendChild(hName); hHdr.appendChild(hCnt); hHdr.appendChild(hArrow);
 
-    var hdr = document.createElement('div');
-    hdr.style.cssText = 'padding:8px 12px;background:#E3F4FF;cursor:pointer;';
-    var hdrTop = document.createElement('div');
-    hdrTop.style.cssText = 'display:flex;align-items:center;gap:6px;margin-bottom:5px;';
+    var hBody = document.createElement('div');
+    hBody.style.cssText = 'display:' + (hOpen ? 'block' : 'none') + ';padding:4px 10px;background:var(--bg);';
+    hiddenPrayers.forEach(function(p) {
+      var pf = prayerFolders.find(function(f) { return f.id === p.folderId; });
+      var rowWrap = document.createElement('div'); rowWrap.style.cssText = 'display:flex;flex-direction:column;';
+      if (pf) {
+        var pfTag = document.createElement('div');
+        pfTag.style.cssText = 'font-size:9px;color:var(--tx3);padding-top:6px;';
+        pfTag.textContent = '📁 ' + pf.name;
+        rowWrap.appendChild(pfTag);
+      }
+      rowWrap.appendChild(makePrayerRow(p, false));
+      hBody.appendChild(rowWrap);
+    });
 
-    var nameSpan = document.createElement('span');
-    nameSpan.style.cssText = 'font-size:11px;font-weight:700;color:#2C7FBF;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:16px;';
-    nameSpan.textContent = f.name;
-
-    var dlBadge = document.createElement('span');
-    if (dl) {
-      dlBadge.style.cssText = 'font-size:10px;font-weight:700;color:' + dl.color + ';background:' + dl.bg + ';border-radius:99px;padding:2px 8px;flex-shrink:0;cursor:pointer;line-height:16px;';
-      dlBadge.textContent = dl.label;
-      dlBadge.title = '탭하면 마감일 수정';
-    } else {
-      dlBadge.style.cssText = 'font-size:10px;font-weight:600;color:var(--tx3);background:var(--sf);border:1px dashed var(--bd);border-radius:99px;padding:2px 8px;flex-shrink:0;cursor:pointer;line-height:16px;';
-      dlBadge.textContent = '+ 마감일';
-    }
-    dlBadge.onclick = (function(folder) {
-      return function(e) {
-        e.stopPropagation();
-        var rect = e.target.getBoundingClientRect();
-        openCalPop(folder.deadline || '', function(v) {
-          if (!folder.startDate) folder.startDate = dk(new Date());
-          folder.deadline = v;
-          savePrayerData();
-          renderChallenge();
-        }, rect);
-      };
-    })(f);
-
-    var bulkEditBtn = document.createElement('button');
-    bulkEditBtn.type = 'button'; bulkEditBtn.title = '일괄 수정';
-    bulkEditBtn.style.cssText = 'width:18px;height:18px;flex-shrink:0;background:none;border:none;cursor:pointer;opacity:.5;display:flex;align-items:center;justify-content:center;';
-    bulkEditBtn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--tx3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>';
-    bulkEditBtn.onclick = (function(fid) { return function(e) { e.stopPropagation(); openPrayerBulkEditModal(fid); }; })(f.id);
-
-    hdrTop.appendChild(nameSpan); hdrTop.appendChild(dlBadge); hdrTop.appendChild(bulkEditBtn);
-    hdr.appendChild(hdrTop);
-
-    var barWrap = document.createElement('div');
-    barWrap.style.cssText = 'display:flex;align-items:center;gap:6px;';
-    var bar = document.createElement('div');
-    bar.style.cssText = 'flex:1;height:6px;background:rgba(255,255,255,.7);border-radius:4px;overflow:hidden;';
-    bar.innerHTML = '<div style="height:100%;width:' + pct + '%;background:#3B9AE0;border-radius:4px;transition:width .4s;"></div>';
-    var barLbl = document.createElement('span');
-    barLbl.style.cssText = 'font-size:10.5px;color:#2C7FBF;flex-shrink:0;font-weight:600;';
-    barLbl.textContent = done.length + '/' + total + ' (' + pct + '%)';
-    barWrap.appendChild(bar); barWrap.appendChild(barLbl);
-    hdr.appendChild(barWrap);
-
-    wrap.appendChild(hdr);
-
-    var body = document.createElement('div');
-    body.style.cssText = 'padding:4px 10px;background:var(--sf);display:' + (isOpen ? 'block' : 'none') + ';';
-
-    // 달성된 기원 ✨ - 폴더 헤더 바로 아래, 활성 항목 위에 배치. 달성된 게 있을 때만 나타남
-    if (done.length) {
-      var doneWrap = document.createElement('div');
-      doneWrap.style.cssText = 'margin:4px 0 6px;';
-      var doneHdr = document.createElement('div');
-      var doneOpen = false;
-      doneHdr.style.cssText = 'display:flex;align-items:center;gap:6px;padding:7px 2px;cursor:pointer;';
-      doneHdr.innerHTML = '<span style="font-size:11px;font-weight:700;color:#3B9AE0;flex:1;">이뤄진 기원 ✨ (' + done.length + ')</span><span class="dArrow" style="font-size:10px;color:var(--tx3);">▼</span>';
-      var doneBody = document.createElement('div');
-      doneBody.style.cssText = 'display:none;';
-      done.forEach(function(p) { doneBody.appendChild(makePrayerRow(p, false)); });
-      doneHdr.onclick = function(e) {
-        if (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON') return;
-        doneOpen = doneBody.style.display !== 'none';
-        doneBody.style.display = doneOpen ? 'none' : 'block';
-        doneHdr.querySelector('.dArrow').textContent = doneOpen ? '▼' : '▲';
-      };
-      doneWrap.appendChild(doneHdr); doneWrap.appendChild(doneBody);
-      body.appendChild(doneWrap);
-    }
-
-    if (active.length) {
-      active.forEach(function(p, idx) {
-        var rowEl = makePrayerRow(p, true);
-        if (idx === active.length - 1) rowEl.style.borderBottom = 'none';
-        body.appendChild(rowEl);
-      });
-    } else if (!qn) {
-      var emptyMsg = document.createElement('div');
-      emptyMsg.style.cssText = 'text-align:center;padding:14px 0;color:var(--tx3);font-size:11px;';
-      emptyMsg.textContent = total ? '🎉 이 폴더 기원문을 모두 이뤘어요!' : '항목이 없어요';
-      body.appendChild(emptyMsg);
-    }
-
-    wrap.appendChild(body);
-
-    hdr.onclick = function() {
-      f._open = body.style.display === 'none';
-      body.style.display = f._open ? 'block' : 'none';
+    hHdr.onclick = function() {
+      _prayerHiddenOpen = hBody.style.display === 'none';
+      hArrow.textContent = _prayerHiddenOpen ? '▲' : '▼';
+      hBody.style.display = _prayerHiddenOpen ? 'block' : 'none';
     };
 
-    cont.appendChild(wrap);
-  });
+    hWrap.appendChild(hHdr); hWrap.appendChild(hBody);
+    cont.appendChild(hWrap);
+  }
+
+  // 📁 숨긴 기원문 — 폴더째로 숨긴 것들, 맨 아래 모아서 펼치면 최근 마감순으로 표시 (폴더 단위 숨김)
+  if (hiddenFolders.length) {
+    var sortedHiddenFolders = hiddenFolders.slice().sort(function(a, b) {
+      if (a.deadline && b.deadline) return b.deadline.localeCompare(a.deadline); // 최근 마감순 (마감일이 늦은/최근 것 먼저)
+      if (a.deadline && !b.deadline) return -1;
+      if (!a.deadline && b.deadline) return 1;
+      return a.name.localeCompare(b.name, 'ko');
+    });
+    var hfWrap = document.createElement('div');
+    hfWrap.style.cssText = 'border-radius:var(--rs);border:1.5px solid #e05252;overflow:hidden;margin-top:4px;';
+    var hfOpen = _prayerHiddenFolderOpen === true;
+    var hfHdr = document.createElement('div');
+    hfHdr.style.cssText = 'display:flex;align-items:center;gap:6px;padding:9px 12px;background:#FDECEC;cursor:pointer;';
+    var hfName = document.createElement('span');
+    hfName.style.cssText = 'font-size:11px;font-weight:700;color:#e05252;flex:1;';
+    hfName.textContent = '📁 숨긴 기원문';
+    var hfCnt = document.createElement('span');
+    hfCnt.style.cssText = 'font-size:11px;color:#e05252;opacity:.8;flex-shrink:0;';
+    hfCnt.textContent = sortedHiddenFolders.length + '개';
+    var hfArrow = document.createElement('span');
+    hfArrow.style.cssText = 'font-size:11px;color:#e05252;flex-shrink:0;';
+    hfArrow.textContent = hfOpen ? '▲' : '▼';
+    hfHdr.appendChild(hfName); hfHdr.appendChild(hfCnt); hfHdr.appendChild(hfArrow);
+
+    var hfBody = document.createElement('div');
+    hfBody.style.cssText = 'display:' + (hfOpen ? 'block' : 'none') + ';padding:6px;background:var(--bg);';
+    sortedHiddenFolders.forEach(function(f) {
+      hfBody.appendChild(buildPrayerFolderWrap(f, prayers.filter(function(p) { return !p.hidden; }), '', { showUnhide: true }));
+    });
+
+    hfHdr.onclick = function() {
+      _prayerHiddenFolderOpen = hfBody.style.display === 'none';
+      hfArrow.textContent = _prayerHiddenFolderOpen ? '▲' : '▼';
+      hfBody.style.display = _prayerHiddenFolderOpen ? 'block' : 'none';
+    };
+
+    hfWrap.appendChild(hfHdr); hfWrap.appendChild(hfBody);
+    cont.appendChild(hfWrap);
+  }
 }
 
 // SPEECH TAB
@@ -6512,6 +6985,23 @@ function getAllSpeech() {
 
 function getSpFolder(id) { return spFolders.find(function(f) { return (f.speechIds || []).includes(id); }); }
 function getSpFolderName(id) { var f = getSpFolder(id); return f ? f.name : ''; }
+
+// 스피치 본문과 말미 출처 인용구('- 도서명 N권 챕터 p.N')를 분리 — 검색 정확도 분류에 사용
+function splitSpBodyAndCitation(text) {
+  var t = normalizeSpCitation(text || '');
+  var m = t.match(/\n+-\s*([^\n]+)$/);
+  if (m) return { body: t.slice(0, m.index).trim(), citation: m[1].trim() };
+  return { body: t.trim(), citation: '' };
+}
+// 검색어가 어느 항목에 매칭됐는지 분류: 폴더명 > 본문 > 출처(도서명·페이지) > 해시태그(키워드) 순 우선순위
+function classifySpSearchTier(s, qn) {
+  if (normQ(getSpFolderName(s.id) || '').includes(qn)) return 'folder';
+  var parts = splitSpBodyAndCitation(s.text);
+  if (normQ(parts.body).includes(qn)) return 'body';
+  if (normQ(parts.citation).includes(qn)) return 'source';
+  if (toArr(s.keywords).some(function(k) { return normQ(k).includes(qn); })) return 'hashtag';
+  return null;
+}
 
 // 가장 최근에 '등록'한 스피치 (수정 시각이 아닌 최초 등록 시각 기준)
 function getMostRecentSpeech() {
@@ -6797,9 +7287,6 @@ function renderSpTab(cont, searchId) {
   spChecked = {};
   updateBulkBar();
 
-  var banner = makeRecentSpeechBanner();
-  if (banner) cont.appendChild(banner);
-
   var all = getAllSpeech();
   var searchEl = document.getElementById(searchId);
   var q = searchEl ? searchEl.value.toLowerCase() : '';
@@ -6866,33 +7353,110 @@ function renderSpTab(cont, searchId) {
     return wrap;
   }
 
-  // 검색어 있으면: ① 이름이 일치하는 폴더(테마)를 먼저, ② 그 아래 내용/키워드로 매칭된 메모들
+  // 검색어 있으면: 정확도 우선순위(폴더명 → 본문 → 출처(도서명·페이지) → 해시태그)로 그룹핑해서 표시
+  // 스코프 드롭다운으로 특정 기준 하나만 골라서 볼 수도 있음
   if (qn) {
-    var matchedFolders = nonHiddenFolders.filter(function(f) { return normQ(f.name).includes(qn); });
-    var shownIds = {};
-    if (matchedFolders.length) {
-      var folderHdr = document.createElement('div');
-      folderHdr.style.cssText = 'font-size:11px;font-weight:700;color:var(--tx3);padding:4px 0 8px;';
-      folderHdr.textContent = '📁 관련 폴더 ' + matchedFolders.length + '개';
-      cont.appendChild(folderHdr);
-      matchedFolders.forEach(function(f) {
-        var items = visible.filter(function(s) { return (f.speechIds || []).includes(s.id); });
-        items.forEach(function(s) { shownIds[s.id] = true; });
-        cont.appendChild(buildSpFolderBox(f, items));
+    var scopeWrap = document.getElementById('ch-search-scope-wrap');
+    if (scopeWrap) scopeWrap.style.display = 'block';
+    var scope = (document.getElementById('ch-search-scope') || {}).value || 'all';
+
+    var tierBuckets = { folder: [], body: [], source: [], hashtag: [] };
+    visible.forEach(function(s) {
+      var tier = classifySpSearchTier(s, qn);
+      if (tier) tierBuckets[tier].push(s);
+    });
+
+    function renderTextTier(items, title) {
+      if (!items.length) return;
+      var hdr = document.createElement('div');
+      hdr.style.cssText = 'font-size:11px;font-weight:700;color:var(--tx3);padding:8px 0 6px;';
+      hdr.textContent = title + ' ' + items.length + '개';
+      cont.appendChild(hdr);
+      items.forEach(function(s) {
+        var box = makeSpBox(s, false);
+        var txtEl = box.querySelector('.sp-txt');
+        if (txtEl) { txtEl.textContent = ''; txtEl.appendChild(renderSpText(normalizeSpCitation(s.text), q)); }
+        cont.appendChild(box);
       });
     }
-    var textMatches = visible.filter(function(s) { return !shownIds[s.id]; });
-    var matchHdr = document.createElement('div');
-    matchHdr.style.cssText = 'font-size:11px;font-weight:700;color:var(--tx3);padding:' + (matchedFolders.length ? '12px 0 8px' : '4px 0 8px') + ';';
-    matchHdr.textContent = '🔍 메모 검색 결과 ' + textMatches.length + '개';
-    cont.appendChild(matchHdr);
-    textMatches.forEach(function(s) {
-      var box = makeSpBox(s, false);
-      var txtEl = box.querySelector('.sp-txt');
-      if (txtEl) { txtEl.textContent = ''; txtEl.appendChild(renderSpText(normalizeSpCitation(s.text), q)); }
-      cont.appendChild(box);
-    });
+
+    function renderFolderTier() {
+      if (!tierBuckets.folder.length) return;
+      var matchedFolders = nonHiddenFolders.filter(function(f) { return matchNameQuery(f.name, qn); });
+      if (!matchedFolders.length) { renderTextTier(tierBuckets.folder, '📁 폴더명 매칭'); return; }
+      var hdr = document.createElement('div');
+      hdr.style.cssText = 'font-size:11px;font-weight:700;color:var(--tx3);padding:4px 0 6px;';
+      hdr.textContent = '📁 폴더명 매칭 ' + matchedFolders.length + '개';
+      cont.appendChild(hdr);
+      matchedFolders.forEach(function(f) {
+        var items = tierBuckets.folder.filter(function(s) { return (f.speechIds || []).includes(s.id); });
+        if (items.length) cont.appendChild(buildSpFolderBox(f, items));
+      });
+    }
+
+    if (scope === 'all') {
+      renderFolderTier();
+      renderTextTier(tierBuckets.body, '📝 본문 매칭');
+      renderTextTier(tierBuckets.source, '📖 도서명·페이지 매칭');
+      renderTextTier(tierBuckets.hashtag, '#️⃣ 해시태그 매칭');
+      if (!visible.some(function(s) { return classifySpSearchTier(s, qn); })) {
+        var noneMsg = document.createElement('div');
+        noneMsg.style.cssText = 'text-align:center;padding:36px 0;color:var(--tx3);font-size:13px;';
+        noneMsg.textContent = '검색 결과가 없어요';
+        cont.appendChild(noneMsg);
+      }
+    } else if (scope === 'folder') {
+      renderFolderTier();
+      if (!tierBuckets.folder.length) cont.innerHTML = '<div style="text-align:center;padding:36px 0;color:var(--tx3);font-size:13px;">폴더명에 일치하는 결과가 없어요</div>';
+    } else {
+      var label = scope === 'body' ? '📝 본문 매칭' : scope === 'source' ? '📖 도서명·페이지 매칭' : '#️⃣ 해시태그 매칭';
+      renderTextTier(tierBuckets[scope], label);
+      if (!tierBuckets[scope].length) cont.innerHTML = '<div style="text-align:center;padding:36px 0;color:var(--tx3);font-size:13px;">해당 기준으로 일치하는 결과가 없어요</div>';
+    }
     return;
+  } else {
+    var scopeWrap2 = document.getElementById('ch-search-scope-wrap');
+    if (scopeWrap2) scopeWrap2.style.display = 'none';
+  }
+
+  // 🕐 최근 저장 — 등록 시각(createdAt) 최신순, 즐겨찾기보다 위, 고정 섹션
+  var recentSorted = visible.slice().filter(function(s) { return s.createdAt; })
+    .sort(function(a, b) { return (b.createdAt || 0) - (a.createdAt || 0); })
+    .slice(0, 20);
+  if (recentSorted.length) {
+    var recWrap = document.createElement('div');
+    recWrap.style.cssText = 'border-radius:var(--rs);border:1.5px solid var(--pu);overflow:hidden;margin-bottom:8px;';
+
+    var recOpen = (_recentSpSectionOpen === true);
+    var recHdr = document.createElement('div');
+    recHdr.style.cssText = 'display:flex;align-items:center;gap:6px;padding:9px 12px;background:var(--pul);cursor:pointer;';
+
+    var recIcon = document.createElement('span');
+    recIcon.style.cssText = 'font-size:12px;font-weight:700;color:var(--pu);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
+    recIcon.textContent = '🕐 최근 저장';
+
+    var recCnt = document.createElement('span');
+    recCnt.style.cssText = 'font-size:11px;color:var(--pu);opacity:.8;flex-shrink:0;';
+    recCnt.textContent = recentSorted.length + '개';
+
+    var recArrow = document.createElement('span');
+    recArrow.style.cssText = 'font-size:11px;color:var(--pu);flex-shrink:0;';
+    recArrow.textContent = recOpen ? '▲' : '▼';
+
+    recHdr.appendChild(recIcon); recHdr.appendChild(recCnt); recHdr.appendChild(recArrow);
+
+    var recBody = document.createElement('div');
+    recBody.style.cssText = 'display:' + (recOpen ? 'block' : 'none') + ';padding:6px;background:var(--sf);';
+    recentSorted.forEach(function(s) { recBody.appendChild(makeSpBox(s, false)); });
+
+    recHdr.onclick = function(e) {
+      if (e.target.tagName === 'BUTTON') return;
+      _recentSpSectionOpen = recBody.style.display === 'none';
+      recBody.style.display = _recentSpSectionOpen ? 'block' : 'none';
+      recArrow.textContent = _recentSpSectionOpen ? '▲' : '▼';
+    };
+
+    recWrap.appendChild(recHdr); recWrap.appendChild(recBody); cont.appendChild(recWrap);
   }
 
   // ⭐ 즐겨찾기 — 고정 섹션, 실제 폴더와 무관하게 즐겨찾기된 항목만 모아서 표시
@@ -7065,6 +7629,7 @@ function makeSpBox(s, isHidden, fullWidthTag) {
       };
       document.getElementById('m-sp-reg').style.display = 'flex';
       addEbookPasteHandler(document.getElementById('m-sp-text'));
+      okBtn._openSnapshot = grabSpRegSnapshot();
     };
   })(s);
   btns.appendChild(editBtn);
@@ -7167,7 +7732,8 @@ function openFolderMove(ids, mode) {
   _fmoveIds = ids;
   _fmoveMode = mode || 'sp';
   var s = document.getElementById('m-fmove-search'); if (s) s.value = '';
-  var t = document.getElementById('m-fmove-title'); if (t) t.textContent = _fmoveMode === 'essay' ? '테마 지정' : '폴더 이동';
+  var t = document.getElementById('m-fmove-title');
+  if (t) t.textContent = _fmoveMode === 'essay' ? '테마 지정' : '폴더 이동';
   renderFolderMoveList();
   document.getElementById('m-folder-move').style.display = 'flex';
 }
@@ -7201,7 +7767,7 @@ function renderFolderMoveList() {
 
   // 가나다순 정렬
   var sorted = folderArr.slice().sort(function(a, b) { return a.name.localeCompare(b.name, 'ko'); });
-  var matched = qn ? sorted.filter(function(f) { return normQ(f.name).includes(qn); }) : sorted;
+  var matched = qn ? sorted.filter(function(f) { return matchNameQuery(f.name, qn); }) : sorted;
 
   function assignTo(folder) {
     if (mode === 'essay') {
@@ -7315,6 +7881,37 @@ function clearSpRegDraft() {
   showToast('🗑 임시저장 내용 삭제');
 }
 
+// 팝업을 연 시점(등록: 임시저장 or 빈칸 / 수정: 원래 저장돼있던 값)의 스냅샷 — 되돌리기 기준점
+function grabSpRegSnapshot() {
+  return {
+    text: document.getElementById('m-sp-text').value,
+    kw: document.getElementById('m-sp-kw').value,
+    folderId: document.getElementById('m-sp-folder').value,
+    folderQ: document.getElementById('m-sp-folder-q').value,
+    fav: !!((document.getElementById('m-sp-fav') || {})._fav),
+    book: document.getElementById('m-sp-book').value,
+    chapter: document.getElementById('m-sp-chapter').value,
+    page: document.getElementById('m-sp-page').value
+  };
+}
+
+// 되돌리기: 지금 이 팝업을 열었을 때 상태로 복원 (수정 모드면 원래 저장값, 등록 모드면 팝업 열 때 불러온 임시저장/빈칸 상태)
+function revertSpReg() {
+  var okBtn = document.getElementById('m-sp-ok');
+  var snap = okBtn && okBtn._openSnapshot;
+  if (!snap) return;
+  document.getElementById('m-sp-text').value = snap.text;
+  document.getElementById('m-sp-kw').value = snap.kw;
+  document.getElementById('m-sp-folder').value = snap.folderId;
+  document.getElementById('m-sp-folder-q').value = snap.folderQ;
+  setSpRegFav(snap.fav);
+  document.getElementById('m-sp-book').value = snap.book;
+  document.getElementById('m-sp-chapter').value = snap.chapter;
+  document.getElementById('m-sp-page').value = snap.page;
+  if (!okBtn._editMode) saveSpRegDraft();
+  showToast('↺ 되돌리기');
+}
+
 // ★ 즐겨찾기 토글
 function setSpRegFav(on) {
   var btn = document.getElementById('m-sp-fav');
@@ -7365,6 +7962,8 @@ function toggleBoldSelection(taId) {
 
 // ===== 🎲 랜덤 스피치 추천 =====
 var _spRandomLastId = null;
+var _spRandomBag = []; // 셔플백: 전체 후보를 한 번씩 다 보여준 뒤에만 다시 섞음 (같은/비슷한 항목이 자꾸 반복되는 느낌 방지)
+var _spRandomBagKey = '';
 
 function openSpRandomModal() {
   var kw = document.getElementById('sp-random-kw'); if (kw) kw.value = '';
@@ -7391,12 +7990,27 @@ function pickRandomSpeech(fromKeyword) {
     body.innerHTML = '<div style="text-align:center;padding:30px 0;color:var(--tx3);font-size:12px;">' + (kwn ? '해당 키워드와 맞는 스피치가 없어요' : '저장된 스피치가 없어요') + '</div>';
     footer.textContent = '';
     _spRandomLastId = null;
+    _spRandomBag = []; _spRandomBagKey = '';
     return;
   }
 
-  // 후보가 여럿이면 직전과 같은 것 다시 뽑지 않기
-  var candidates = pool.length > 1 ? pool.filter(function(s) { return s.id !== _spRandomLastId; }) : pool;
-  var pick = candidates[Math.floor(Math.random() * candidates.length)];
+  // 지금 후보 목록이 바뀌었으면 셔플백을 새로 만듦 (Fisher-Yates로 균등하게 섞음)
+  var poolKey = kwn + ':' + pool.map(function(s) { return s.id; }).sort().join(',');
+  if (poolKey !== _spRandomBagKey || !_spRandomBag.length) {
+    _spRandomBag = pool.map(function(s) { return s.id; });
+    for (var i = _spRandomBag.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var tmp = _spRandomBag[i]; _spRandomBag[i] = _spRandomBag[j]; _spRandomBag[j] = tmp;
+    }
+    // 직전에 봤던 항목이 셔플 결과 맨 앞이면 바로 반복되지 않도록 뒤로 보냄
+    if (_spRandomBag.length > 1 && _spRandomBag[0] === _spRandomLastId) {
+      _spRandomBag.push(_spRandomBag.shift());
+    }
+    _spRandomBagKey = poolKey;
+  }
+
+  var pickId = _spRandomBag.shift();
+  var pick = pool.find(function(s) { return s.id === pickId; }) || pool[0];
   _spRandomLastId = pick.id;
 
   body.innerHTML = '';
@@ -7444,6 +8058,7 @@ function openSpRegModal() {
   document.getElementById('m-sp-reg').style.display = 'flex';
   if (d.text) showToast('✍️ 작성 중이던 내용을 불러왔어요');
   addEbookPasteHandler(document.getElementById('m-sp-text'));
+  okBtn._openSnapshot = grabSpRegSnapshot();
 }
 
 // ===== 스피치 폴더 검색형 선택 =====
@@ -7503,7 +8118,7 @@ function renderSpFolderOpts(open) {
   }
 
   var opts = spFolderOptions();
-  var matched = qn ? opts.filter(function(f) { return normQ(f.name).includes(qn); }) : opts;
+  var matched = qn ? opts.filter(function(f) { return matchNameQuery(f.name, qn); }) : opts;
 
   if (!qn) row('📌 분류없음', '', function() { setSpFolder('', ''); }, 'var(--tx3)');
 
