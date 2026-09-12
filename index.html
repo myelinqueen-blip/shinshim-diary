@@ -3160,11 +3160,15 @@ function renderEssayMemoTab(cont) {
   function makeMemoBox(m) {
     var box=document.createElement('div');
     box.style.cssText='border-radius:var(--rs);border:1.5px solid '+(essayMemoChecked[m.memoId]?'var(--te)':'var(--bd)')+';background:var(--sf);padding:10px 12px;';
-    var topRow=document.createElement('div'); topRow.style.cssText='display:flex;align-items:flex-start;gap:6px;';
+
+    // 헤더 줄: 체크박스 + (오른쪽 정렬) 수정/삭제/복사 버튼 — 스피치 박스와 동일한 구조
+    var hdr=document.createElement('div'); hdr.style.cssText='display:flex;align-items:center;gap:5px;margin-bottom:6px;';
     var chk=document.createElement('input'); chk.type='checkbox'; chk.checked=!!essayMemoChecked[m.memoId];
-    chk.style.cssText='width:14px;height:14px;flex-shrink:0;margin-top:2px;accent-color:var(--te);cursor:pointer;';
+    chk.style.cssText='width:14px;height:14px;flex-shrink:0;accent-color:var(--te);cursor:pointer;';
     chk.onchange=function(){if(chk.checked)essayMemoChecked[m.memoId]=true;else delete essayMemoChecked[m.memoId];box.style.borderColor=chk.checked?'var(--te)':'var(--bd)';updateEssayBulkBar();};
-    var txt=document.createElement('div'); txt.style.cssText='flex:1;font-size:12px;color:var(--tx);line-height:1.6;white-space:pre-wrap;min-width:0;'; txt.textContent=m.memoText;
+    hdr.appendChild(chk);
+
+    var btns=document.createElement('div'); btns.style.cssText='display:flex;gap:4px;align-items:center;margin-left:auto;';
     var editBtn=document.createElement('button'); editBtn.type='button'; editBtn.title='수정';
     editBtn.style.cssText='width:22px;height:22px;border-radius:5px;border:1px solid var(--bd);background:var(--sf);color:var(--tx3);font-size:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;';
     editBtn.textContent='✏️';
@@ -3189,7 +3193,14 @@ function renderEssayMemoTab(cont) {
     // 복사 형식: #어서명 #키워드 (엔터)(엔터) 내용
     var cpTags = m.keywords.slice(); cpTags.unshift(m.essayName);
     var cpBtn=makeCpBtn(buildTagHeader(cpTags)+m.memoText);
-    topRow.appendChild(chk); topRow.appendChild(txt); topRow.appendChild(editBtn); topRow.appendChild(delBtn); topRow.appendChild(cpBtn); box.appendChild(topRow);
+    btns.appendChild(editBtn); btns.appendChild(delBtn); btns.appendChild(cpBtn);
+    hdr.appendChild(btns);
+    box.appendChild(hdr);
+
+    // 본문: 전체 너비 사용 (버튼과 같은 줄에 두지 않아 오른쪽 여백 낭비 없음)
+    var txt=document.createElement('div'); txt.style.cssText='font-size:12px;color:var(--tx);line-height:1.6;white-space:pre-wrap;'; txt.textContent=m.memoText;
+    box.appendChild(txt);
+
     var botRow=document.createElement('div'); botRow.style.cssText='display:flex;align-items:center;justify-content:space-between;gap:6px;margin-top:5px;flex-wrap:wrap;';
     var nameTag=document.createElement('span'); nameTag.style.cssText='font-size:10px;color:var(--tx3);'; nameTag.textContent='- '+m.essayName;
     botRow.appendChild(nameTag);
@@ -3305,7 +3316,7 @@ function renderEssayMemoTab(cont) {
 
   kwNames.forEach(function(k) {
     var kMemos = kwMap[k];
-    var isOpen = _essayKwOpen[k] !== false;
+    var isOpen = _essayKwOpen[k] === true;
 
     var wrap=document.createElement('div');
     wrap.style.cssText='border-radius:var(--rs);border:1px solid var(--bd);overflow:hidden;';
