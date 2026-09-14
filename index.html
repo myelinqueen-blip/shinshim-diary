@@ -291,7 +291,8 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
 #m-essay-scroll::-webkit-scrollbar-track{background:transparent;}
 #m-essay-scroll::-webkit-scrollbar-thumb{background:var(--bd);border-radius:3px;}
 /* 스피치 등록 팝업: 키보드가 올라와도 페이지 입력칸까지 보이도록 위쪽 정렬 + 여백 축소 */
-#m-sp-reg{align-items:flex-start;padding-top:10px;}
+#m-sp-reg{align-items:flex-start;padding-top:4px;}
+#m-sp-reg .mb{max-height:96vh;}
 #m-sp-reg .mb{padding:14px 16px;}
 /* 앱 컬럼(390px) 안에 고정 + 화면 밖으로 벗어나지 않도록 스크롤 허용 */
 .mo{position:fixed;top:0;bottom:0;left:50%;transform:translateX(-50%);
@@ -878,7 +879,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
     <label class="mlbl">기원문 <span style="font-size:10px;font-weight:400;color:var(--tx3);">(한 줄에 하나씩 · 묶으려면 앞에 띄어쓰기 · #소제목 · **볼드**)</span></label>
     <textarea class="minp" id="pr-add-text" rows="8" placeholder="예)&#10;가족 모두 건강하게 지내기&#10;시험 합격하기&#10;  이어서 적고 싶은 내용은&#10;  앞에 띄어쓰기하면 위 줄과 하나로 묶여요&#10;# 이렇게 적으면 소제목이 돼요" style="min-height:150px;resize:vertical;" onpaste="onPrayerAddTextPaste(event)"></textarea>
     <div style="display:flex;align-items:center;gap:8px;margin-top:8px;">
-      <button type="button" onclick="toggleBoldSelection('pr-add-text')" style="width:30px;height:30px;font-weight:900;font-size:12px;border-radius:var(--rs);border:1px solid var(--bd);background:var(--sf);color:var(--tx);cursor:pointer;">B</button>
+      <button type="button" onmousedown="event.preventDefault()" ontouchstart="event.preventDefault()" onclick="toggleBoldSelection('pr-add-text')" style="width:30px;height:30px;font-weight:900;font-size:12px;border-radius:var(--rs);border:1px solid var(--bd);background:var(--sf);color:var(--tx);cursor:pointer;">B</button>
       <label style="height:30px;padding:0 12px;border-radius:var(--rs);border:1px solid var(--bd);background:var(--sf);font-size:11.5px;color:var(--tx);cursor:pointer;display:inline-flex;align-items:center;">📷 사진 추가<input type="file" accept="image/*" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;" onchange="handlePrayerAddImageFile(this)"></label>
       <div id="pr-add-img-preview" style="display:none;position:relative;">
         <img style="width:44px;height:44px;object-fit:cover;border-radius:8px;border:1px solid var(--bd);"/>
@@ -1027,7 +1028,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
     </div>
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px;">
       <label class="mlbl" style="margin-bottom:0;">내용</label>
-      <button type="button" id="m-sp-bold-btn" onclick="toggleBoldSelection()" title="선택한 글자 볼드 처리 (Ctrl/Cmd+B)"
+      <button type="button" id="m-sp-bold-btn" onmousedown="event.preventDefault()" ontouchstart="event.preventDefault()" onclick="toggleBoldSelection()" title="선택한 글자 볼드 처리 (Ctrl/Cmd+B)"
               style="width:26px;height:22px;border-radius:5px;border:1px solid var(--bd);background:var(--sf);font-size:12px;font-weight:800;color:var(--tx2);flex-shrink:0;">B</button>
     </div>
     <textarea class="minp" id="m-sp-text" rows="3" placeholder="스피치 내용 입력... (일부 선택 후 B로 볼드 처리)" style="min-height:60px;resize:vertical;white-space:pre-wrap;margin-bottom:6px;"></textarea>
@@ -6564,6 +6565,8 @@ function startPrayerTextEdit(p, row, mainCol, txt, imgWrap) {
   var boldBtn = document.createElement('button');
   boldBtn.type = 'button'; boldBtn.textContent = 'B'; boldBtn.style.cssText = 'width:26px;height:24px;font-weight:900;font-size:11px;border-radius:5px;border:1px solid var(--bd);background:var(--sf);color:var(--tx);cursor:pointer;';
   boldBtn.onclick = function(e) { e.stopPropagation(); toggleBoldSelection(taId); };
+  boldBtn.onmousedown = function(e) { e.preventDefault(); };
+  boldBtn.addEventListener('touchstart', function(e) { e.preventDefault(); }, { passive: false });
 
   // 사진 버튼: label이 hidden file input을 직접 감싸는 방식 (JS로 새 input을 만들어 click()시키는 방식은
   // 이 앱이 표시되는 웹뷰에서 신뢰성이 낮아서, 백업복원 버튼과 동일하게 검증된 방식으로 통일)
