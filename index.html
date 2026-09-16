@@ -256,6 +256,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
 .spbox{border-radius:var(--rs);border:1px solid var(--bd);background:var(--sf);padding:10px 12px;margin-bottom:6px;}
 .spbox.done{background:#F6F6F8;opacity:.65;}
 .spbox.chk{border-color:var(--pu);}
+.spbox.chk .sp-txt{color:var(--tx3);}
 .ftag{font-size:10px;font-weight:600;border-radius:99px;padding:2px 8px;border:1px solid var(--gl);background:var(--gl);color:var(--g);cursor:pointer;}
 
 /* MEMBER */
@@ -736,6 +737,18 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
     <div style="display:flex;gap:8px;">
       <button id="m-confirm-cancel" style="flex:1;height:38px;border-radius:var(--rs);border:1.5px solid var(--bd);background:var(--bg);font-size:13px;font-weight:600;color:var(--tx3);">취소</button>
       <button id="m-confirm-ok" style="flex:1;height:38px;border-radius:var(--rs);border:none;background:var(--pk);font-size:13px;font-weight:700;color:#fff;">삭제</button>
+    </div>
+  </div>
+</div>
+
+<!-- 직접입력 등, 좁은 인라인 칸 대신 넉넉한 공간에서 입력받는 공용 팝업 -->
+<div id="m-quick-text" class="mo" style="display:none;">
+  <div class="mb" style="max-height:85vh;display:flex;flex-direction:column;">
+    <div class="mtit"><span id="m-quick-text-title">직접입력</span><button onclick="closeM('m-quick-text')" style="font-size:18px;color:var(--tx3);">×</button></div>
+    <textarea class="minp" id="m-quick-text-input" rows="3" style="min-height:64px;resize:vertical;margin-bottom:10px;"></textarea>
+    <div class="mfoot">
+      <button class="mcan" onclick="closeM('m-quick-text')">취소</button>
+      <button class="mok" onclick="confirmQuickTextInput()">확인</button>
     </div>
   </div>
 </div>
@@ -2088,6 +2101,23 @@ function closeM(id) {
   document.getElementById(id).style.display = 'none';
 }
 
+// 좁은 인라인 칸 대신 넉넉한 팝업에서 텍스트를 입력받음 (예: '직접입력' 선택 시)
+var _quickTextSaveCb = null;
+function openQuickTextInput(title, initialValue, onSave) {
+  document.getElementById('m-quick-text-title').textContent = title || '직접입력';
+  var ta = document.getElementById('m-quick-text-input');
+  ta.value = initialValue || '';
+  _quickTextSaveCb = onSave;
+  document.getElementById('m-quick-text').style.display = 'flex';
+  setTimeout(function() { ta.focus(); ta.select(); }, 50);
+}
+function confirmQuickTextInput() {
+  var v = document.getElementById('m-quick-text-input').value;
+  var cb = _quickTextSaveCb;
+  closeM('m-quick-text');
+  if (cb) cb(v);
+}
+
 // 모달 바깥 클릭 시 닫기
 document.addEventListener('click', function(e) {
   var mo = e.target.closest('.mo') === e.target ? e.target : null; if (!mo) return; var e2 = e;
@@ -2147,6 +2177,7 @@ function switchTab(id, btn) {
   else if (id === 'collection') renderCol();
   else if (id === 'forest') renderForest();
   else if (id === 'challenge') renderChallenge();
+  updateSpeechScrollUI();
 }
 
 var curChTab = 'speech';
@@ -2163,7 +2194,22 @@ function switchChTab(tab, btn) {
   if (spTb)    spTb.style.display    = tab === 'speech' ? 'block' : 'none';
   if (prTb)    prTb.style.display    = tab === 'prayer' ? 'block' : 'none';
   renderChallenge();
+  updateSpeechScrollUI();
 }
+
+// 스피치 탭에서 스크롤을 내리면 상단 '기록/모음/복운의 숲/도전' 탭바를 숨겨서
+// 화면 공간을 아끼고, 맨 위로 올라오면 다시 보여줌
+var SP_TABBAR_HIDE_Y = 40;
+function updateSpeechScrollUI() {
+  var tabbar = document.getElementById('tabbar');
+  if (!tabbar) return;
+  var challengeTab = document.getElementById('tab-challenge');
+  var isSpeechView = !!(challengeTab && challengeTab.classList.contains('on') && curChTab === 'speech');
+  if (!isSpeechView) { tabbar.style.display = ''; return; }
+  var y = window.scrollY || document.documentElement.scrollTop || 0;
+  tabbar.style.display = (y > SP_TABBAR_HIDE_Y) ? 'none' : '';
+}
+window.addEventListener('scroll', updateSpeechScrollUI, { passive: true });
 
 function renderChallenge() {
   var cont = document.getElementById('ch-content');
@@ -3854,13 +3900,18 @@ function renderHaengList(list) {
     typeBtn.title = typeLabel;
     if (!typeLabel) typeBtn.style.color = 'var(--tx3)';
 
-    // 직접입력 시 추가 텍스트필드
+    // 직접입력 시 추가 텍스트필드 — 좁아서 타이핑이 힘드니, 탭하면 넉넉한 팝업에서 입력받음
     var ci = document.createElement('input');
     ci.className = 'inp';
     ci.placeholder = '직접입력';
     ci.value = item.custom || '';
-    ci.style.cssText = 'width:54px;flex-shrink:0;display:' + (item.type === '직접입력' ? 'inline-block' : 'none') + ';';
-    ci.oninput = (function(it) { return function() { it.custom = ci.value; autoSave(); }; })(item);
+    ci.readOnly = true;
+    ci.style.cssText = 'width:54px;flex-shrink:0;cursor:pointer;display:' + (item.type === '직접입력' ? 'inline-block' : 'none') + ';';
+    ci.onclick = (function(it) {
+      return function() {
+        openQuickTextInput('직접입력', it.custom || '', function(v) { it.custom = v; ci.value = v; autoSave(); });
+      };
+    })(item);
 
     typeBtn.onclick = (function(it, btn, ci2) {
       return function(e) {
@@ -3873,6 +3924,9 @@ function renderHaengList(list) {
           btn.style.color = lbl ? 'var(--tx)' : 'var(--tx3)';
           ci2.style.display = v === '직접입력' ? 'inline-block' : 'none';
           autoSave();
+          if (v === '직접입력') {
+            openQuickTextInput('직접입력', it.custom || '', function(val) { it.custom = val; ci2.value = val; autoSave(); });
+          }
         });
       };
     })(item, typeBtn, ci);
@@ -4475,14 +4529,22 @@ function renderActList(list) {
     if (!item.type) db2.style.color = 'var(--tx3)';
     var ci = document.createElement('input');
     ci.className = 'inp'; ci.placeholder = '입력';
-    ci.value = item.custom || ''; ci.style.cssText = 'width:52px;flex-shrink:0;display:' + (item.type === '직접입력' ? 'block' : 'none') + ';';
-    ci.oninput = (function(it) { return function() { it.custom = ci.value; autoSave(); }; })(item);
+    ci.value = item.custom || ''; ci.readOnly = true;
+    ci.style.cssText = 'width:52px;flex-shrink:0;cursor:pointer;display:' + (item.type === '직접입력' ? 'block' : 'none') + ';';
+    ci.onclick = (function(it) {
+      return function() {
+        openQuickTextInput('직접입력', it.custom || '', function(v) { it.custom = v; ci.value = v; autoSave(); });
+      };
+    })(item);
     db2.onclick = (function(it, btn, ci2) {
       return function(e) {
         e.stopPropagation();
         openTDrop(btn, ACT_GROUPS, it.type, function(v) {
           it.type = v; btn.textContent = getLbl(ACT_GROUPS, v) || v;
           btn.style.color = 'var(--tx)'; ci2.style.display = v === '직접입력' ? 'block' : 'none'; autoSave();
+          if (v === '직접입력') {
+            openQuickTextInput('직접입력', it.custom || '', function(val) { it.custom = val; ci2.value = val; autoSave(); });
+          }
         });
       };
     })(item, db2, ci);
@@ -7314,6 +7376,7 @@ function renderSpTab(cont, searchId) {
   }) : all;
   var visible = filtered.filter(function(s) { return !spDone[s.id] && getSpFolderName(s.id) !== '숨김'; });
   var hidden = filtered.filter(function(s) { return spDone[s.id] || getSpFolderName(s.id) === '숨김'; });
+  function isSpHidden(s) { return !!spDone[s.id] || getSpFolderName(s.id) === '숨김'; }
 
   syncSpViewToggle();
   if (spViewMode === 'source') {
@@ -7352,7 +7415,7 @@ function renderSpTab(cont, searchId) {
 
     var body = document.createElement('div');
     body.style.cssText = 'display:' + (isOpen ? 'block' : 'none') + ';padding:6px;background:var(--sf);';
-    items.forEach(function(s) { body.appendChild(makeSpBox(s, false)); });
+    items.forEach(function(s) { body.appendChild(makeSpBox(s, isSpHidden(s))); });
 
     hdr.onclick = (function(f, b, arr) {
       return function(e) {
@@ -7375,7 +7438,7 @@ function renderSpTab(cont, searchId) {
     var scope = (document.getElementById('ch-search-scope') || {}).value || 'all';
 
     var tierBuckets = { folder: [], body: [], source: [], hashtag: [] };
-    visible.forEach(function(s) {
+    filtered.forEach(function(s) {
       var tier = classifySpSearchTier(s, qn);
       if (tier) tierBuckets[tier].push(s);
     });
@@ -7387,7 +7450,7 @@ function renderSpTab(cont, searchId) {
       hdr.textContent = title + ' ' + items.length + '개';
       cont.appendChild(hdr);
       items.forEach(function(s) {
-        var box = makeSpBox(s, false);
+        var box = makeSpBox(s, isSpHidden(s));
         var txtEl = box.querySelector('.sp-txt');
         if (txtEl) { txtEl.textContent = ''; txtEl.appendChild(renderSpText(normalizeSpCitation(s.text), q)); }
         cont.appendChild(box);
@@ -7413,7 +7476,7 @@ function renderSpTab(cont, searchId) {
       renderTextTier(tierBuckets.body, '📝 본문 매칭');
       renderTextTier(tierBuckets.source, '📖 도서명·페이지 매칭');
       renderTextTier(tierBuckets.hashtag, '#️⃣ 해시태그 매칭');
-      if (!visible.some(function(s) { return classifySpSearchTier(s, qn); })) {
+      if (!filtered.some(function(s) { return classifySpSearchTier(s, qn); })) {
         var noneMsg = document.createElement('div');
         noneMsg.style.cssText = 'text-align:center;padding:36px 0;color:var(--tx3);font-size:13px;';
         noneMsg.textContent = '검색 결과가 없어요';
@@ -7991,7 +8054,10 @@ function pickRandomSpeech(fromKeyword) {
   var body = document.getElementById('sp-random-body');
   var footer = document.getElementById('sp-random-footer');
 
-  var pool = getAllSpeech().filter(function(s) { return !spDone[s.id] && getSpFolderName(s.id) !== '숨김'; });
+  var pool = getAllSpeech().filter(function(s) {
+    var fn = getSpFolderName(s.id);
+    return !spDone[s.id] && fn !== '숨김' && fn !== '명언';
+  });
   if (kwn) {
     pool = pool.filter(function(s) {
       return normQ(s.text).includes(kwn) ||
