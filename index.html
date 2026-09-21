@@ -892,7 +892,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
     <label class="mlbl">기원문 <span style="font-size:10px;font-weight:400;color:var(--tx3);">(한 줄에 하나씩 · 묶으려면 앞에 띄어쓰기 · #소제목 · **볼드**)</span></label>
     <textarea class="minp" id="pr-add-text" rows="8" placeholder="예)&#10;가족 모두 건강하게 지내기&#10;시험 합격하기&#10;  이어서 적고 싶은 내용은&#10;  앞에 띄어쓰기하면 위 줄과 하나로 묶여요&#10;# 이렇게 적으면 소제목이 돼요" style="min-height:150px;resize:vertical;" onpaste="onPrayerAddTextPaste(event)"></textarea>
     <div style="display:flex;align-items:center;gap:8px;margin-top:8px;">
-      <button type="button" onmousedown="event.preventDefault()" ontouchstart="event.preventDefault()" onclick="toggleBoldSelection('pr-add-text')" style="width:30px;height:30px;font-weight:900;font-size:12px;border-radius:var(--rs);border:1px solid var(--bd);background:var(--sf);color:var(--tx);cursor:pointer;">B</button>
+      <button type="button" onmousedown="event.preventDefault()" onclick="toggleBoldSelection('pr-add-text')" style="width:30px;height:30px;font-weight:900;font-size:12px;border-radius:var(--rs);border:1px solid var(--bd);background:var(--sf);color:var(--tx);cursor:pointer;">B</button>
       <label style="height:30px;padding:0 12px;border-radius:var(--rs);border:1px solid var(--bd);background:var(--sf);font-size:11.5px;color:var(--tx);cursor:pointer;display:inline-flex;align-items:center;">📷 사진 추가<input type="file" accept="image/*" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;" onchange="handlePrayerAddImageFile(this)"></label>
       <div id="pr-add-img-preview" style="display:none;position:relative;">
         <img style="width:44px;height:44px;object-fit:cover;border-radius:8px;border:1px solid var(--bd);"/>
@@ -1041,7 +1041,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
     </div>
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px;">
       <label class="mlbl" style="margin-bottom:0;">내용</label>
-      <button type="button" id="m-sp-bold-btn" onmousedown="event.preventDefault()" ontouchstart="event.preventDefault()" onclick="toggleBoldSelection()" title="선택한 글자 볼드 처리 (Ctrl/Cmd+B)"
+      <button type="button" id="m-sp-bold-btn" onmousedown="event.preventDefault()" onclick="toggleBoldSelection()" title="선택한 글자 볼드 처리 (Ctrl/Cmd+B)"
               style="width:26px;height:22px;border-radius:5px;border:1px solid var(--bd);background:var(--sf);font-size:12px;font-weight:800;color:var(--tx2);flex-shrink:0;">B</button>
     </div>
     <textarea class="minp" id="m-sp-text" rows="3" placeholder="스피치 내용 입력... (일부 선택 후 B로 볼드 처리)" style="min-height:60px;resize:vertical;white-space:pre-wrap;margin-bottom:6px;"></textarea>
@@ -3895,41 +3895,38 @@ function renderHaengList(list) {
     var typeBtn = document.createElement('button');
     typeBtn.className = 'tdb-sm';
     typeBtn.style.cssText = 'flex:1;min-width:54px;';
-    var typeLabel = getLbl(HAENG_GROUPS, item.type) || '';
+    // 직접입력이면 버튼 자체에 입력한 내용을 보여줌 (별도 칸을 추가하지 않아 화면 밖으로 삭제 버튼이 밀려나지 않음)
+    var typeLabel = item.type === '직접입력' ? (item.custom || '✏️ 직접입력') : (getLbl(HAENG_GROUPS, item.type) || '');
     typeBtn.textContent = typeLabel;
     typeBtn.title = typeLabel;
     if (!typeLabel) typeBtn.style.color = 'var(--tx3)';
 
-    // 직접입력 시 추가 텍스트필드 — 좁아서 타이핑이 힘드니, 탭하면 넉넉한 팝업에서 입력받음
-    var ci = document.createElement('input');
-    ci.className = 'inp';
-    ci.placeholder = '직접입력';
-    ci.value = item.custom || '';
-    ci.readOnly = true;
-    ci.style.cssText = 'width:54px;flex-shrink:0;cursor:pointer;display:' + (item.type === '직접입력' ? 'inline-block' : 'none') + ';';
-    ci.onclick = (function(it) {
-      return function() {
-        openQuickTextInput('직접입력', it.custom || '', function(v) { it.custom = v; ci.value = v; autoSave(); });
-      };
-    })(item);
-
-    typeBtn.onclick = (function(it, btn, ci2) {
+    typeBtn.onclick = (function(it, btn) {
       return function(e) {
         e.stopPropagation();
         openTDrop(btn, HAENG_GROUPS, it.type || '', function(v) {
           it.type = v;
-          var lbl = getLbl(HAENG_GROUPS, v) || v;
-          btn.textContent = lbl;
-          btn.title = lbl;
-          btn.style.color = lbl ? 'var(--tx)' : 'var(--tx3)';
-          ci2.style.display = v === '직접입력' ? 'inline-block' : 'none';
-          autoSave();
           if (v === '직접입력') {
-            openQuickTextInput('직접입력', it.custom || '', function(val) { it.custom = val; ci2.value = val; autoSave(); });
+            btn.textContent = it.custom || '✏️ 직접입력';
+            btn.title = btn.textContent;
+            btn.style.color = 'var(--tx)';
+            autoSave();
+            openQuickTextInput('직접입력', it.custom || '', function(val) {
+              it.custom = val;
+              btn.textContent = val || '✏️ 직접입력';
+              btn.title = btn.textContent;
+              autoSave();
+            });
+          } else {
+            var lbl = getLbl(HAENG_GROUPS, v) || v;
+            btn.textContent = lbl;
+            btn.title = lbl;
+            btn.style.color = lbl ? 'var(--tx)' : 'var(--tx3)';
+            autoSave();
           }
         });
       };
-    })(item, typeBtn, ci);
+    })(item, typeBtn);
 
     // ── 삭제 버튼 ──
     var del = document.createElement('button');
@@ -3947,7 +3944,6 @@ function renderHaengList(list) {
     inner.appendChild(catBtn);
     inner.appendChild(nameWrap);
     inner.appendChild(typeBtn);
-    inner.appendChild(ci);
     inner.appendChild(del);
     row.appendChild(inner);
     el.appendChild(row);
@@ -4525,29 +4521,27 @@ function renderActList(list) {
     var dw = document.createElement('div'); dw.className = 'tdw'; dw.style.cssText = 'flex-shrink:0;';
     var db2 = document.createElement('button');
     db2.className = 'tdb';
-    db2.textContent = getLbl(ACT_GROUPS, item.type) || '구분';
+    // 직접입력이면 버튼 자체에 입력한 내용을 보여줌 (별도 칸을 추가하지 않아 화면 밖으로 삭제 버튼이 밀려나지 않음)
+    db2.textContent = item.type === '직접입력' ? (item.custom || '✏️ 직접입력') : (getLbl(ACT_GROUPS, item.type) || '구분');
     if (!item.type) db2.style.color = 'var(--tx3)';
-    var ci = document.createElement('input');
-    ci.className = 'inp'; ci.placeholder = '입력';
-    ci.value = item.custom || ''; ci.readOnly = true;
-    ci.style.cssText = 'width:52px;flex-shrink:0;cursor:pointer;display:' + (item.type === '직접입력' ? 'block' : 'none') + ';';
-    ci.onclick = (function(it) {
-      return function() {
-        openQuickTextInput('직접입력', it.custom || '', function(v) { it.custom = v; ci.value = v; autoSave(); });
-      };
-    })(item);
-    db2.onclick = (function(it, btn, ci2) {
+    db2.onclick = (function(it, btn) {
       return function(e) {
         e.stopPropagation();
         openTDrop(btn, ACT_GROUPS, it.type, function(v) {
-          it.type = v; btn.textContent = getLbl(ACT_GROUPS, v) || v;
-          btn.style.color = 'var(--tx)'; ci2.style.display = v === '직접입력' ? 'block' : 'none'; autoSave();
+          it.type = v;
           if (v === '직접입력') {
-            openQuickTextInput('직접입력', it.custom || '', function(val) { it.custom = val; ci2.value = val; autoSave(); });
+            btn.textContent = it.custom || '✏️ 직접입력';
+            btn.style.color = 'var(--tx)'; autoSave();
+            openQuickTextInput('직접입력', it.custom || '', function(val) {
+              it.custom = val; btn.textContent = val || '✏️ 직접입력'; autoSave();
+            });
+          } else {
+            btn.textContent = getLbl(ACT_GROUPS, v) || v;
+            btn.style.color = 'var(--tx)'; autoSave();
           }
         });
       };
-    })(item, db2, ci);
+    })(item, db2);
     dw.appendChild(db2);
 
     var del = document.createElement('button');
@@ -4562,7 +4556,7 @@ function renderActList(list) {
     var inner = document.createElement('div');
     inner.style.cssText = 'display:flex;align-items:center;gap:4px;flex-wrap:nowrap;padding:2px 0;';
     inner.appendChild(makeGrip()); inner.appendChild(dBtn); inner.appendChild(nWrap);
-    inner.appendChild(dw); inner.appendChild(ci); inner.appendChild(del);
+    inner.appendChild(dw); inner.appendChild(del);
     row.appendChild(inner); el.appendChild(row);
   });
 }
@@ -6628,7 +6622,6 @@ function startPrayerTextEdit(p, row, mainCol, txt, imgWrap) {
   boldBtn.type = 'button'; boldBtn.textContent = 'B'; boldBtn.style.cssText = 'width:26px;height:24px;font-weight:900;font-size:11px;border-radius:5px;border:1px solid var(--bd);background:var(--sf);color:var(--tx);cursor:pointer;';
   boldBtn.onclick = function(e) { e.stopPropagation(); toggleBoldSelection(taId); };
   boldBtn.onmousedown = function(e) { e.preventDefault(); };
-  boldBtn.addEventListener('touchstart', function(e) { e.preventDefault(); }, { passive: false });
 
   // 사진 버튼: label이 hidden file input을 직접 감싸는 방식 (JS로 새 input을 만들어 click()시키는 방식은
   // 이 앱이 표시되는 웹뷰에서 신뢰성이 낮아서, 백업복원 버튼과 동일하게 검증된 방식으로 통일)
